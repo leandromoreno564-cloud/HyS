@@ -11,10 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('item_inspeccions', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        Schema::create('items_inspeccion', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('inspeccion_id')->constrained('inspecciones')->cascadeOnDelete();
+    $table->foreignId('item_checklist_id')->nullable()->constrained('items_checklist')->nullOnDelete();
+    $table->text('descripcion_personalizada')->nullable();
+    $table->enum('estado', ['Cumple', 'No Cumple', 'No Aplica', 'Pendiente'])->default('Pendiente');
+    $table->text('observacion')->nullable();
+    $table->timestamps();
+
+});
     }
 
     /**
