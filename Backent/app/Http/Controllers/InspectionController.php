@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class InspectionController extends Controller
 {
@@ -48,7 +49,7 @@ class InspectionController extends Controller
 
         $companies = Company::accessibleBy($user)->active()->orderBy('business_name')->get();
 
-        return view('inspections.index', compact('inspections', 'companies'));
+        return Inertia::render('Inspections/Index', compact('inspections', 'companies'));
     }
 
     public function create(Request $request)
@@ -59,7 +60,7 @@ class InspectionController extends Controller
         $companies = Company::accessibleBy($user)->active()->orderBy('business_name')->get();
         $selectedCompanyId = $request->query('company_id');
 
-        return view('inspections.create', compact('companies', 'selectedCompanyId'));
+        return Inertia::render('Inspections/Create', compact('companies', 'selectedCompanyId'));
     }
 
     public function store(Request $request)
@@ -144,7 +145,7 @@ class InspectionController extends Controller
 
         $stats = $inspection->complianceStats();
 
-        return view('inspections.show', compact('inspection', 'groupedChecklist', 'stats'));
+        return Inertia::render('Inspections/Show', compact('inspection', 'groupedChecklist', 'stats'));
     }
 
     public function edit(Inspection $inspection)
@@ -158,7 +159,7 @@ class InspectionController extends Controller
 
         $companies = Company::accessibleBy($user)->active()->get();
 
-        return view('inspections.edit', compact('inspection', 'companies'));
+        return Inertia::render('Inspections/Edit', compact('inspection', 'companies'));
     }
 
     public function update(Request $request, Inspection $inspection)
@@ -227,8 +228,8 @@ class InspectionController extends Controller
         }
 
         $data = $request->validate([
-            'signature_inspector' => ['nullable', 'string', 'max:255'],
-            'signature_company' => ['nullable', 'string', 'max:255'],
+            'signature_inspector' => ['nullable', 'string'],
+            'signature_company' => ['nullable', 'string'],
             'signature_company_name' => ['nullable', 'string', 'max:255'],
         ]);
 

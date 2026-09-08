@@ -10,6 +10,9 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
+CREATE DATABASE IF NOT EXISTS `hys_control` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `hys_control`;
+
 -- --------------------------------------------------------
 -- Estructura para la tabla `users`
 -- --------------------------------------------------------
@@ -35,6 +38,8 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `name`, `email`, `role`, `phone`, `license_number`, `is_active`, `avatar`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES ('1', 'Ing. Alejandro Morales', 'admin@seguridad.local', 'admin', '+54 11 4455-6677', 'MAT-NAC-00192', '1', NULL, NULL, '$2y$12$FDlnj2yuzTeoOZD5F63dMOEKlCzlNng/6tEZzbjTgB0qGZK9vZQAe', NULL, '2026-09-03 19:56:31', '2026-09-03 19:56:31');
 INSERT INTO `users` (`id`, `name`, `email`, `role`, `phone`, `license_number`, `is_active`, `avatar`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES ('2', 'Lic. Carlos Rossi', 'inspector@seguridad.local', 'inspector', '+54 11 5566-7788', 'LIC-HYS-8492', '1', NULL, NULL, '$2y$12$vTPfu7N/c0RRY.47fgz5FeCkSDaq3QPvsIWWeqgHzNNRuyOgXnmLe', NULL, '2026-09-03 19:56:31', '2026-09-03 19:56:31');
 INSERT INTO `users` (`id`, `name`, `email`, `role`, `phone`, `license_number`, `is_active`, `avatar`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES ('3', 'Lic. María Fernández', 'maria@seguridad.local', 'inspector', '+54 11 6677-8899', 'LIC-HYS-3120', '1', NULL, NULL, '$2y$12$uHDeJufR7PD0/q0o8kotbeq/cQQlNOxRj1B/R/72vP0wzqOsU8W7a', NULL, '2026-09-03 19:56:32', '2026-09-03 19:56:32');
+INSERT INTO `users` (`id`, `name`, `email`, `role`, `phone`, `license_number`, `is_active`, `avatar`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES ('4', 'Administrador General', 'admin@hys.com', 'admin', '+54 11 4455-6677', 'MAT-NAC-00192', '1', NULL, NULL, '$2y$12$e/a6i.O6347Uj4YF4n3y1eB7Q2pvdZc080y1Rz6Q2oB1M81r5/0G2', NULL, '2026-09-05 20:44:29', '2026-09-05 20:44:29');
+INSERT INTO `users` (`id`, `name`, `email`, `role`, `phone`, `license_number`, `is_active`, `avatar`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES ('5', 'Lic. Inspector Técnico', 'inspector@hys.com', 'inspector', '+54 11 5566-7788', 'LIC-HYS-8492', '1', NULL, NULL, '$2y$12$440L.V2QJ50Z1b3M2G2wweB3P8k7e7Q5V1j7z4A0uY1K1v0L9/0F1', NULL, '2026-09-05 20:44:29', '2026-09-05 20:44:29');
 
 -- --------------------------------------------------------
 -- Estructura para la tabla `companies`

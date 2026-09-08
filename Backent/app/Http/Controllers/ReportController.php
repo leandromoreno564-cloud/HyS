@@ -6,6 +6,7 @@ use App\Models\Inspection;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ReportController extends Controller
 {
@@ -116,6 +117,6 @@ class ReportController extends Controller
         $inspection = Inspection::with(['company', 'user'])->where('token', $token)->firstOrFail();
         $stats = $inspection->complianceStats();
 
-        return view('reports.verify', compact('inspection', 'stats'));
+        return Inertia::render('Reports/Verify', compact('inspection', 'stats'));
     }
 }

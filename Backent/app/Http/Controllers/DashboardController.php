@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -86,7 +87,7 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
-        return view('dashboard.admin', compact(
+        return Inertia::render('Dashboard/Admin', compact(
             'totalCompanies',
             'totalUsers',
             'totalInspections',
@@ -159,7 +160,7 @@ class DashboardController extends Controller
         // Mis empresas asignadas o creadas
         $myCompanies = Company::accessibleBy($user)->active()->limit(5)->get();
 
-        return view('dashboard.inspector', compact(
+        return Inertia::render('Dashboard/Inspector', compact(
             'totalMyInspections',
             'inProgressCount',
             'completedCount',

@@ -8,6 +8,7 @@ use App\Models\User;
 use Database\Seeders\ChecklistTemplateSeeder;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class HySSystemTest extends TestCase
@@ -24,8 +25,7 @@ class HySSystemTest extends TestCase
     {
         $response = $this->get('/login');
         $response->assertStatus(200);
-        $response->assertSee('HyS Control');
-        $response->assertSee('admin@seguridad.local');
+        $response->assertInertia(fn (Assert $page) => $page->component('Auth/Login'));
     }
 
     public function test_admin_can_login_and_access_dashboard(): void
@@ -40,8 +40,7 @@ class HySSystemTest extends TestCase
 
         $dashboardResponse = $this->get('/dashboard');
         $dashboardResponse->assertStatus(200);
-        $dashboardResponse->assertSee('Panel de Control Global');
-        $dashboardResponse->assertSee('Gestión de Usuarios');
+        $dashboardResponse->assertInertia(fn (Assert $page) => $page->component('Dashboard/Admin'));
     }
 
     public function test_inspector_can_login_and_see_inspector_dashboard(): void
@@ -56,8 +55,7 @@ class HySSystemTest extends TestCase
 
         $dashboardResponse = $this->get('/dashboard');
         $dashboardResponse->assertStatus(200);
-        $dashboardResponse->assertSee('Mis Inspecciones');
-        $dashboardResponse->assertDontSee('Gestión de Usuarios');
+        $dashboardResponse->assertInertia(fn (Assert $page) => $page->component('Dashboard/Inspector'));
     }
 
     public function test_inspector_cannot_access_user_management(): void
@@ -110,7 +108,9 @@ class HySSystemTest extends TestCase
 
         $response = $this->get("/verify/{$inspection->token}");
         $response->assertStatus(200);
-        $response->assertSee('Certificado de Autenticidad');
-        $response->assertSee($inspection->company->business_name);
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Reports/Verify')
+            ->has('inspection')
+        );
     }
 }

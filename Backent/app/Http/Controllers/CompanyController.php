@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class CompanyController extends Controller
 {
@@ -49,13 +50,13 @@ class CompanyController extends Controller
             ->distinct()
             ->pluck('industry_sector');
 
-        return view('companies.index', compact('companies', 'sectors'));
+        return Inertia::render('Companies/Index', compact('companies', 'sectors'));
     }
 
     public function create()
     {
         $inspectors = User::where('role', 'inspector')->where('is_active', true)->get();
-        return view('companies.create', compact('inspectors'));
+        return Inertia::render('Companies/Create', compact('inspectors'));
     }
 
     public function store(Request $request)
@@ -106,7 +107,7 @@ class CompanyController extends Controller
         $company->load(['creator', 'inspectors', 'inspections.user', 'inspections.observations']);
         $inspectors = User::where('role', 'inspector')->where('is_active', true)->get();
 
-        return view('companies.show', compact('company', 'inspectors'));
+        return Inertia::render('Companies/Show', compact('company', 'inspectors'));
     }
 
     public function edit(Company $company)
@@ -120,7 +121,7 @@ class CompanyController extends Controller
 
         $inspectors = User::where('role', 'inspector')->where('is_active', true)->get();
 
-        return view('companies.edit', compact('company', 'inspectors'));
+        return Inertia::render('Companies/Edit', compact('company', 'inspectors'));
     }
 
     public function update(Request $request, Company $company)

@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
+use Inertia\Inertia;
+
 class AuthController extends Controller
 {
     public function showLogin()
@@ -16,7 +18,7 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect()->route('dashboard');
         }
-        return view('auth.login');
+        return Inertia::render('Auth/Login');
     }
 
     public function login(Request $request)
@@ -58,7 +60,7 @@ class AuthController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        return view('auth.profile', compact('user'));
+        return Inertia::render('Auth/Profile', compact('user'));
     }
 
     public function updateProfile(Request $request)

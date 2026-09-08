@@ -30,10 +30,30 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
+        User::create([
+            'name' => 'Administrador General',
+            'email' => 'admin@hys.com',
+            'password' => Hash::make('admin123'),
+            'role' => 'admin',
+            'phone' => '+54 11 4455-6677',
+            'license_number' => 'MAT-NAC-00192',
+            'is_active' => true,
+        ]);
+
         $inspector1 = User::create([
             'name' => 'Lic. Carlos Rossi',
             'email' => 'inspector@seguridad.local',
             'password' => Hash::make('password'),
+            'role' => 'inspector',
+            'phone' => '+54 11 5566-7788',
+            'license_number' => 'LIC-HYS-8492',
+            'is_active' => true,
+        ]);
+
+        User::create([
+            'name' => 'Lic. Inspector Técnico',
+            'email' => 'inspector@hys.com',
+            'password' => Hash::make('inspector123'),
             'role' => 'inspector',
             'phone' => '+54 11 5566-7788',
             'license_number' => 'LIC-HYS-8492',

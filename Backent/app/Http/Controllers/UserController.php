@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Inertia\Inertia;
 
 class UserController extends Controller
 {
@@ -37,12 +38,12 @@ class UserController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('users.index', compact('users'));
+        return Inertia::render('Users/Index', compact('users'));
     }
 
     public function create()
     {
-        return view('users.create');
+        return Inertia::render('Users/Create');
     }
 
     public function store(Request $request)
@@ -67,7 +68,7 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        return view('users.edit', compact('user'));
+        return Inertia::render('Users/Edit', compact('user'));
     }
 
     public function update(Request $request, User $user)

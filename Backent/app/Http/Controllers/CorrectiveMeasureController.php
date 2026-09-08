@@ -8,6 +8,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class CorrectiveMeasureController extends Controller
 {
@@ -61,7 +62,7 @@ class CorrectiveMeasureController extends Controller
             ->where('deadline', '<', Carbon::today())
             ->count();
 
-        return view('corrective_measures.index', compact('measures', 'totalCount', 'pendingCount', 'overdueCount'));
+        return Inertia::render('CorrectiveMeasures/Index', compact('measures', 'totalCount', 'pendingCount', 'overdueCount'));
     }
 
     public function store(Request $request, Inspection $inspection)

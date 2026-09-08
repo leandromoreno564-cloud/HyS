@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\AppNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class NotificationController extends Controller
 {
     public function index()
     {
         $notifications = Auth::user()->appNotifications()->paginate(15);
-        return view('notifications.index', compact('notifications'));
+        return Inertia::render('Notifications/Index', compact('notifications'));
     }
 
     public function markAsRead(AppNotification $notification)

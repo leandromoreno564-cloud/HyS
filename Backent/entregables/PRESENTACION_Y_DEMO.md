@@ -1,107 +1,147 @@
-# Presentación del Proyecto y Guion de Demostración en Vivo
-## Sistema de Gestión de Inspecciones de Higiene y Seguridad Laboral (HyS Control)
+# Presentación del Proyecto Institucional y Guion de Demostración en Vivo
+## Plataforma Web de Gestión Integral de Inspecciones de Higiene y Seguridad Laboral (HyS Control)
+**Instituto de Educación Superior "Nuevo Horizonte"**  
+**Carrera:** Tecnicatura Superior en Desarrollo de Software  
+**Espacio Curricular:** Prácticas Profesionalizantes I y II  
+**Equipo Docente Evaluador:** Prof. Aquino Carolina, Prof. Figueroa Franco, Prof. Huanca Elio  
+**Destinatarios:** Estudiantes, docentes e inspectores licenciados en Higiene y Seguridad Laboral
 
 ---
 
-### PARTE 1: Estructura de Diapositivas para la Defensa Académica / Profesional
+### PARTE 1: Estructura de Diapositivas para la Defensa Académica
 
-#### Diapositiva 1: Portada
-- **Título**: Sistema Integral de Gestión de Inspecciones de Higiene y Seguridad Laboral (HyS Control)
-- **Subtítulo**: Digitalización, Trazabilidad y Cumplimiento Normativo en Campo
-- **Tecnologías**: Laravel 12, PHP 8.2, MySQL / SQLite, Bootstrap 5, Chart.js, DomPDF
-- **Equipo de Desarrollo**: Estudiantes de Higiene, Seguridad y Sistemas
+#### Diapositiva 1: Portada Institucional
+- **Título:** Plataforma Web de Gestión Integral de Inspecciones de Higiene y Seguridad Laboral (**HyS Control**)
+- **Subtítulo:** Digitalización de Campo, Trazabilidad Normativa, Firmas Digitales y Verificación QR
+- **Stack Tecnológico:** Laravel 12.x • React 19 • Inertia.js v2 • Tailwind CSS • MySQL 8.0 • DomPDF
+- **Desarrolladores Ejecutores:** Estudiantes de 2.° y 3.° año de la Tecnicatura Superior en Desarrollo de Software
 
-#### Diapositiva 2: Planteamiento del Problema
-- **Situación Actual**: Las inspecciones de seguridad en plantas industriales y obras se realizan predominantemente en formularios en papel o planillas estáticas de cálculo.
-- **Problemáticas Detectadas**:
-  - Pérdida de tiempo en transcripción manual de datos en gabinete (horas extra dedicadas a confeccionar informes).
-  - Fotografías de no conformidades desvinculadas del acta técnica o dispersas en teléfonos celulares personales.
-  - Falta de estandarización en la aplicación de normativas (Ley 19.587, Dec. 351/79, Dec. 911/96).
-  - Dificultad en el seguimiento de las medidas correctivas (las recomendaciones suelen quedar en papel sin trazabilidad de cumplimiento).
-  - Imposibilidad de validar la autenticidad física de un informe técnico frente a auditorías externas o ART.
+#### Diapositiva 2: Problemática y Justificación Interdisciplinaria
+- **Diagnóstico en Campo:** Tradicionalmente, los profesionales en Seguridad e Higiene relevan plantas y obras con planillas impresas en papel y carpetas físicas.
+- **Inconsistencias Detectadas:**
+  - Pérdida excesiva de horas en gabinete transcribiendo apuntes y redactando informes en Word.
+  - Fotografías de no conformidades dispersas en los teléfonos personales de los inspectores, desvinculadas del acta técnica.
+  - Retrasos severos en la comunicación de medidas urgentes a las empresas clientes.
+  - Imposibilidad de validar la autenticidad física de un informe frente a auditorías externas, entes de control o ART.
+- **Propuesta:** Una solución web moderna, trazable, mobile-first y segura, que automatiza el ciclo integral desde la visita en campo hasta la emisión del informe formal.
 
-#### Diapositiva 3: Objetivos del Sistema
-- **Objetivo General**: Desarrollar una aplicación web responsive que permita a los licenciados en higiene y seguridad gestionar inspecciones en campo, documentar evidencia fotográfica, completar checklists técnicos normativos, formular planes de acción y generar automáticamente informes PDF profesionales con validación QR.
-- **Objetivos Específicos**:
-  - Control de acceso por roles (Administrador e Inspectores).
-  - Generación dinámica de checklists según sector industrial.
-  - Interfaz Mobile-First adaptable a celulares y tablets para trabajo en planta.
-  - Trazabilidad y sistema de notificaciones automáticas para medidas próximas a vencer.
+#### Diapositiva 3: Decisión de Arquitectura Frontend (Evolución a React)
+- **Evolución del Stack:** Con el aval del equipo docente, se sustituyó el esquema clásico de plantillas (*AdminLTE 3 y Bootstrap 5*) por un ecosistema de vanguardia en la industria: **React 19 + Inertia.js + Tailwind CSS**.
+- **Ventajas Estratégicas:**
+  - **Single Page Application (SPA):** Navegación fluida e instantánea sin recarga de pantallas.
+  - **Experiencia Táctil Mobile-First:** Botones grandes de evaluación diseñados para celulares y tablets en plantas industriales ruidosas o con guantes.
+  - **100% Gratuito y Open Source:** Sin costo de licencias ni plataformas privativas.
+  - **Componentes Avanzados:** Canvas táctil para rúbrica manuscrita digital y mapas interactivos satelitales con OpenStreetMap.
 
-#### Diapositiva 4: Arquitectura Tecnológica
-- **Patrón Arquitectónico**: MVC (Modelo-Vista-Controlador) robusto.
-- **Seguridad**:
-  - Cifrado de credenciales con algoritmo Bcrypt.
-  - Protección contra ataques CSRF, XSS e Inyecciones SQL mediante Eloquent ORM.
-  - Middleware de autorización basada en roles (RBAC) y verificación de estado de cuenta activa.
-- **Módulos Principales**:
-  - Gestión de Usuarios y Licencias Profesionales.
-  - Padrón de Empresas con Soft Delete e Historial.
-  - Motor de Inspecciones y Checklists Dinámicos.
-  - Matriz de Medidas Correctivas con Semáforo de Vencimiento.
-  - Generador de Informes PDF con DomPDF y Códigos QR.
+#### Diapositiva 4: Alcance Funcional Fase I (Núcleo Operativo Implementado)
+- **Seguridad y Roles:** Autenticación protegida con control RBAC (`role:admin` / `role:inspector`), registro de actividad y control de inactividad.
+- **Gestión de Empresas:** Padrón con búsqueda en vivo, filtro por sector, soft delete, restauración y asignación de técnicos por tabla pivote (`company_user`).
+- **Checklists Técnicos Normativos:** Generación automática de listas de cotejo según sector (Ley 19.587 y Dec. 351/79) con cálculo automático de avance al 100%.
+- **Evidencias Fotográficas:** Clasificación de desvíos con severidad (*Menor, Moderada, Mayor, Crítica*) y subida de imágenes múltiples.
+- **Planes de Acción:** Matriz de medidas correctivas con asignación de responsables, costos estimados y semáforo de vencimiento.
+- **Informes Ejecutivos:** Generación en alta calidad de actas técnicas oficiales en PDF mediante DomPDF.
 
-#### Diapositiva 5: Demostración en Vivo
-*(Paso a la demostración práctica del software).*
+#### Diapositiva 5: Alcance Funcional Fase II (Módulos de Evolución Técnica)
+- **Firma Digital Manuscrita en Canvas:** Módulo táctil para la rúbrica en pantalla del inspector y del representante de la empresa.
+- **Geolocalización GPS y Mapas:** Captura automática de coordenadas con un clic y visualización en mapa interactivo con Leaflet.
+- **Validación Pública por Código QR:** Inclusión de código QR dinámico con token UUID para que cualquier perito o autoridad pueda constatar la autenticidad del acta en `/verify/{token}`.
+- **Exportación Masiva a Excel:** Extracción de datos en CSV UTF-8 estructurado.
 
-#### Diapositiva 6: Conclusiones y Valor Agregado
-- Reducción del tiempo de elaboración de informes de un 70% (de horas a un clic).
-- Estandarización de criterios técnicos en base a leyes y decretos reglamentarios.
-- Mayor confiabilidad documental y trazabilidad para empresas aseguradoras y entes de control.
+#### Diapositiva 6: Conclusiones e Impacto
+- Reducción del tiempo de elaboración de informes en un **80%** (de horas de redacción a un solo clic).
+- Trazabilidad y transparencia absoluta para la Tecnicatura en Seguridad e Higiene Laboral.
+- Cumplimiento estricto del cronograma de 6 semanas y de todos los estándares de calidad del proyecto educativo.
 
 ---
 
-### PARTE 2: Guion Paso a Paso para la Demostración en Vivo (5 a 10 Minutos)
+### PARTE 2: Guion Paso a Paso para la Demostración Práctica en Vivo (7 a 10 Minutos)
 
-#### Momento 1: Inicio de Sesión y Roles (1 minuto)
-1. Abrir el navegador en `http://127.0.0.1:8000/login`.
-2. Mostrar la pantalla de login con diseño responsive y el logotipo de seguridad.
-3. Señalar los botones de acceso rápido de prueba: hacer clic en **"Admin"** e iniciar sesión.
+Este guion está cronometrado para guiar la presentación práctica ante los profesores evaluadores de manera contundente y ordenada.
 
-#### Momento 2: Dashboard del Administrador y Analítica (2 minutos)
-1. Mostrar las 4 tarjetas de indicadores clave (Empresas, Inspecciones, Inspectores y Medidas Vencidas).
-2. Resaltar los gráficos interactivos en **Chart.js**:
-   - Evolución mensual de auditorías.
-   - Distribución porcentual por estado (Completadas, En Curso, Borradores).
-3. Explicar el panel de **Alertas de Seguridad Críticas** (medidas vencidas) y el ranking de empresas con más observaciones.
-4. Mostrar la sección **Gestión de Usuarios** y cómo se habilitan/deshabilitan cuentas o se editan matrículas.
+---
 
-#### Momento 3: Perspectiva del Inspector en Dispositivo Móvil (2 minutos)
-1. Cerrar sesión e ingresar con el usuario del **Licenciado en Seguridad** (`inspector@seguridad.local`).
-2. Redimensionar el navegador a vista móvil (o F12 -> modo emulador celular) para mostrar la interfaz responsive:
-   - El menú colapsable (hamburguesa).
-   - Los botones táctiles de gran tamaño (mínimo 44px de altura).
-   - La tarjeta de inicio rápido para trabajo en campo.
-3. Mostrar cómo el inspector visualiza únicamente sus empresas e inspecciones asignadas.
+#### Momento 1: Inicio de Sesión y Control de Accesos (1 minuto)
+1. **Abrir el navegador** en `http://127.0.0.1:8000`.
+2. **Explicar:** *"Presentamos la interfaz de acceso de HyS Control, construida con React 19 y Tailwind CSS, con un diseño SaaS contemporáneo y validación en tiempo real"*.
+3. **Demostración de Acceso Rápido:** Hacer clic en el botón **"Como Admin"** (completa `admin@hys.com` / `admin123`) e iniciar sesión.
+4. **Resaltar:** Señalar el mensaje de bienvenida emergente y la ausencia total de parpadeo en la carga gracias a Inertia.js.
 
-#### Momento 4: Flujo Completo de una Inspección en Campo (3 minutos)
-1. Presionar **"Iniciar Inspección"**.
-2. Seleccionar una empresa (ej. *Siderúrgica del Plata* o *Constructora Horizontes*).
-3. Mostrar cómo al crear la inspección, el sistema genera automáticamente los checklists clasificados en los 10 ejes técnicos (Herramientas, Electricidad, Autoelevadores, EPP, Incendio, etc.).
-4. **Evaluar ítems**:
-   - Presionar los botones **Cumple**, **No Cumple** o **No Aplica**.
-   - Mostrar cómo la barra de porcentaje de avance sube en tiempo real.
-   - Abrir el desplegable de un ítem para agregar una nota técnica y nivel de riesgo.
-5. **Cargar una Observación con Foto**:
-   - Ir a la pestaña *Observaciones con Fotos*.
-   - Registrar un hallazgo, indicar la ubicación (*Nave 2*), severidad (*Mayor*) y adjuntar una imagen.
-   - Activar la casilla para generar la medida correctiva en el mismo acto.
-6. **Revisar la Matriz de Medidas Correctivas**:
-   - Cambiar el estado de una medida a *"Completada"*.
-7. **Firmas y Cierre**:
-   - En la pestaña *Firmas y Cierre*, verificar la firma del inspector y consignar el receptor de la empresa.
-   - Pasar el estado a **"Completada"**.
+---
 
-#### Momento 5: Generación del Informe PDF y Verificación QR (2 minutos)
-1. Presionar el botón **"Descargar Informe Técnico PDF"**.
-2. Abrir el PDF generado y exhibir:
-   - Portada profesional y metadatos de la empresa e inspector matriculado.
-   - Gráficos y porcentajes de cumplimiento del resumen ejecutivo.
-   - Tabla de relevamiento completo de todos los puntos de la norma.
-   - Hallazgos detectados con severidades.
-   - Plan de medidas correctivas.
-   - Bloque de firmas oficiales.
-   - **Código QR de autenticidad**.
-3. Hacer clic en el enlace del QR o escanearlo con un celular para mostrar la **Página Pública de Certificado de Autenticidad**.
-4. Mostrar la exportación de listados a formato CSV / Excel.
-5. Conclusión y espacio para preguntas del jurado docente.
+#### Momento 2: Dashboard General y Monitoreo Estratégico (2 minutos)
+1. **Métricas Clave:** Mostrar las tarjetas superiores de KPI (Empresas registradas, Total de inspecciones, Medidas pendientes e Inspectores activos).
+2. **Alerta Crítica de Seguridad:** Señalar el banner de medidas vencidas: *"Si un extintor venció o un tablero eléctrico no se arregló en plazo, el sistema lo detecta automáticamente y lo destaca en rojo para los auditores"*.
+3. **Gráficos Interactivos:**
+   - Mostrar el gráfico de barras con la **evolución de inspecciones de los últimos 6 meses**.
+   - Mostrar el desglose porcentual de estados (*Completadas, En Progreso, Borradores*).
+4. **Módulo de Usuarios (Exclusivo Admin):** Ir a **"Usuarios & Técnicos"** y mostrar:
+   - Los números de matrícula profesional de los inspectores (`LIC-HYS-8492`).
+   - El botón de activación/desactivación instantánea de cuenta para seguridad operativa.
+
+---
+
+#### Momento 3: Perspectiva del Inspector en Dispositivo Móvil (1 minuto)
+1. **Cambio de Rol:** Cerrar sesión desde el menú de usuario e ingresar con el botón **"Como Inspector"** (`inspector@hys.com` / `inspector123`).
+2. **Modo Emulador Móvil:** Presionar `F12` en el navegador y conmutar a la vista de celular (iPhone o Galaxy) para que los profesores aprecien el diseño *Mobile-First*:
+   - Menú lateral hamburguesa retraíble con fondo traslúcido (*backdrop-blur*).
+   - Acceso directo para **"Iniciar Inspección en Terreno"**.
+   - Listado de empresas que ese inspector tiene efectivamente asignadas.
+
+---
+
+#### Momento 4: Flujo Completo de Auditoría en Campo (3 a 4 minutos)
+*(Regresar a pantalla normal o mantener en tablet)*.
+
+1. **Iniciar Inspección:**
+   - Hacer clic en **"Iniciar Inspección en Terreno"**.
+   - Seleccionar la empresa **"Siderúrgica del Plata S.A."** (Sector Metalmecánica).
+   - Indicar tipo: **General** y presionar **"Crear e Iniciar Evaluación"**.
+   - **Explicar:** *"En este instante, el backend generó automáticamente todos los ítems normativos correspondientes a la Ley 19.587 para el sector metalmecánico"*.
+2. **Pestaña 1 - Checklist Técnico Táctil:**
+   - Mostrar los botones grandes de evaluación: presionar **`[ Cumple ]`**, **`[ No Cumple ]`** y **`[ No Aplica ]`**.
+   - Señalar cómo la **barra de progreso y el porcentaje de cumplimiento** suben instantáneamente en pantalla sin recargar la página.
+   - En un ítem con *No Cumple*, mostrar el atajo rápido que invita a documentar el hallazgo.
+3. **Pestaña 2 - Observaciones con Evidencia Fotográfica:**
+   - Ir a la pestaña **"Observaciones & Fotos"** y hacer clic en **"Nueva Observación"**.
+   - Indicar severidad: **Mayor**, Ubicación: *Nave 2 - Taller de Maquinado*, y descripción técnica del defecto eléctrico.
+   - Adjuntar fotos de prueba y marcar la casilla *"Generar Medida Correctiva Inmediata"*.
+   - Mostrar la galería visual generada y hacer clic en una foto para demostrar el **visor Lightbox modal** ampliado.
+4. **Pestaña 3 - Medidas Correctivas:**
+   - Mostrar cómo la medida correctiva quedó vinculada con responsable, fecha de vencimiento y estado *Pendiente*.
+5. **Pestaña 4 - Firma Digital Manuscrita en Pantalla (Fase II):**
+   - Ir a la pestaña **"Firma Digital & Cierre"**.
+   - **Dibujar la firma con el mouse o con el dedo en la pantalla táctil** en el recuadro del Inspector.
+   - Escribir el nombre del representante de planta (*Ing. Roberto Gómez*) y estampar su firma en el segundo canvas.
+   - Presionar **"Guardar y Estampar Firmas en Informe"**.
+6. **Pestaña 5 - Geolocalización Satelital GPS (Fase II):**
+   - Ir a la pestaña **"Geolocalización GPS"**.
+   - Presionar **"Usar mi GPS actual"** y mostrar el mapa interactivo de OpenStreetMap con el marcador fijado sobre las coordenadas.
+
+---
+
+#### Momento 5: Cierre del Acta, Emisión del PDF y Validación QR (2 minutos)
+1. **Cerrar el Acta:** Presionar el botón superior **"Finalizar y Cerrar"**.
+2. **Generar Informe Oficial:** Hacer clic en **"Descargar Informe PDF"**.
+3. **Exhibir el PDF Oficial generado por DomPDF:**
+   - Mostrar la portada formal con datos de la empresa, inspector y matrícula.
+   - El resumen ejecutivo con los porcentajes de conformidad.
+   - La lista de cotejo completa categorizada.
+   - Las fotos de evidencia integradas en alta definición.
+   - Las **firmas manuscritas digitales** capturadas en el canvas.
+   - El **Código QR dinámico** estampado al pie del acta.
+4. **Verificación Pública de Autenticidad:**
+   - Abrir en una pestaña nueva la URL de verificación pública vinculada al código QR (`http://127.0.0.1:8000/verify/{token}`).
+   - **Explicar:** *"Cualquier persona que escanee el código QR físico con su teléfono accederá a este certificado digital oficial que garantiza la inalterabilidad y validez jurídica del informe"*.
+
+---
+
+### PARTE 3: Respuestas a Preguntas Probables de la Mesa Examinadora
+
+- **¿Por qué migraron a React si el programa original mencionaba AdminLTE?**  
+  *Respuesta:* AdminLTE 3 es una plantilla basada en Bootstrap 4/5 y jQuery que data de 2014, requiriendo recargas continuas de página que entorpecen la labor en campo. React 19 con Inertia.js y Tailwind CSS nos permite brindar una aplicación tipo SPA de alta velocidad, con componentes táctiles modernos (como el canvas de firma y los mapas) que elevan sustancialmente el perfil profesional del egresado, utilizando tecnologías 100% gratuitas y de máxima demanda en la industria.
+
+- **¿Cómo se asegura que no se pierdan datos si el inspector pierde conectividad momentánea?**  
+  *Respuesta:* Cada acción sobre el checklist se envía mediante peticiones asíncronas optimistas de Inertia.js preservando el estado de la pantalla. Además, la arquitectura está preparada para la Fase II de PWA Offline mediante Service Workers y almacenamiento local en IndexedDB.
+
+- **¿Cómo se garantiza que un informe en PDF no sea adulterado?**  
+  *Respuesta:* Mediante la combinación de la firma digital manuscrita en base64 y el token UUID criptográfico único estampado en el código QR. Cualquier modificación al PDF físico quedará en evidencia al contrastarlo contra los datos públicos alojados en el servidor institucional.
