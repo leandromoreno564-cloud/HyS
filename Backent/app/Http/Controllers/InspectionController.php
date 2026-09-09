@@ -69,7 +69,7 @@ class InspectionController extends Controller
         $user = Auth::user();
 
         $data = $request->validate([
-            'company_id' => ['required', 'exists:companies,id'],
+            'company_id' => ['required', 'exists:empresas,id'],
             'inspection_date' => ['required', 'date'],
             'type' => ['required', 'in:General,Específica,Seguimiento'],
             'start_time' => ['nullable', 'string'],
@@ -92,13 +92,13 @@ class InspectionController extends Controller
         // Generar items de checklist automáticamente según sector de la empresa y tipo de inspección (RF-27)
         $templateCategories = ChecklistCategory::with(['items' => function ($q) use ($company, $inspection) {
             $q->where(function ($sq) use ($company) {
-                $sq->whereNull('industry_sector')
-                   ->orWhere('industry_sector', $company->industry_sector);
+                $sq->whereNull('sector_industrial')
+                   ->orWhere('sector_industrial', $company->sector ?? $company->industry_sector);
             })->where(function ($tq) use ($inspection) {
-                $tq->whereNull('inspection_type')
-                   ->orWhere('inspection_type', $inspection->type);
+                $tq->whereNull('tipo_inspeccion')
+                   ->orWhere('tipo_inspeccion', $inspection->tipo ?? $inspection->type);
             });
-        }])->orderBy('order')->get();
+        }])->orderBy('orden')->get();
 
         foreach ($templateCategories as $cat) {
             foreach ($cat->items as $tmplItem) {

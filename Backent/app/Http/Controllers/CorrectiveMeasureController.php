@@ -79,7 +79,7 @@ class CorrectiveMeasureController extends Controller
             'deadline' => ['nullable', 'date'],
             'responsible_person' => ['nullable', 'string', 'max:255'],
             'estimated_cost' => ['nullable', 'numeric', 'min:0'],
-            'observation_id' => ['nullable', 'exists:observations,id'],
+            'observation_id' => ['nullable', 'exists:observacions,id'],
         ]);
 
         $data['inspection_id'] = $inspection->id;
