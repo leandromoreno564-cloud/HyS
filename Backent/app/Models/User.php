@@ -13,41 +13,16 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $table = 'usuarios';
-
     protected $fillable = [
-        'nombre',
         'name',
         'email',
         'password',
-        'rol_id',
         'role',
         'phone',
         'license_number',
-        'activo',
         'is_active',
         'avatar',
     ];
-
-    public function getNameAttribute(): string
-    {
-        return $this->attributes['nombre'] ?? $this->attributes['name'] ?? '';
-    }
-
-    public function setNameAttribute($value): void
-    {
-        $this->attributes['nombre'] = $value;
-    }
-
-    public function getRoleAttribute(): string
-    {
-        return ($this->attributes['rol_id'] ?? 2) == 1 ? 'admin' : 'inspector';
-    }
-
-    public function getIsActiveAttribute(): bool
-    {
-        return (bool) ($this->attributes['activo'] ?? $this->attributes['is_active'] ?? true);
-    }
 
     protected $hidden = [
         'password',
