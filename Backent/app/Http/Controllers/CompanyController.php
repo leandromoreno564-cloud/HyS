@@ -21,19 +21,19 @@ class CompanyController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('business_name', 'like', "%{$search}%")
-                  ->orWhere('tax_id', 'like', "%{$search}%")
-                  ->orWhere('contact_person', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%");
+                $q->where('razon_social', 'like', "%{$search}%")
+                  ->orWhere('cuit', 'like', "%{$search}%")
+                  ->orWhere('persona_contacto', 'like', "%{$search}%")
+                  ->orWhere('direccion', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('sector')) {
-            $query->where('industry_sector', $request->input('sector'));
+            $query->where('sector', $request->input('sector'));
         }
 
         if ($request->filled('status')) {
-            $query->where('is_active', $request->input('status') === 'active');
+            $query->where('activa', $request->input('status') === 'active');
         }
 
         // Si el admin pide ver papelera
@@ -42,13 +42,13 @@ class CompanyController extends Controller
         }
 
         $companies = $query->withCount('inspections')
-            ->orderBy('business_name')
+            ->orderBy('razon_social')
             ->paginate(10)
             ->withQueryString();
 
-        $sectors = Company::select('industry_sector')
+        $sectors = Company::select('sector')
             ->distinct()
-            ->pluck('industry_sector');
+            ->pluck('sector');
 
         return Inertia::render('Companies/Index', compact('companies', 'sectors'));
     }

@@ -24,30 +24,30 @@ class InspectionController extends Controller
         $query = Inspection::accessibleBy($user)->with(['company', 'user']);
 
         if ($request->filled('company_id')) {
-            $query->where('company_id', $request->input('company_id'));
+            $query->where('empresa_id', $request->input('company_id'));
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+            $query->where('estado', $request->input('status'));
         }
 
         if ($request->filled('type')) {
-            $query->where('type', $request->input('type'));
+            $query->where('tipo', $request->input('type'));
         }
 
         if ($request->filled('date_from')) {
-            $query->whereDate('inspection_date', '>=', $request->input('date_from'));
+            $query->whereDate('fecha_inicio', '>=', $request->input('date_from'));
         }
 
         if ($request->filled('date_to')) {
-            $query->whereDate('inspection_date', '<=', $request->input('date_to'));
+            $query->whereDate('fecha_inicio', '<=', $request->input('date_to'));
         }
 
-        $inspections = $query->latest('inspection_date')
+        $inspections = $query->latest('fecha_inicio')
             ->paginate(10)
             ->withQueryString();
 
-        $companies = Company::accessibleBy($user)->active()->orderBy('business_name')->get();
+        $companies = Company::accessibleBy($user)->active()->orderBy('razon_social')->get();
 
         return Inertia::render('Inspections/Index', compact('inspections', 'companies'));
     }
@@ -202,7 +202,7 @@ class InspectionController extends Controller
 
         if ($data['status'] === 'Completada') {
             // Verificar si hay items pendientes
-            $pendingCount = $inspection->checklistItems()->where('status', 'Pendiente')->count();
+            $pendingCount = $inspection->checklistItems()->where('estado', 'Pendiente')->count();
             if ($pendingCount > 0 && !$request->boolean('force')) {
                 return back()->with('warning', "Aún quedan {$pendingCount} ítems del checklist en estado 'Pendiente'. Puedes evaluarlos o forzar el cierre.");
             }

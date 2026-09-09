@@ -32,23 +32,23 @@ class DashboardController extends Controller
         $totalCompanies = Company::count();
         $totalUsers = User::count();
         $totalInspections = Inspection::count();
-        $completedInspections = Inspection::where('status', 'Completada')->count();
-        $inProgressInspections = Inspection::where('status', 'En Progreso')->count();
+        $completedInspections = Inspection::where('estado', 'Completada')->count();
+        $inProgressInspections = Inspection::where('estado', 'En Progreso')->count();
         
-        $pendingMeasures = CorrectiveMeasure::whereIn('status', ['Pendiente', 'En Progreso'])->count();
-        $overdueMeasures = CorrectiveMeasure::whereIn('status', ['Pendiente', 'En Progreso'])
-            ->whereNotNull('deadline')
-            ->where('deadline', '<', Carbon::today())
+        $pendingMeasures = CorrectiveMeasure::whereIn('estado', ['Pendiente', 'En Progreso'])->count();
+        $overdueMeasures = CorrectiveMeasure::whereIn('estado', ['Pendiente', 'En Progreso'])
+            ->whereNotNull('fecha_limite')
+            ->where('fecha_limite', '<', Carbon::today())
             ->count();
 
         // Alertas de medidas correctivas críticas o vencidas
         $criticalAlerts = CorrectiveMeasure::with(['inspection.company', 'observation'])
-            ->whereIn('status', ['Pendiente', 'En Progreso'])
+            ->whereIn('estado', ['Pendiente', 'En Progreso'])
             ->where(function ($q) {
-                $q->where('priority', 'Crítica')
-                  ->orWhere('deadline', '<', Carbon::today());
+                $q->where('prioridad', 'Crítica')
+                  ->orWhere('fecha_limite', '<', Carbon::today());
             })
-            ->orderBy('deadline', 'asc')
+            ->orderBy('fecha_limite', 'asc')
             ->limit(5)
             ->get();
 
@@ -59,18 +59,18 @@ class DashboardController extends Controller
             $monthDate = Carbon::now()->subMonths($i);
             $monthName = $monthDate->translatedFormat('M Y');
             $months[] = ucfirst($monthName);
-            $count = Inspection::whereYear('inspection_date', $monthDate->year)
-                ->whereMonth('inspection_date', $monthDate->month)
+            $count = Inspection::whereYear('fecha_inicio', $monthDate->year)
+                ->whereMonth('fecha_inicio', $monthDate->month)
                 ->count();
             $monthlyCounts[] = $count;
         }
 
         // Inspecciones por estado para gráfico de torta
         $statusCounts = [
-            'Completadas' => Inspection::where('status', 'Completada')->count(),
-            'En Progreso' => Inspection::where('status', 'En Progreso')->count(),
-            'Borradores' => Inspection::where('status', 'Borrador')->count(),
-            'Canceladas' => Inspection::where('status', 'Cancelada')->count(),
+            'Completadas' => Inspection::where('estado', 'Completada')->count(),
+            'En Progreso' => Inspection::where('estado', 'En Progreso')->count(),
+            'Borradores' => Inspection::where('estado', 'Borrador')->count(),
+            'Canceladas' => Inspection::where('estado', 'Cancelada')->count(),
         ];
 
         // Ranking de empresas con más observaciones
@@ -104,33 +104,33 @@ class DashboardController extends Controller
 
     protected function inspectorDashboard(User $user)
     {
-        $myInspectionsQuery = Inspection::where('user_id', $user->id);
+        $myInspectionsQuery = Inspection::where('inspector_id', $user->id);
 
         $totalMyInspections = (clone $myInspectionsQuery)->count();
-        $inProgressCount = (clone $myInspectionsQuery)->where('status', 'En Progreso')->count();
-        $completedCount = (clone $myInspectionsQuery)->where('status', 'Completada')->count();
+        $inProgressCount = (clone $myInspectionsQuery)->where('estado', 'En Progreso')->count();
+        $completedCount = (clone $myInspectionsQuery)->where('estado', 'Completada')->count();
 
         // Observaciones críticas activas en sus inspecciones
         $criticalObsCount = Observation::whereHas('inspection', function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        })->whereIn('severity', ['Crítico', 'Mayor'])->count();
+            $q->where('inspector_id', $user->id);
+        })->whereIn('severidad', ['Crítico', 'Mayor'])->count();
 
         // Medidas correctivas pendientes en sus inspecciones
         $myPendingMeasures = CorrectiveMeasure::whereHas('inspection', function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        })->whereIn('status', ['Pendiente', 'En Progreso'])->count();
+            $q->where('inspector_id', $user->id);
+        })->whereIn('estado', ['Pendiente', 'En Progreso'])->count();
 
         // Alertas inmediatas
         $myAlerts = CorrectiveMeasure::with(['inspection.company'])
             ->whereHas('inspection', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
+                $q->where('inspector_id', $user->id);
             })
-            ->whereIn('status', ['Pendiente', 'En Progreso'])
+            ->whereIn('estado', ['Pendiente', 'En Progreso'])
             ->where(function ($q) {
-                $q->where('priority', 'Crítica')
-                  ->orWhere('deadline', '<=', Carbon::today()->addDays(3));
+                $q->where('prioridad', 'Crítica')
+                  ->orWhere('fecha_limite', '<=', Carbon::today()->addDays(3));
             })
-            ->orderBy('deadline', 'asc')
+            ->orderBy('fecha_limite', 'asc')
             ->limit(5)
             ->get();
 
@@ -141,16 +141,16 @@ class DashboardController extends Controller
             $monthDate = Carbon::now()->subMonths($i);
             $monthName = $monthDate->translatedFormat('M Y');
             $months[] = ucfirst($monthName);
-            $count = Inspection::where('user_id', $user->id)
-                ->whereYear('inspection_date', $monthDate->year)
-                ->whereMonth('inspection_date', $monthDate->month)
+            $count = Inspection::where('inspector_id', $user->id)
+                ->whereYear('fecha_inicio', $monthDate->year)
+                ->whereMonth('fecha_inicio', $monthDate->month)
                 ->count();
             $monthlyCounts[] = $count;
         }
 
         // Mis inspecciones recientes
         $recentInspections = Inspection::with(['company'])
-            ->where('user_id', $user->id)
+            ->where('inspector_id', $user->id)
             ->latest()
             ->limit(6)
             ->get();

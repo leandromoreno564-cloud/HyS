@@ -236,4 +236,18 @@ class Inspection extends Model
             'rate' => $complianceRate,
         ];
     }
+
+    public function scopeAccessibleBy(Builder $query, User $user): Builder
+    {
+        if ($user->role === 'admin' || $user->rol_id == 1 || (method_exists($user, 'isAdmin') && $user->isAdmin())) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $sub) use ($user) {
+            $sub->where('inspector_id', $user->id)
+                ->orWhereHas('company', function (Builder $c) use ($user) {
+                    $c->accessibleBy($user);
+                });
+        });
+    }
 }

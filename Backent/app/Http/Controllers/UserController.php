@@ -19,9 +19,9 @@ class UserController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
+                $q->where('nombre', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('license_number', 'like', "%{$search}%");
+                  ->orWhere('matricula', 'like', "%{$search}%");
             });
         }
 
@@ -30,11 +30,11 @@ class UserController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('is_active', $request->input('status') === 'active');
+            $query->where('activo', $request->input('status') === 'active');
         }
 
         $users = $query->withCount(['inspections', 'assignedCompanies'])
-            ->orderBy('name')
+            ->orderBy('nombre')
             ->paginate(10)
             ->withQueryString();
 
