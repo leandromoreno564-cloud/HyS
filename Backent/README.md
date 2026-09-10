@@ -1,59 +1,123 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Plataforma Web de Gestión Integral de Inspecciones de Higiene y Seguridad Laboral (HyS Control)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[![Laravel 12](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
+[![React 19](https://img.shields.io/badge/React-19.x-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev)
+[![Inertia.js](https://img.shields.io/badge/Inertia.js-v2.0-9553E9?style=for-the-badge&logo=inertia&logoColor=white)](https://inertiajs.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![MySQL 8](https://img.shields.io/badge/MySQL-8.0-00758F?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com)
 
-## About Laravel
+**Proyecto Educativo Institucional**  
+**Institución:** Instituto de Educación Superior "Nuevo Horizonte"  
+**Carrera Ejecutora:** Tecnicatura Superior en Desarrollo de Software (2.° y 3.° año)  
+**Carrera Destinataria:** Tecnicatura Superior en Seguridad e Higiene Laboral  
+**Espacios Curriculares:** Práctica Profesionalizante I y Práctica Profesionalizante II  
+**Equipo Docente Tutor:** Prof. Aquino Carolina, Prof. Figueroa Franco, Prof. Huanca Elio  
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📌 Descripción del Proyecto
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+En el ámbito profesional de la Seguridad y la Higiene Laboral, el relevamiento tradicional mediante formularios impresos en papel y planillas estáticas ocasiona pérdida de datos, retrasos significativos en la redacción de informes y dificultades para el seguimiento de medidas correctivas. 
 
-## Learning Laravel
+**HyS Control** es una solución web de nivel empresarial y diseño responsive mobile-first que automatiza el ciclo integral de inspecciones:
+1. **Control de Empresas y Establecimientos**: Padrón clasificado por sector industrial con asignación de inspectores matriculados y borrado lógico (*Soft Deletes*).
+2. **Motor de Checklists Normativos**: Generación automática de listas de cotejo técnicas según la normativa vigente (Ley Nacional 19.587, Dec. 351/79 y Dec. 911/96) con cálculo dinámico de avance al 100%.
+3. **Evidencias Fotográficas & Hallazgos**: Documentación gráfica con nivel de severidad (*Menor, Moderada, Mayor, Crítica*) y visor Lightbox interactivo.
+4. **Matriz de Medidas Correctivas**: Planes de mitigación técnica con fechas límite, responsables asignados, estados y estimación de costos.
+5. **Firma Digital Manuscrita en Pantalla (Fase II)**: Canvas interactivo táctil para firma del inspector y representante de la empresa en el celular o tablet.
+6. **Geolocalización GPS y Mapas (Fase II)**: Captura satelital de coordenadas y trazado en OpenStreetMap interactivo con Leaflet.
+7. **Informes Oficiales en PDF con Verificación QR (Fase II)**: Emisión instantánea con DomPDF y validación pública inalterable en `/verify/{token}`.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🚀 Tecnologías Utilizadas
 
-## Laravel Sponsors
+- **Backend:** PHP 8.2+ / 8.4+, Laravel 12.x, Eloquent ORM, Bcrypt, Middleware RBAC (`role:admin`, `role:inspector`, `active`).
+- **Frontend:** React 19, Inertia.js v2, Tailwind CSS v4, Lucide React Icons.
+- **Herramientas de Compilación:** Vite 7.x, `@vitejs/plugin-react`, `@tailwindcss/vite`.
+- **Base de Datos:** MySQL 8.0+ / 8.4+ (Base de datos: `hys_control`).
+- **Reportes:** Barryvdh DomPDF 3.x y exportación tabular CSV UTF-8.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## ⚙️ Instalación y Puesta en Marcha
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 1. Clonar el repositorio
+```bash
+git clone <url-del-repositorio>
+cd sistema-inspecciones-hys
+```
 
-## Contributing
+### 2. Instalar dependencias de PHP y Node
+```bash
+composer install
+npm install
+```
+*(En Windows PowerShell utilizar `npm.cmd install` si aplica la política de scripts).*
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Configuración de Entorno (`.env`)
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+Asegúrese de configurar la base de datos en `.env`:
+```ini
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=hys_control
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-## Code of Conduct
+### 4. Enlace simbólico de almacenamiento
+```bash
+php artisan storage:link
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 5. Migraciones y Datos de Prueba (Seeders)
+```bash
+php artisan migrate:fresh --seed
+```
 
-## Security Vulnerabilities
+### 6. Compilar activos de React
+```bash
+npm run build
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 7. Iniciar el servidor local
+```bash
+php artisan serve
+```
+O simplemente ejecutar el archivo `iniciar_sistema.bat`. Acceder en el navegador a **`http://127.0.0.1:8000`**.
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🔑 Credenciales de Prueba (Demo)
+
+| Rol | Correo Electrónico | Contraseña | Matrícula / Función |
+| :--- | :--- | :--- | :--- |
+| **Administrador** | `admin@hys.com` *(o admin@seguridad.local)* | `admin123` *(o password)* | MAT-NAC-00192 (Gestión global) |
+| **Inspector Técnico** | `inspector@hys.com` *(o inspector@seguridad.local)* | `inspector123` *(o password)* | LIC-HYS-8492 (Auditor en campo) |
+
+*(En la pantalla de inicio de sesión se incluyen botones de acceso rápido de un clic para pruebas ágiles).*
+
+---
+
+## 🧪 Pruebas Automatizadas
+
+Para ejecutar la batería de pruebas de backend con aserciones de Inertia:
+```bash
+php artisan test
+```
+**Resultado:** 9 pruebas pasadas (49 aserciones exitosas).
+
+---
+
+## 📚 Documentación y Entregables
+
+En la carpeta [`entregables/`](./entregables) se encuentran los manuales y recursos completos del proyecto:
+- [**MANUAL_TECNICO.md**](./entregables/MANUAL_TECNICO.md): Arquitectura detallada, requerimientos de servidor, modelo relacional y seguridad.
+- [**MANUAL_USUARIO.md**](./entregables/MANUAL_USUARIO.md): Guía práctica ilustrada paso a paso para administradores e inspectores.
+- [**PRESENTACION_Y_DEMO.md**](./entregables/PRESENTACION_Y_DEMO.md): Estructura de diapositivas y guion de demostración cronometrado para la mesa examinadora.
+- [**base_de_datos.sql**](./entregables/base_de_datos.sql): Script SQL completo con estructura y datos de prueba.
