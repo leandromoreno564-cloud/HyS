@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'usuarios';
 
@@ -75,7 +76,7 @@ class User extends Authenticatable
 
     public function assignedCompanies(): BelongsToMany
     {
-        return $this->belongsToMany(Company::class, 'company_user')->withTimestamps();
+        return $this->belongsToMany(Company::class, 'empresa_usuario', 'usuario_id', 'empresa_id')->withTimestamps();
     }
 
     public function createdCompanies(): HasMany

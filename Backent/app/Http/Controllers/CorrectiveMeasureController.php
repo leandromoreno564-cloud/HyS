@@ -26,7 +26,7 @@ class CorrectiveMeasureController extends Controller
                   ->orWhereHas('company', function ($cq) use ($user) {
                       $cq->where('created_by', $user->id)
                          ->orWhereHas('inspectors', function ($iq) use ($user) {
-                             $iq->where('users.id', $user->id);
+                             $iq->where('usuarios.id', $user->id);
                          });
                   });
             });

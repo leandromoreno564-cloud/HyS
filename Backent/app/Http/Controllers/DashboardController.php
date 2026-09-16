@@ -74,9 +74,7 @@ class DashboardController extends Controller
         ];
 
         // Ranking de empresas con más observaciones
-        $topCompaniesWithObs = Company::withCount(['inspections as observations_count' => function ($q) {
-                $q->join('observations', 'inspections.id', '=', 'observations.inspection_id');
-            }])
+        $topCompaniesWithObs = Company::withCount('observations')
             ->orderByDesc('observations_count')
             ->limit(5)
             ->get();
