@@ -117,6 +117,7 @@ class ApiInspectionController extends Controller
 
     /**
      * Subir evidencia fotográfica tomada con la cámara de Android (multipart/form-data).
+     * Soporta subida individual ('foto' o 'file') o en lote ('fotos' como array de imágenes).
      */
     public function uploadEvidence(Request $request, $inspectionId): JsonResponse
     {
@@ -125,33 +126,86 @@ class ApiInspectionController extends Controller
         $inspection = Inspection::accessibleBy($user)->findOrFail($inspectionId);
 
         $request->validate([
-            'foto' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'], // hasta 10MB
+            'foto' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
+            'fotos' => ['nullable', 'array'],
+            'fotos.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
+            'file' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
             'item_inspeccion_id' => ['nullable', 'exists:items_inspeccion,id'],
+            'observacion_id' => ['nullable', 'exists:observacions,id'],
             'descripcion' => ['nullable', 'string', 'max:500'],
             'severidad' => ['nullable', 'in:Bajo,Medio,Alto,Crítico'],
             'ubicacion' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $path = $request->file('foto')->store('evidencias/' . $inspection->id, 'public');
-        $publicUrl = Storage::disk('public')->url($path);
+        // Recolectar todos los archivos enviados (sea uno solo o múltiples)
+        $uploadedFiles = [];
+        if ($request->hasFile('fotos')) {
+            $uploadedFiles = $request->file('fotos');
+        } elseif ($request->hasFile('foto')) {
+            $uploadedFiles = [$request->file('foto')];
+        } elseif ($request->hasFile('file')) {
+            $uploadedFiles = [$request->file('file')];
+        }
 
-        // Registrar o actualizar observación con la foto
-        $observation = Observation::create([
-            'inspeccion_id' => $inspection->id,
-            'item_inspeccion_id' => $request->input('item_inspeccion_id'),
-            'tipo' => 'Evidencia Fotográfica',
-            'severidad' => $request->input('severidad', 'Medio'),
-            'ubicacion' => $request->input('ubicacion'),
-            'descripcion' => $request->input('descripcion', 'Evidencia capturada en campo'),
-            'fotos' => [$path],
-        ]);
+        if (empty($uploadedFiles)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se recibió ninguna imagen para subir.',
+            ], 422);
+        }
+
+        $savedPaths = [];
+        $savedUrls = [];
+
+        foreach ($uploadedFiles as $file) {
+            $path = $file->store('evidencias/' . $inspection->id, 'public');
+            $savedPaths[] = $path;
+            $savedUrls[] = Storage::disk('public')->url($path);
+        }
+
+        $itemId = $request->input('item_inspeccion_id');
+        $obsId = $request->input('observacion_id');
+
+        // 1. Si está vinculado a un ítem de inspección, actualizar su array de fotos
+        if ($itemId) {
+            $item = InspectionChecklistItem::where('inspeccion_id', $inspection->id)->find($itemId);
+            if ($item) {
+                $currentFotos = is_array($item->fotos) ? $item->fotos : [];
+                $item->fotos = array_values(array_unique(array_merge($currentFotos, $savedPaths)));
+                $item->save();
+            }
+        }
+
+        // 2. Si se especificó una observación existente, anexar las fotos
+        if ($obsId) {
+            $observation = Observation::where('inspeccion_id', $inspection->id)->find($obsId);
+            if ($observation) {
+                $currentFotos = is_array($observation->fotos) ? $observation->fotos : [];
+                $observation->fotos = array_values(array_unique(array_merge($currentFotos, $savedPaths)));
+                if ($request->filled('descripcion')) {
+                    $observation->descripcion = $request->input('descripcion');
+                }
+                $observation->save();
+            }
+        } else {
+            // Si no existe observación previa, crear una nueva con el lote de fotos
+            $observation = Observation::create([
+                'inspeccion_id' => $inspection->id,
+                'item_inspeccion_id' => $itemId,
+                'tipo' => 'Evidencia Fotográfica',
+                'severidad' => $request->input('severidad', 'Medio'),
+                'ubicacion' => $request->input('ubicacion'),
+                'descripcion' => $request->input('descripcion', 'Evidencia capturada con la cámara en campo'),
+                'fotos' => $savedPaths,
+            ]);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Foto subida y registrada exitosamente',
-            'path' => $path,
-            'url' => $publicUrl,
-            'observation' => $observation,
+            'message' => count($savedPaths) === 1 ? 'Foto subida correctamente' : count($savedPaths) . ' fotos subidas correctamente',
+            'paths' => $savedPaths,
+            'urls' => $savedUrls,
+            'observation' => $observation ?? null,
         ], 201);
     }
 
