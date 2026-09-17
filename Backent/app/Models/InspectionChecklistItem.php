@@ -36,6 +36,8 @@ class InspectionChecklistItem extends Model
         'photos',
         'es_personalizado',
         'is_custom',
+        'numero_pregunta',
+        'fecha_regularizacion',
     ];
 
     protected $casts = [
@@ -43,6 +45,7 @@ class InspectionChecklistItem extends Model
         'photos' => 'array',
         'es_personalizado' => 'boolean',
         'is_custom' => 'boolean',
+        'fecha_regularizacion' => 'date',
     ];
 
     public function getInspectionIdAttribute(): int

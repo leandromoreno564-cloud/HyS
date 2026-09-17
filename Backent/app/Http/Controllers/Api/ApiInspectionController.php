@@ -84,23 +84,39 @@ class ApiInspectionController extends Controller
             'observacion' => ['nullable', 'string'],
             'nivel_riesgo' => ['nullable', 'in:Bajo,Medio,Alto,Crítico'],
             'notas' => ['nullable', 'string'],
+            'fecha_regularizacion' => ['nullable', 'date'],
         ]);
 
         $item->update($data);
 
-        // Si es "No Cumple" y se envía observación, podemos crear o vincular una observación
-        if ($data['estado'] === 'No Cumple' && !empty($data['observacion'])) {
-            Observation::firstOrCreate(
+        // Si es "No Cumple", registrar observación y medida correctiva con fecha de regularización
+        if ($data['estado'] === 'No Cumple') {
+            $obs = Observation::firstOrCreate(
                 [
                     'inspeccion_id' => $inspection->id,
                     'item_inspeccion_id' => $item->id,
                 ],
                 [
-                    'tipo' => 'Hallazgo Negativo',
+                    'tipo' => 'No Conformidad RGRL',
                     'severidad' => $data['nivel_riesgo'] ?? 'Medio',
-                    'descripcion' => $data['observacion'],
+                    'descripcion' => $data['observacion'] ?? 'Incumplimiento detectado en: ' . $item->titulo,
                 ]
             );
+
+            if (!empty($data['fecha_regularizacion'])) {
+                \App\Models\CorrectiveMeasure::updateOrCreate(
+                    [
+                        'inspeccion_id' => $inspection->id,
+                        'observacion_id' => $obs->id,
+                    ],
+                    [
+                        'descripcion' => 'Regularizar condición normativa: ' . $item->titulo,
+                        'prioridad' => $data['nivel_riesgo'] === 'Crítico' ? 'Crítica' : ($data['nivel_riesgo'] === 'Alto' ? 'Alta' : 'Media'),
+                        'fecha_limite' => $data['fecha_regularizacion'],
+                        'estado' => 'Pendiente',
+                    ]
+                );
+            }
         }
 
         // Recalcular progreso

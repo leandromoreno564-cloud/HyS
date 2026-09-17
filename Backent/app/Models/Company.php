@@ -40,6 +40,10 @@ class Company extends Model
         'created_by',
         'activa',
         'is_active',
+        'numero_contrato',
+        'numero_establecimiento',
+        'art_nombre',
+        'superficie_m2',
     ];
 
     protected $casts = [

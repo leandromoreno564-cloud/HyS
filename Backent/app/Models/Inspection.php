@@ -42,11 +42,14 @@ class Inspection extends Model
         'nombre_firmante_empresa',
         'signature_company_name',
         'token',
+        'formulario_tipo',
+        'proxima_inspeccion_sugerida',
     ];
 
     protected $casts = [
         'fecha_inicio' => 'datetime',
         'fecha_fin' => 'datetime',
+        'proxima_inspeccion_sugerida' => 'date',
         'porcentaje_avance' => 'integer',
         'progress_percentage' => 'integer',
     ];
