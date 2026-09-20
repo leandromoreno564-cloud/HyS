@@ -1,20 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from '@inertiajs/react';
-import { ShieldCheck, Lock, Mail, User, Phone, BadgeCheck, ArrowRight } from 'lucide-react';
+import {
+    ShieldCheck,
+    Lock,
+    Mail,
+    User,
+    Phone,
+    BadgeCheck,
+    ArrowRight,
+    Eye,
+    EyeOff,
+    IdCard,
+    FileDigit,
+    Camera,
+} from 'lucide-react';
 
 export default function Register() {
     const { data, setData, post, processing, errors } = useForm({
-        name: '',
+        first_name: '',
+        last_name: '',
         email: '',
+        dni: '',
+        legajo: '',
         phone: '',
         license_number: '',
         password: '',
         password_confirmation: '',
+        avatar: null,
     });
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
+    const [avatarPreview, setAvatarPreview] = useState(null);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/register');
+        post('/register', { forceFormData: true });
+    };
+
+    const handleAvatarChange = (e) => {
+        const file = e.target.files?.[0] || null;
+        setData('avatar', file);
+        setAvatarPreview(file ? URL.createObjectURL(file) : null);
     };
 
     return (
@@ -43,30 +70,77 @@ export default function Register() {
                         <BadgeCheck className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
                         <p className="text-xs text-amber-700">
                             Tu cuenta quedará <strong>pendiente de aprobación</strong>. Un administrador
-                            debe habilitarla antes de que puedas ingresar al sistema.
+                            debe habilitarla antes de que puedas ingresar al sistema. Te avisaremos
+                            por correo el resultado.
                         </p>
                     </div>
 
                     <form className="space-y-4" onSubmit={handleSubmit}>
-                        {/* Nombre */}
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
-                                Nombre Completo
-                            </label>
-                            <div className="mt-1.5 relative rounded-xl shadow-xs">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                                    <User className="w-4 h-4" />
+                        {/* Foto de perfil */}
+                        <div className="flex justify-center">
+                            <label className="cursor-pointer group">
+                                <div className="w-20 h-20 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden group-hover:border-blue-500 transition-colors">
+                                    {avatarPreview ? (
+                                        <img src={avatarPreview} alt="Vista previa" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <Camera className="w-6 h-6 text-slate-400" />
+                                    )}
                                 </div>
                                 <input
-                                    type="text"
-                                    value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    placeholder="Lic. Nombre Apellido"
-                                    required
-                                    className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/webp"
+                                    onChange={handleAvatarChange}
+                                    className="hidden"
                                 />
+                                <p className="mt-1.5 text-[11px] text-center text-slate-500 font-semibold">
+                                    Foto de perfil
+                                </p>
+                            </label>
+                        </div>
+                        {errors.avatar && (
+                            <p className="text-xs text-rose-600 font-medium text-center">{errors.avatar}</p>
+                        )}
+
+                        {/* Nombre y Apellido */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                    Nombre
+                                </label>
+                                <div className="mt-1.5 relative rounded-xl shadow-xs">
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <User className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={data.first_name}
+                                        onChange={(e) => setData('first_name', e.target.value)}
+                                        placeholder="Franco"
+                                        required
+                                        className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
+                                    />
+                                </div>
+                                {errors.first_name && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.first_name}</p>}
                             </div>
-                            {errors.name && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.name}</p>}
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                    Apellido
+                                </label>
+                                <div className="mt-1.5 relative rounded-xl shadow-xs">
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <User className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={data.last_name}
+                                        onChange={(e) => setData('last_name', e.target.value)}
+                                        placeholder="Figueroa"
+                                        required
+                                        className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
+                                    />
+                                </div>
+                                {errors.last_name && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.last_name}</p>}
+                            </div>
                         </div>
 
                         {/* Email */}
@@ -88,6 +162,49 @@ export default function Register() {
                                 />
                             </div>
                             {errors.email && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.email}</p>}
+                        </div>
+
+                        {/* DNI y Legajo */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                    DNI
+                                </label>
+                                <div className="mt-1.5 relative rounded-xl shadow-xs">
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <IdCard className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={data.dni}
+                                        onChange={(e) => setData('dni', e.target.value)}
+                                        placeholder="30123456"
+                                        required
+                                        className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
+                                    />
+                                </div>
+                                {errors.dni && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.dni}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                    Legajo
+                                </label>
+                                <div className="mt-1.5 relative rounded-xl shadow-xs">
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <FileDigit className="w-4 h-4" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={data.legajo}
+                                        onChange={(e) => setData('legajo', e.target.value)}
+                                        placeholder="LEG-0000"
+                                        required
+                                        className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
+                                    />
+                                </div>
+                                {errors.legajo && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.legajo}</p>}
+                            </div>
                         </div>
 
                         {/* Teléfono y Matrícula */}
@@ -142,14 +259,26 @@ export default function Register() {
                                     <Lock className="w-4 h-4" />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     placeholder="••••••••"
                                     required
-                                    className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
+                                    className="block w-full pl-10 pr-10 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600"
+                                    tabIndex={-1}
+                                    title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
                             </div>
+                            <p className="mt-1.5 text-[11px] text-slate-400">
+                                Mínimo 8 caracteres, con al menos un número y un símbolo.
+                            </p>
                             {errors.password && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.password}</p>}
                         </div>
 
@@ -163,13 +292,22 @@ export default function Register() {
                                     <Lock className="w-4 h-4" />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={showPasswordConfirmation ? 'text' : 'password'}
                                     value={data.password_confirmation}
                                     onChange={(e) => setData('password_confirmation', e.target.value)}
                                     placeholder="••••••••"
                                     required
-                                    className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
+                                    className="block w-full pl-10 pr-10 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPasswordConfirmation((v) => !v)}
+                                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600"
+                                    tabIndex={-1}
+                                    title={showPasswordConfirmation ? 'Ocultar contraseña' : 'Ver contraseña'}
+                                >
+                                    {showPasswordConfirmation ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
                             </div>
                         </div>
 

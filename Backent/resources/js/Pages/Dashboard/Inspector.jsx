@@ -8,10 +8,8 @@ import {
     Clock, 
     Building2, 
     AlertTriangle, 
-    Plus, 
     CheckCircle2, 
-    Calendar,
-    ArrowUpRight
+    Calendar
 } from 'lucide-react';
 
 export default function InspectorDashboard({
@@ -43,15 +41,6 @@ export default function InspectorDashboard({
                         <p className="text-xs text-slate-300 mt-1">
                             Gestiona tus checklists técnicos, observaciones con fotos y medidas correctivas.
                         </p>
-                    </div>
-                    <div>
-                        <Link
-                            href="/inspections/create"
-                            className="inline-flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all hover:scale-105"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Iniciar Inspección en Terreno
-                        </Link>
                     </div>
                 </div>
 
@@ -102,12 +91,6 @@ export default function InspectorDashboard({
                                         Accede rápidamente al checklist para continuar evaluando
                                     </p>
                                 </div>
-                                <Link
-                                    href="/inspections"
-                                    className="text-xs font-semibold text-blue-600 hover:text-blue-700"
-                                >
-                                    Ver todas
-                                </Link>
                             </div>
 
                             <div className="overflow-x-auto">
@@ -118,7 +101,6 @@ export default function InspectorDashboard({
                                             <th className="pb-3">Fecha</th>
                                             <th className="pb-3">Estado</th>
                                             <th className="pb-3">Avance</th>
-                                            <th className="pb-3 text-right">Acción</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -147,19 +129,11 @@ export default function InspectorDashboard({
                                                             </span>
                                                         </div>
                                                     </td>
-                                                    <td className="py-3 text-right">
-                                                        <Link
-                                                            href={`/inspections/${ins.id}`}
-                                                            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg transition-colors"
-                                                        >
-                                                            Abrir
-                                                        </Link>
-                                                    </td>
                                                 </tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={5} className="py-6 text-center text-slate-400 text-xs">
+                                                <td colSpan={4} className="py-6 text-center text-slate-400 text-xs">
                                                     No tienes inspecciones activas asignadas.
                                                 </td>
                                             </tr>
@@ -226,13 +200,6 @@ export default function InspectorDashboard({
                                                     {comp.industry_sector} • CUIT: {comp.tax_id}
                                                 </p>
                                             </div>
-                                            <Link
-                                                href={`/inspections/create?company_id=${comp.id}`}
-                                                className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg"
-                                                title="Nueva Inspección"
-                                            >
-                                                <Plus className="w-4 h-4" />
-                                            </Link>
                                         </div>
                                     ))
                                 ) : (
@@ -267,12 +234,6 @@ export default function InspectorDashboard({
                                             </p>
                                             <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                                                 <span>Plazo: {alert.deadline ? new Date(alert.deadline).toLocaleDateString('es-AR') : 'Sin fecha'}</span>
-                                                <Link
-                                                    href={`/inspections/${alert.inspection_id}`}
-                                                    className="font-semibold text-blue-600 hover:underline"
-                                                >
-                                                    Ver inspección
-                                                </Link>
                                             </div>
                                         </div>
                                     ))

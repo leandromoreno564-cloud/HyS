@@ -190,21 +190,13 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
                                                             <RotateCcw className="w-4 h-4" />
                                                         </button>
                                                     ) : (
-                                                        <>
-                                                            <Link
-                                                                href={`/inspections/create?company_id=${company.id}`}
-                                                                className="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold transition-colors"
-                                                            >
-                                                                Inspeccionar
-                                                            </Link>
-                                                            <Link
-                                                                href={`/companies/${company.id}`}
-                                                                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
-                                                                title="Ver Ficha"
-                                                            >
-                                                                <ExternalLink className="w-4 h-4" />
-                                                            </Link>
-                                                        </>
+                                                        <Link
+                                                            href={`/companies/${company.id}`}
+                                                            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
+                                                            title="Ver Ficha"
+                                                        >
+                                                            <ExternalLink className="w-4 h-4" />
+                                                        </Link>
                                                     )}
                                                 </div>
                                             </td>

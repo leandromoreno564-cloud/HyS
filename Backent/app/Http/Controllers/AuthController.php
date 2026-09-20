@@ -33,22 +33,34 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Password::min(6)],
+            'dni' => ['required', 'string', 'max:20', 'unique:users'],
+            'legajo' => ['required', 'string', 'max:50', 'unique:users'],
+            'password' => ['required', 'confirmed', Password::min(8)->numbers()->symbols()],
             'phone' => ['nullable', 'string', 'max:50'],
             'license_number' => ['nullable', 'string', 'max:100'],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ]);
 
         $newUser = User::create([
-            'name' => $data['name'],
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
             'email' => $data['email'],
+            'dni' => $data['dni'],
+            'legajo' => $data['legajo'],
             'password' => Hash::make($data['password']),
             'phone' => $data['phone'] ?? null,
             'license_number' => $data['license_number'] ?? null,
             'role' => 'inspector', // El auto-registro solo crea Licenciados, nunca administradores
             'is_active' => false, // Debe ser aprobado por un administrador antes de poder ingresar
         ]);
+
+        if ($request->hasFile('avatar')) {
+            $newUser->avatar = $request->file('avatar')->store('avatars', 'public');
+            $newUser->save();
+        }
 
         // Avisar a todos los administradores que hay una cuenta nueva esperando aprobación
         $admins = User::where('role', 'admin')->get();

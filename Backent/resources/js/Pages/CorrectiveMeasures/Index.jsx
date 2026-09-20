@@ -10,8 +10,7 @@ import {
     Building2, 
     Filter, 
     Calendar, 
-    Trash2,
-    ArrowUpRight
+    Trash2
 } from 'lucide-react';
 
 export default function CorrectiveMeasuresIndex({ 
@@ -139,7 +138,6 @@ export default function CorrectiveMeasuresIndex({
                                     <th className="py-3.5 px-4">Responsable</th>
                                     <th className="py-3.5 px-4">Fecha Límite</th>
                                     <th className="py-3.5 px-4">Estado</th>
-                                    <th className="py-3.5 px-4 text-right">Ver</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -191,20 +189,11 @@ export default function CorrectiveMeasuresIndex({
                                                     <option value="Cancelada">Cancelada</option>
                                                 </select>
                                             </td>
-                                            <td className="py-3.5 px-4 text-right">
-                                                <Link
-                                                    href={`/inspections/${measure.inspection_id}`}
-                                                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg inline-block"
-                                                    title="Ir a Inspección"
-                                                >
-                                                    <ArrowUpRight className="w-4 h-4" />
-                                                </Link>
-                                            </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={7} className="py-10 text-center text-slate-400 text-xs">
+                                        <td colSpan={6} className="py-10 text-center text-slate-400 text-xs">
                                             No se encontraron medidas correctivas registradas.
                                         </td>
                                     </tr>

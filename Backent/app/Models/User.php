@@ -15,14 +15,30 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
         'role',
         'phone',
         'license_number',
+        'dni',
+        'legajo',
         'is_active',
         'avatar',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Mantiene 'name' (usado en todo el sistema) sincronizado con nombre + apellido
+        static::saving(function (User $user) {
+            if ($user->first_name || $user->last_name) {
+                $user->name = trim("{$user->first_name} {$user->last_name}");
+            }
+        });
+    }
 
     protected $hidden = [
         'password',

@@ -51,6 +51,11 @@ class Company extends Model
         return $this->hasMany(Inspection::class)->latest('inspection_date');
     }
 
+    public function checklistItems(): HasMany
+    {
+        return $this->hasMany(CompanyChecklistItem::class)->orderBy('item_number');
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

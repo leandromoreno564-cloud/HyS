@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\CorrectiveMeasure;
-use App\Models\Inspection;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -63,31 +62,6 @@ class CorrectiveMeasureController extends Controller
             ->count();
 
         return Inertia::render('CorrectiveMeasures/Index', compact('measures', 'totalCount', 'pendingCount', 'overdueCount'));
-    }
-
-    public function store(Request $request, Inspection $inspection)
-    {
-        $user = Auth::user();
-        if (!$user->isAdmin() && $inspection->user_id !== $user->id) {
-            abort(403, 'No tiene permisos para modificar esta inspección.');
-        }
-
-        $data = $request->validate([
-            'description' => ['required', 'string'],
-            'priority' => ['required', 'in:Baja,Media,Alta,Crítica'],
-            'recommendations' => ['nullable', 'string'],
-            'deadline' => ['nullable', 'date'],
-            'responsible_person' => ['nullable', 'string', 'max:255'],
-            'estimated_cost' => ['nullable', 'numeric', 'min:0'],
-            'observation_id' => ['nullable', 'exists:observations,id'],
-        ]);
-
-        $data['inspection_id'] = $inspection->id;
-        $data['status'] = 'Pendiente';
-
-        CorrectiveMeasure::create($data);
-
-        return back()->with('success', 'Medida correctiva registrada exitosamente.');
     }
 
     public function updateStatus(Request $request, CorrectiveMeasure $measure)

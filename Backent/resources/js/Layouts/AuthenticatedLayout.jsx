@@ -4,7 +4,6 @@ import {
     ShieldCheck, 
     LayoutDashboard, 
     Building2, 
-    ClipboardCheck, 
     AlertTriangle, 
     FileText, 
     Users, 
@@ -41,12 +40,6 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             href: '/companies', 
             icon: Building2, 
             active: currentPath.startsWith('/companies') 
-        },
-        { 
-            name: 'Inspecciones', 
-            href: '/inspections', 
-            icon: ClipboardCheck, 
-            active: currentPath.startsWith('/inspections') 
         },
         { 
             name: 'Medidas Correctivas', 

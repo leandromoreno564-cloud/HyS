@@ -1,13 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ChecklistController;
+use App\Http\Controllers\CompanyChecklistController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CorrectiveMeasureController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\InspectionController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\ObservationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -26,9 +24,6 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
-// Verificación pública de autenticidad por código QR
-Route::get('/verify/{token}', [ReportController::class, 'verifyQr'])->name('reports.verify');
-
 // Rutas protegidas (Usuario autenticado y activo)
 Route::middleware(['auth', 'active'])->group(function () {
     // Panel de control
@@ -44,30 +39,23 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
 
     // Gestión de Empresas
+    Route::post('/companies/extract-pdf', [CompanyController::class, 'extractPdf'])->name('companies.extract-pdf');
     Route::resource('companies', CompanyController::class);
 
-    // Módulo de Inspecciones
-    Route::resource('inspections', InspectionController::class);
-    Route::post('/inspections/{inspection}/status', [InspectionController::class, 'updateStatus'])->name('inspections.status');
-    Route::post('/inspections/{inspection}/sign', [InspectionController::class, 'sign'])->name('inspections.sign');
-
-    // Checklists interactivos
-    Route::post('/inspections/{inspection}/checklist/{item}', [ChecklistController::class, 'updateItem'])->name('inspections.checklist.update');
-    Route::post('/inspections/{inspection}/checklist-custom', [ChecklistController::class, 'addItem'])->name('inspections.checklist.custom');
-    Route::delete('/inspections/{inspection}/checklist/{item}', [ChecklistController::class, 'destroyItem'])->name('inspections.checklist.destroy');
-
-    // Observaciones en campo
-    Route::post('/inspections/{inspection}/observations', [ObservationController::class, 'store'])->name('observations.store');
-    Route::delete('/observations/{observation}', [ObservationController::class, 'destroy'])->name('observations.destroy');
+    // Relevamiento / Checklist por Empresa
+    Route::get('/companies/{company}/checklist', [CompanyChecklistController::class, 'index'])->name('companies.checklist.index');
+    Route::post('/companies/{company}/checklist/extract', [CompanyChecklistController::class, 'extract'])->name('companies.checklist.extract');
+    Route::post('/companies/{company}/checklist', [CompanyChecklistController::class, 'store'])->name('companies.checklist.store');
+    Route::patch('/checklist-items/{item}', [CompanyChecklistController::class, 'updateItem'])->name('checklist-items.update');
+    Route::post('/checklist-items/{item}/photo', [CompanyChecklistController::class, 'uploadPhoto'])->name('checklist-items.photo.upload');
+    Route::delete('/checklist-items/{item}/photo', [CompanyChecklistController::class, 'deletePhoto'])->name('checklist-items.photo.delete');
 
     // Medidas Correctivas
     Route::get('/corrective-measures', [CorrectiveMeasureController::class, 'index'])->name('corrective-measures.index');
-    Route::post('/inspections/{inspection}/measures', [CorrectiveMeasureController::class, 'store'])->name('corrective-measures.store');
     Route::post('/corrective-measures/{measure}/status', [CorrectiveMeasureController::class, 'updateStatus'])->name('corrective-measures.status');
     Route::delete('/corrective-measures/{measure}', [CorrectiveMeasureController::class, 'destroy'])->name('corrective-measures.destroy');
 
     // Informes y Reportes
-    Route::get('/inspections/{inspection}/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
     Route::get('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.csv');
 
     // Rutas exclusivas para Administradores
