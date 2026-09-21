@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Inertia\Inertia;
 
 class CompanyChecklistController extends Controller
@@ -110,6 +112,11 @@ class CompanyChecklistController extends Controller
             }
         });
 
+        // El front guarda por axios y necesita los IDs para subir las fotos que ya adjuntó
+        if ($request->expectsJson()) {
+            return response()->json(['items' => $company->checklistItems()->get()]);
+        }
+
         return back()->with('success', 'Relevamiento guardado correctamente.');
     }
 
@@ -190,47 +197,233 @@ class CompanyChecklistController extends Controller
     }
 
     /**
+     * Agrega un ítem manual a un relevamiento ya guardado.
+     */
+    public function storeItem(Request $request, Company $company)
+    {
+        $this->authorize404($company);
+
+        $data = $request->validate([
+            'category' => ['nullable', 'string', 'max:255'],
+            'question' => ['nullable', 'string'],
+            'reference' => ['nullable', 'string'],
+        ]);
+
+        $next = ((int) CompanyChecklistItem::where('company_id', $company->id)->max('item_number')) + 1;
+
+        $item = $company->checklistItems()->create([
+            'item_number' => $next,
+            'category' => $data['category'] ?? null,
+            'question' => $data['question'] ?: 'Nuevo ítem',
+            'reference' => $data['reference'] ?? null,
+        ]);
+
+        return response()->json(['item' => $item->fresh()]);
+    }
+
+    /**
+     * Elimina un ítem guardado junto con sus fotos.
+     */
+    public function destroyItem(Request $request, CompanyChecklistItem $item)
+    {
+        $this->authorize404($item->company);
+
+        if ($item->photo_1) Storage::disk('public')->delete($item->photo_1);
+        if ($item->photo_2) Storage::disk('public')->delete($item->photo_2);
+        $item->delete();
+
+        return response()->json(['deleted' => true]);
+    }
+
+    /**
+     * Renombra una categoría (todos los ítems que la tengan). "from" null = ítems sin categoría.
+     */
+    public function renameCategory(Request $request, Company $company)
+    {
+        $this->authorize404($company);
+
+        $data = $request->validate([
+            'from' => ['nullable', 'string'],
+            'to' => ['required', 'string', 'max:255'],
+        ]);
+
+        $query = CompanyChecklistItem::where('company_id', $company->id);
+        $data['from'] === null ? $query->whereNull('category') : $query->where('category', $data['from']);
+        $query->update(['category' => trim($data['to'])]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Descarga el relevamiento guardado (con todas las ediciones, estados, observaciones
+     * y fotos) como PDF. Requiere: composer require barryvdh/laravel-dompdf
+     */
+    public function downloadPdf(Company $company)
+    {
+        $this->authorize404($company);
+
+        $items = $company->checklistItems()->get();
+        if ($items->isEmpty()) {
+            abort(404, 'Todavía no hay un relevamiento guardado para esta empresa.');
+        }
+
+        // Las fotos se reescalan e incrustan: con muchas fotos de celular el PDF pesaría cientos de MB
+        @set_time_limit(300);
+        @ini_set('memory_limit', '768M');
+
+        $rows = $items->map(fn (CompanyChecklistItem $it) => [
+            'item_number' => $it->item_number,
+            'category' => $it->category ?: 'Sin categoría',
+            'question' => $it->question,
+            'reference' => $it->reference,
+            'status' => $it->status,
+            'description' => $it->description,
+            'photos' => array_values(array_filter([
+                $this->imageDataUri($it->photo_1),
+                $this->imageDataUri($it->photo_2),
+            ])),
+        ]);
+
+        $summary = [
+            'total' => $rows->count(),
+            'si' => $rows->where('status', 'SI')->count(),
+            'no' => $rows->where('status', 'NO')->count(),
+            'na' => $rows->where('status', 'NO_APLICA')->count(),
+            'pending' => $rows->whereNull('status')->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.checklist', [
+            'company' => $company,
+            'groups' => $rows->groupBy('category'),
+            'summary' => $summary,
+            'generatedAt' => now()->format('d/m/Y H:i'),
+        ])->setPaper('a4', 'portrait')->setOptions([
+            'defaultFont' => 'DejaVu Sans',
+            'isRemoteEnabled' => false,
+        ]);
+
+        $filename = 'Relevamiento-' . (Str::slug($company->business_name) ?: 'empresa') . '-' . now()->format('Y-m-d') . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    /**
+     * Devuelve la foto reescalada (máx. 1000 px) como data URI para incrustarla en el PDF,
+     * corrigiendo la orientación EXIF de las fotos tomadas con el celular.
+     */
+    private function imageDataUri(?string $relativePath, int $maxSize = 1000): ?string
+    {
+        if (!$relativePath) return null;
+
+        $path = Storage::disk('public')->path($relativePath);
+        if (!is_file($path)) return null;
+
+        $info = @getimagesize($path);
+        if (!$info) return null;
+
+        $binary = file_get_contents($path);
+
+        // Sin GD no se puede reescalar: se incrusta tal cual
+        if (!function_exists('imagecreatefromstring')) {
+            return 'data:' . $info['mime'] . ';base64,' . base64_encode($binary);
+        }
+
+        $src = @imagecreatefromstring($binary);
+        if (!$src) return null;
+
+        if ($info['mime'] === 'image/jpeg' && function_exists('exif_read_data')) {
+            $exif = @exif_read_data($path);
+            $angle = [3 => 180, 6 => -90, 8 => 90][$exif['Orientation'] ?? 1] ?? 0;
+            if ($angle !== 0) {
+                $rotated = imagerotate($src, $angle, 0);
+                if ($rotated) {
+                    imagedestroy($src);
+                    $src = $rotated;
+                }
+            }
+        }
+
+        $w = imagesx($src);
+        $h = imagesy($src);
+        $scale = min(1, $maxSize / max($w, $h));
+        $nw = max(1, (int) round($w * $scale));
+        $nh = max(1, (int) round($h * $scale));
+
+        $dst = imagecreatetruecolor($nw, $nh);
+        imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255)); // fondo blanco para PNG/WEBP transparentes
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+
+        ob_start();
+        imagejpeg($dst, null, 80);
+        $jpeg = ob_get_clean();
+
+        imagedestroy($src);
+        imagedestroy($dst);
+
+        return 'data:image/jpeg;base64,' . base64_encode($jpeg);
+    }
+
+    /**
      * Parser genérico de checklists numerados tipo "Relevamiento General de Riesgos
      * Laborales" (Anexo I - Res. 463/09) u otros formularios con la misma lógica:
      * número de ítem + pregunta + referencia normativa, agrupados bajo encabezados
      * de categoría en mayúsculas. No asume texto fijo: siempre relee lo que venga.
+     *
+     * Detalles que hay que tolerar porque el extractor de texto (smalot/pdfparser)
+     * NO conserva los espacios del PDF:
+     *  - El número puede venir pegado al texto: "10¿Existe...", "21Se desarrolla...".
+     *  - El encabezado repetido de cada página ("SI NO NO Fecha", "GENERAL", "A",
+     *    "Nombre de la Empresa...", "[2 de 8]") aparece al FINAL del texto de la página,
+     *    pegado al último ítem, y hay que descartarlo entero.
      */
     private function parseChecklistItems(string $text): array
     {
         $lines = preg_split('/\r\n|\r|\n/', $text);
 
+        // Encabezado/pie que se repite en cada página. Se descarta desde la línea
+        // "SI NO NO Fecha" hasta el marcador "[n de N]" (tolera espacios faltantes).
+        $footerStart = '/^\s*SI\s*NO\s*NO\s*Fecha/ui';
+        $pageMarker = '/\[\s*\d+\s*de\s*\d+\s*\]/ui';
+        $maxFooterLines = 40;
+
+        // Líneas sueltas de ruido (por si el extractor las deja fuera del bloque anterior)
         $noisePatterns = [
-            '/^SI\s+NO\s+NO\s+Fecha/ui',
-            '/^APLICA\s+Regul/ui',
-            '/^G\s*E\s*N\s*E\s*R\s*A\s*L\s*$/ui',
-            '/^FORMULARIO$/ui',
-            '/^ANEXO\s/ui',
-            '/^RELEVAMIENTO GENERAL/ui',
-            '/^Decreto\s+\d/ui',
+            '/^\s*N\s*°\s*EMPRESAS/ui',
+            '/^\s*APLICA\s*Regul/ui',
+            '/^\s*G\s*E\s*N\s*E\s*R\s*A\s*L\s*$/ui',
+            '/^\s*[A-Z]\s*$/u',
+            '/^\s*FORMULARIO\s*$/ui',
+            '/^\s*ANEXO\s/ui',
+            '/^\s*RELEVAMIENTO GENERAL/ui',
+            '/^\s*Decreto\s+\d+\/\d+\s*-/ui',
             '/AGRO O A LAS OBRAS/ui',
+            '/^\s*(El presente relevamiento|El relevamiento deber|En caso de empresas|consideradas como)/ui',
+            '/^\s*(Nombre de la Empresa|CUIT\s*\/|Domicilio Completo|\d?\s*Provincia\s*:|N[º°]\s*de Establecimiento)/ui',
+            '/^\s*DATOS GENERALES DEL/ui',
+            '/^\s*ESTADO DE CUMPLIMIENTO EN EL ESTABLECIMIENTO/ui',
         ];
 
         // Marcadores de que el listado numerado terminó (todo lo posterior se descarta)
         $stopPatterns = [
-            '/^PLANILLA\b/ui',
+            '/^\s*PLANILLA\b/ui',
             '/Marcar con una cruz/ui',
-            '/^C[óo]digo\s+sustancia/ui',
-            '/^CÓDIGO SUSTANCIA/ui',
+            '/^\s*C[óo]digo\s*sustancia/ui',
+            '/^\s*C[óo]d\.?\s*Difenilos/ui',
             '/DATOS LABORALES DEL PROFESIONAL/ui',
-            '/^RESPONSABILIDAD$/ui',
+            '/^\s*RESPONSABILIDAD\s*$/ui',
             '/FIRMA Y SELLO/ui',
             '/listado de C[óo]digos de Agentes de Riesgo/ui',
         ];
 
-        $pageMarker = '/\[\s*\d+\s*de\s*\d+\s*\]/ui';
         $maxItemChars = 600;
+        $maxNumberJump = 5; // un número nuevo debe ser mayor al anterior y no saltar demasiado
 
         $isNoise = fn (string $l) => collect($noisePatterns)->contains(fn ($p) => preg_match($p, $l));
         $isStop = fn (string $l) => collect($stopPatterns)->contains(fn ($p) => preg_match($p, $l));
 
         $looksLikeCategory = function (string $line): bool {
             $stripped = trim($line);
-            if ($stripped === '' || mb_strlen($stripped) > 90) return false;
+            if (mb_strlen($stripped) < 3 || mb_strlen($stripped) > 90) return false;
             if (preg_match('/^\d/', $stripped)) return false;
             preg_match_all('/\p{L}/u', $stripped, $letters);
             if (empty($letters[0])) return false;
@@ -241,52 +434,83 @@ class CompanyChecklistController extends Controller
         $items = [];
         $currentCategory = null;
         $current = null;
-        $stopped = false;
+        $lastNumber = null;
+        $footerLines = 0;
+        $inFooter = false;
 
-        $flush = function () use (&$current, &$items, &$currentCategory) {
+        $flush = function () use (&$current, &$items) {
             if ($current === null) return;
             $raw = trim(preg_replace('/\s+/u', ' ', $current['text']));
             $idx = mb_strrpos($raw, '?');
             if ($idx !== false) {
                 $question = trim(mb_substr($raw, 0, $idx + 1));
-                $reference = trim(mb_substr($raw, $idx + 1));
-                $reference = $reference !== '' ? $reference : null;
+                $reference = trim(ltrim(mb_substr($raw, $idx + 1), " :"));
+            } elseif (preg_match('/^(.*?)\s+((?:Cap\.|Art\.|Arts\.|Anexo|Res\.|Dec\.|Dto\.|Ley)\s.*)$/u', $raw, $m)) {
+                // Ítems sin signo de pregunta (ej. sub-ítems de mantenimiento preventivo)
+                $question = trim($m[1]);
+                $reference = trim($m[2]);
             } else {
                 $question = $raw;
-                $reference = null;
+                $reference = '';
             }
             if ($question !== '') {
                 $items[] = [
                     'item_number' => $current['number'],
-                    'category' => $currentCategory,
+                    'category' => $current['category'],
                     'question' => $question,
-                    'reference' => $reference,
+                    'reference' => $reference !== '' ? $reference : null,
                 ];
             }
             $current = null;
         };
 
         foreach ($lines as $rawLine) {
-            if ($stopped) break;
-            $line = preg_replace($pageMarker, '', $rawLine);
-            if (trim($line) === '') continue;
+            // ¿Estamos dentro del bloque de encabezado/pie de página? Lo salteamos entero.
+            if ($inFooter) {
+                $footerLines++;
+                if (preg_match($pageMarker, $rawLine) || $footerLines > $maxFooterLines) {
+                    $inFooter = false;
+                }
+                continue;
+            }
 
-            if ($isStop($line)) {
-                $flush();
-                $stopped = true;
+            if ($isStop($rawLine)) {
                 break;
             }
+
+            if (preg_match($footerStart, $rawLine)) {
+                $inFooter = true;
+                $footerLines = 0;
+                continue;
+            }
+
+            $line = preg_replace($pageMarker, '', $rawLine);
+            if (trim($line) === '') continue;
             if ($isNoise($line)) continue;
+
+            // Número de ítem: el espacio con el texto es OPCIONAL ("10¿Existe", "21Se desarrolla").
+            // Se valida contra el número anterior para no confundir "2Provincia" ni "106,107 y110".
+            if (preg_match('/^\s*(\d{1,3})\s*(?=[¿¡A-ZÁÉÍÓÚÑ])/u', $line, $m)) {
+                $number = (int) $m[1];
+                $validSequence = $lastNumber === null
+                    ? $number <= $maxNumberJump
+                    : ($number > $lastNumber && $number <= $lastNumber + $maxNumberJump);
+
+                if ($validSequence) {
+                    $flush();
+                    $lastNumber = $number;
+                    $current = [
+                        'number' => $number,
+                        'category' => $currentCategory,
+                        'text' => mb_substr($line, mb_strlen($m[0])),
+                    ];
+                    continue;
+                }
+            }
 
             if ($looksLikeCategory($line)) {
                 $flush();
                 $currentCategory = trim($line);
-                continue;
-            }
-
-            if (preg_match('/^\s*(\d{1,3})\s+(?=[¿A-ZÁÉÍÓÚÑ])/u', $line, $m)) {
-                $flush();
-                $current = ['number' => (int) $m[1], 'text' => mb_substr($line, mb_strlen($m[0]))];
                 continue;
             }
 
