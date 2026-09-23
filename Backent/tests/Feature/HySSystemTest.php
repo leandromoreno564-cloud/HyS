@@ -80,14 +80,14 @@ class HySSystemTest extends TestCase
             'general_observations' => 'Auditoría de prueba automatizada',
         ]);
 
-        $this->assertDatabaseHas('inspections', [
-            'company_id' => $company->id,
-            'user_id' => $inspector->id,
-            'type' => 'General',
-            'status' => 'En Progreso',
+        $this->assertDatabaseHas('inspecciones', [
+            'empresa_id' => $company->id,
+            'inspector_id' => $inspector->id,
+            'tipo' => 'General',
+            'estado' => 'En Progreso',
         ]);
 
-        $createdInspection = Inspection::where('general_observations', 'Auditoría de prueba automatizada')->first();
+        $createdInspection = Inspection::where('observaciones_generales', 'Auditoría de prueba automatizada')->first();
         $this->assertNotNull($createdInspection);
         $this->assertGreaterThan(0, $createdInspection->checklistItems()->count());
     }

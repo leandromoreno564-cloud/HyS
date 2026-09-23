@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('categoria_checklists', function (Blueprint $table) {
             $table->id();
+            $table->string('nombre');
+            $table->string('icono')->default('fa-clipboard-check');
+            $table->text('descripcion')->nullable();
+            $table->integer('orden')->default(0);
             $table->timestamps();
         });
     }

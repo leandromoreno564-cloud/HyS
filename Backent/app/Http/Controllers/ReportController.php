@@ -54,7 +54,7 @@ class ReportController extends Controller
         $user = Auth::user();
         $query = Inspection::accessibleBy($user)->with(['company', 'user']);
 
-        $inspections = $query->latest('inspection_date')->get();
+        $inspections = $query->latest('fecha_inicio')->get();
 
         $csvFileName = 'reporte_inspecciones_' . date('Ymd_His') . '.csv';
 

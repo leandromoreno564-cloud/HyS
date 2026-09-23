@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('observacions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('inspeccion_id')->constrained('inspecciones')->cascadeOnDelete();
+            $table->foreignId('item_inspeccion_id')->nullable()->constrained('items_inspeccion')->nullOnDelete();
+            $table->string('tipo', 50)->default('Hallazgo');
+            $table->string('severidad', 50)->default('Moderado');
+            $table->string('ubicacion')->nullable();
+            $table->text('descripcion');
+            $table->json('fotos')->nullable();
             $table->timestamps();
         });
     }

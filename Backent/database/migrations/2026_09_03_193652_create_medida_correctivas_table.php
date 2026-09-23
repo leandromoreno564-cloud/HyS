@@ -13,6 +13,17 @@ return new class extends Migration
     {
         Schema::create('medida_correctivas', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('inspeccion_id')->constrained('inspecciones')->cascadeOnDelete();
+            $table->foreignId('observacion_id')->nullable()->constrained('observacions')->nullOnDelete();
+            $table->text('descripcion');
+            $table->string('prioridad', 50)->default('Media');
+            $table->text('recomendaciones')->nullable();
+            $table->date('fecha_limite')->nullable();
+            $table->string('responsable')->nullable();
+            $table->decimal('costo_estimado', 12, 2)->nullable();
+            $table->string('estado', 50)->default('Pendiente');
+            $table->date('fecha_verificacion')->nullable();
+            $table->text('notas')->nullable();
             $table->timestamps();
         });
     }

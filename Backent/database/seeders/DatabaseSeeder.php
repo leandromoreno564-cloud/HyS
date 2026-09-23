@@ -19,6 +19,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // 0. Roles del sistema (para rama moreno)
+        \App\Models\Rol::firstOrCreate(['id' => 1], ['nombre' => 'admin', 'descripcion' => 'Administrador del sistema']);
+        \App\Models\Rol::firstOrCreate(['id' => 2], ['nombre' => 'inspector', 'descripcion' => 'Inspector matriculado']);
+
         // 1. Usuarios del sistema
         $admin = User::create([
             'name' => 'Ing. Alejandro Morales',

@@ -23,7 +23,7 @@ class ObservationController extends Controller
             'severity' => ['required', 'in:Menor,Moderado,Mayor,Crítico'],
             'location' => ['nullable', 'string', 'max:255'],
             'description' => ['required', 'string'],
-            'inspection_checklist_item_id' => ['nullable', 'exists:inspection_checklist_items,id'],
+            'inspection_checklist_item_id' => ['nullable', 'exists:items_inspeccion,id'],
             'photos.*' => ['nullable', 'image', 'max:5120'],
             // Campos opcionales para generar de una vez la medida correctiva
             'create_measure' => ['nullable', 'boolean'],

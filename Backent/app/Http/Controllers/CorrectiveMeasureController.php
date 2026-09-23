@@ -22,9 +22,9 @@ class CorrectiveMeasureController extends Controller
         // Filtrar por permisos
         if (!$user->isAdmin()) {
             $query->whereHas('inspection', function ($q) use ($user) {
-                $q->where('user_id', $user->id)
+                $q->where('inspector_id', $user->id)
                   ->orWhereHas('company', function ($cq) use ($user) {
-                      $cq->where('created_by', $user->id)
+                      $cq->where('creado_por', $user->id)
                          ->orWhereHas('inspectors', function ($iq) use ($user) {
                              $iq->where('usuarios.id', $user->id);
                          });
@@ -33,33 +33,33 @@ class CorrectiveMeasureController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+            $query->where('estado', $request->input('status'));
         }
 
         if ($request->filled('priority')) {
-            $query->where('priority', $request->input('priority'));
+            $query->where('prioridad', $request->input('priority'));
         }
 
         if ($request->boolean('overdue')) {
-            $query->whereIn('status', ['Pendiente', 'En Progreso'])
-                  ->whereNotNull('deadline')
-                  ->where('deadline', '<', Carbon::today());
+            $query->whereIn('estado', ['Pendiente', 'En Progreso'])
+                  ->whereNotNull('fecha_limite')
+                  ->where('fecha_limite', '<', Carbon::today());
         }
 
         $measures = $query->orderByRaw("CASE 
-            WHEN priority = 'Crítica' THEN 1 
-            WHEN priority = 'Alta' THEN 2 
-            WHEN priority = 'Media' THEN 3 
+            WHEN prioridad = 'Crítica' THEN 1 
+            WHEN prioridad = 'Alta' THEN 2 
+            WHEN prioridad = 'Media' THEN 3 
             ELSE 4 END")
             ->latest('created_at')
             ->paginate(15)
             ->withQueryString();
 
         $totalCount = (clone $query)->count();
-        $pendingCount = CorrectiveMeasure::whereIn('status', ['Pendiente', 'En Progreso'])->count();
-        $overdueCount = CorrectiveMeasure::whereIn('status', ['Pendiente', 'En Progreso'])
-            ->whereNotNull('deadline')
-            ->where('deadline', '<', Carbon::today())
+        $pendingCount = CorrectiveMeasure::whereIn('estado', ['Pendiente', 'En Progreso'])->count();
+        $overdueCount = CorrectiveMeasure::whereIn('estado', ['Pendiente', 'En Progreso'])
+            ->whereNotNull('fecha_limite')
+            ->where('fecha_limite', '<', Carbon::today())
             ->count();
 
         return Inertia::render('CorrectiveMeasures/Index', compact('measures', 'totalCount', 'pendingCount', 'overdueCount'));
@@ -79,7 +79,7 @@ class CorrectiveMeasureController extends Controller
             'deadline' => ['nullable', 'date'],
             'responsible_person' => ['nullable', 'string', 'max:255'],
             'estimated_cost' => ['nullable', 'numeric', 'min:0'],
-            'observation_id' => ['nullable', 'exists:observations,id'],
+            'observation_id' => ['nullable', 'exists:observacions,id'],
         ]);
 
         $data['inspection_id'] = $inspection->id;
