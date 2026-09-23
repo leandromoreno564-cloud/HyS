@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ProfessionalStatusMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
@@ -110,6 +112,9 @@ class UserController extends Controller
 
         $user->is_active = !$user->is_active;
         $user->save();
+
+        // Avisar por correo al profesional si su cuenta fue aceptada (habilitada) o no
+        Mail::to($user->email)->send(new ProfessionalStatusMail($user, $user->is_active));
 
         $statusText = $user->is_active ? 'habilitado' : 'deshabilitado';
         return back()->with('success', "Usuario {$user->name} {$statusText} correctamente.");

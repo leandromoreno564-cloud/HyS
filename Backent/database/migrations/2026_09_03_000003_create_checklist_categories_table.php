@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        // 3. Categorías de Checklists Técnicos
+        Schema::create('checklist_categories', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('icon')->default('fa-clipboard-check');
+            $table->text('description')->nullable();
+            $table->integer('order')->default(0);
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('checklist_categories');
+    }
+};

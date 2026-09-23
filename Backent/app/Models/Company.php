@@ -193,6 +193,11 @@ class Company extends Model
         );
     }
 
+    public function checklistItems(): HasMany
+    {
+        return $this->hasMany(CompanyChecklistItem::class)->orderBy('item_number');
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('activa', true);

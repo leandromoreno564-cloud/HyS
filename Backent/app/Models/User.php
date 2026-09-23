@@ -19,16 +19,32 @@ class User extends Authenticatable
     protected $fillable = [
         'nombre',
         'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
         'rol_id',
         'role',
         'phone',
         'license_number',
+        'dni',
+        'legajo',
         'activo',
         'is_active',
         'avatar',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Mantiene 'name' (usado en todo el sistema) sincronizado con nombre + apellido
+        static::saving(function (User $user) {
+            if ($user->first_name || $user->last_name) {
+                $user->name = trim("{$user->first_name} {$user->last_name}");
+            }
+        });
+    }
 
     public function getNameAttribute(): string
     {
@@ -42,7 +58,7 @@ class User extends Authenticatable
 
     public function getRoleAttribute(): string
     {
-        return ($this->attributes['rol_id'] ?? 2) == 1 ? 'admin' : 'inspector';
+        return ($this->attributes['rol_id'] ?? 2) == 1 ? 'admin' : ($this->attributes['role'] ?? 'inspector');
     }
 
     public function getIsActiveAttribute(): bool

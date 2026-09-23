@@ -95,6 +95,88 @@ class CompanyController extends Controller
             ->with('success', 'Empresa registrada correctamente en la plataforma.');
     }
 
+    public function extractPdf(Request $request)
+    {
+        $request->validate([
+            'pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+        ]);
+
+        try {
+            $parser = new \Smalot\PdfParser\Parser();
+            $pdf = $parser->parseFile($request->file('pdf')->getRealPath());
+            $text = $pdf->getText();
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo leer el PDF. Verificá que no sea un escaneo/imagen sin texto seleccionable.',
+            ], 422);
+        }
+
+        // Normaliza espacios para que los patrones no fallen por saltos de línea raros
+        $flat = preg_replace('/[ \t]+/', ' ', $text);
+        $flat = preg_replace('/\s*\n\s*/', ' ', $flat);
+
+        $clean = function (?string $value): ?string {
+            if ($value === null) {
+                return null;
+            }
+            // Saca corridas de guiones bajos/puntos usados como líneas de completar
+            $value = preg_replace('/[_\.]{3,}/', ' ', $value);
+            $value = trim(preg_replace('/\s+/', ' ', $value));
+            return $value !== '' ? $value : null;
+        };
+
+        // Descarta restos de formato (ej. "P 2" que queda de un campo vacío) exigiendo
+        // al menos una secuencia de 2+ letras reales en el valor capturado
+        $meaningful = function (?string $value): ?string {
+            if ($value === null) {
+                return null;
+            }
+            return preg_match('/\p{L}{2,}/u', $value) ? $value : null;
+        };
+
+        $match = function (string $pattern) use ($flat, $clean): ?string {
+            if (preg_match($pattern, $flat, $m)) {
+                return $clean($m[1] ?? null);
+            }
+            return null;
+        };
+
+        $businessName = $meaningful($match('/Nombre de la Empresa:?\s*([^:]+?)\s*(?:CUIT|C\.?U\.?I\.?T)/ui'));
+        $taxId = $match('/CUIT\s*\/?\s*CUIP\s*N[ºo°]?:?\s*([\d]{2}[\-\s]?[\d]{7,8}[\-\s]?[\d])/ui');
+        $industrySector = $meaningful($match('/Actividad Econ[oó]mica.*?Rev\.?\s*3:?\s*([^:]+?)\s*(?:Domicilio|$)/ui'));
+        $domicilio = $meaningful($match('/Domicilio Completo:?\s*([^:]+?)\s*(?:C\.?P\.?\s*\/|Localidad)/ui'));
+        $postalCode = $match('/C\.?P\.?\s*\/\s*C\.?P\.?A\.?:?\s*([A-Z0-9]{3,8})/ui');
+        $locality = $meaningful($match('/Localidad:?\s*([^:]+?)\s*(?:P\s*\d*\s*rovincia|Provincia)/ui'));
+        $province = $meaningful($match('/rovincia:?\s*([^:]+?)\s*(?:Cant\.?\s*de trabajadores)/ui'));
+        $employeeCount = $match('/Cant\.?\s*de trabajadores:?\s*([\d]+)/ui');
+        $establishmentNumber = $match('/N[ºo°]\s*de Establecimiento:?\s*([A-Za-z0-9\-]+)/ui');
+        $surfaceM2 = $match('/Sup\.?\s*del Establec\.?:?\s*([\d\.,]+)/ui');
+
+        // Cada campo se devuelve por separado para que el usuario pueda ver y editar
+        // exactamente lo que se detectó en el PDF antes de que se combine/aplique al alta
+        $fields = [
+            'business_name' => $businessName,
+            'tax_id' => $taxId,
+            'industry_sector' => $industrySector,
+            'employee_count' => $employeeCount,
+            'domicilio' => $domicilio,
+            'postal_code' => $postalCode,
+            'locality' => $locality,
+            'province' => $province,
+            'establishment_number' => $establishmentNumber,
+            'surface_m2' => $surfaceM2,
+        ];
+
+        $foundAny = collect($fields)->filter()->isNotEmpty();
+
+        return response()->json([
+            'success' => true,
+            'found' => $foundAny,
+            'fields' => $fields,
+        ]);
+    }
+
     public function show(Company $company)
     {
         /** @var User $user */

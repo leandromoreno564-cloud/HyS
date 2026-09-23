@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppNotification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +20,65 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
         }
         return Inertia::render('Auth/Login');
+    }
+
+    public function showRegister()
+    {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
+        return Inertia::render('Auth/Register');
+    }
+
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'dni' => ['required', 'string', 'max:20', 'unique:users'],
+            'legajo' => ['required', 'string', 'max:50', 'unique:users'],
+            'password' => ['required', 'confirmed', Password::min(8)->numbers()->symbols()],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'license_number' => ['nullable', 'string', 'max:100'],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+        ]);
+
+        $newUser = User::create([
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'email' => $data['email'],
+            'dni' => $data['dni'],
+            'legajo' => $data['legajo'],
+            'password' => Hash::make($data['password']),
+            'phone' => $data['phone'] ?? null,
+            'license_number' => $data['license_number'] ?? null,
+            'role' => 'inspector', // El auto-registro solo crea Licenciados, nunca administradores
+            'is_active' => false, // Debe ser aprobado por un administrador antes de poder ingresar
+        ]);
+
+        if ($request->hasFile('avatar')) {
+            $newUser->avatar = $request->file('avatar')->store('avatars', 'public');
+            $newUser->save();
+        }
+
+        // Avisar a todos los administradores que hay una cuenta nueva esperando aprobación
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            AppNotification::create([
+                'user_id' => $admin->id,
+                'title' => 'Nuevo Licenciado pendiente de aprobación',
+                'message' => "{$newUser->name} ({$newUser->email}) se registró y espera que habilites su acceso.",
+                'type' => 'warning',
+                'link' => '/users',
+                'is_read' => false,
+            ]);
+        }
+
+        return redirect()->route('login')->with(
+            'success',
+            'Tu cuenta fue creada. Un administrador debe habilitarla antes de que puedas ingresar al sistema.'
+        );
     }
 
     public function login(Request $request)
