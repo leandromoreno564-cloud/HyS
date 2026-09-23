@@ -190,13 +190,23 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
                                                             <RotateCcw className="w-4 h-4" />
                                                         </button>
                                                     ) : (
-                                                        <Link
-                                                            href={`/companies/${company.id}`}
-                                                            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
-                                                            title="Ver Ficha"
-                                                        >
-                                                            <ExternalLink className="w-4 h-4" />
-                                                        </Link>
+                                                        <>
+                                                            <Link
+                                                                href={`/companies/${company.id}/checklist`}
+                                                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors"
+                                                                title="Ir al Relevamiento / Checklist RGRL"
+                                                            >
+                                                                <ClipboardCheck className="w-3.5 h-3.5" />
+                                                                <span>Relevamiento</span>
+                                                            </Link>
+                                                            <Link
+                                                                href={`/companies/${company.id}`}
+                                                                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
+                                                                title="Ver Ficha de Empresa"
+                                                            >
+                                                                <ExternalLink className="w-4 h-4" />
+                                                            </Link>
+                                                        </>
                                                     )}
                                                 </div>
                                             </td>
