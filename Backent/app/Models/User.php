@@ -8,28 +8,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
-
-    protected $table = 'usuarios';
+    use HasFactory, Notifiable;
 
     protected $fillable = [
-        'nombre',
         'name',
         'first_name',
         'last_name',
         'email',
         'password',
-        'rol_id',
         'role',
         'phone',
         'license_number',
         'dni',
         'legajo',
-        'activo',
         'is_active',
         'avatar',
     ];
@@ -44,26 +38,6 @@ class User extends Authenticatable
                 $user->name = trim("{$user->first_name} {$user->last_name}");
             }
         });
-    }
-
-    public function getNameAttribute(): string
-    {
-        return $this->attributes['nombre'] ?? $this->attributes['name'] ?? '';
-    }
-
-    public function setNameAttribute($value): void
-    {
-        $this->attributes['nombre'] = $value;
-    }
-
-    public function getRoleAttribute(): string
-    {
-        return ($this->attributes['rol_id'] ?? 2) == 1 ? 'admin' : ($this->attributes['role'] ?? 'inspector');
-    }
-
-    public function getIsActiveAttribute(): bool
-    {
-        return (bool) ($this->attributes['activo'] ?? $this->attributes['is_active'] ?? true);
     }
 
     protected $hidden = [
@@ -92,7 +66,7 @@ class User extends Authenticatable
 
     public function assignedCompanies(): BelongsToMany
     {
-        return $this->belongsToMany(Company::class, 'empresa_usuario', 'usuario_id', 'empresa_id')->withTimestamps();
+        return $this->belongsToMany(Company::class, 'company_user')->withTimestamps();
     }
 
     public function createdCompanies(): HasMany
