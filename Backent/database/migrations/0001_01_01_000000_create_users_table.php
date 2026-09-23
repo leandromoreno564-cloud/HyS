@@ -11,20 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('usuarios', function (Blueprint $table) {
+        Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('rol_id')->constrained('roles')->restrictOnDelete();
-            $table->string('role', 50)->default('inspector');
-            $table->string('nombre');
+            $table->string('name');
             $table->string('email')->unique();
-            $table->string('password');
-            $table->string('telefono', 50)->nullable();
-            $table->string('matricula', 100)->nullable();
+            $table->string('role')->default('inspector'); // 'admin', 'inspector'
+            $table->string('phone')->nullable();
+            $table->string('license_number')->nullable(); // Matrícula profesional
+            $table->boolean('is_active')->default(true);
             $table->string('avatar')->nullable();
-            $table->boolean('activo')->default(true);
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
             $table->rememberToken();
             $table->timestamps();
-            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -48,7 +47,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('usuarios');
+        Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }

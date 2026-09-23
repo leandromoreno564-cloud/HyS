@@ -24,30 +24,30 @@ class InspectionController extends Controller
         $query = Inspection::accessibleBy($user)->with(['company', 'user']);
 
         if ($request->filled('company_id')) {
-            $query->where('empresa_id', $request->input('company_id'));
+            $query->where('company_id', $request->input('company_id'));
         }
 
         if ($request->filled('status')) {
-            $query->where('estado', $request->input('status'));
+            $query->where('status', $request->input('status'));
         }
 
         if ($request->filled('type')) {
-            $query->where('tipo', $request->input('type'));
+            $query->where('type', $request->input('type'));
         }
 
         if ($request->filled('date_from')) {
-            $query->whereDate('fecha_inicio', '>=', $request->input('date_from'));
+            $query->whereDate('inspection_date', '>=', $request->input('date_from'));
         }
 
         if ($request->filled('date_to')) {
-            $query->whereDate('fecha_inicio', '<=', $request->input('date_to'));
+            $query->whereDate('inspection_date', '<=', $request->input('date_to'));
         }
 
-        $inspections = $query->latest('fecha_inicio')
+        $inspections = $query->latest('inspection_date')
             ->paginate(10)
             ->withQueryString();
 
-        $companies = Company::accessibleBy($user)->active()->orderBy('razon_social')->get();
+        $companies = Company::accessibleBy($user)->active()->orderBy('business_name')->get();
 
         return Inertia::render('Inspections/Index', compact('inspections', 'companies'));
     }
@@ -69,7 +69,7 @@ class InspectionController extends Controller
         $user = Auth::user();
 
         $data = $request->validate([
-            'company_id' => ['required', 'exists:empresas,id'],
+            'company_id' => ['required', 'exists:companies,id'],
             'inspection_date' => ['required', 'date'],
             'type' => ['required', 'in:General,Específica,Seguimiento'],
             'start_time' => ['nullable', 'string'],
@@ -92,13 +92,13 @@ class InspectionController extends Controller
         // Generar items de checklist automáticamente según sector de la empresa y tipo de inspección (RF-27)
         $templateCategories = ChecklistCategory::with(['items' => function ($q) use ($company, $inspection) {
             $q->where(function ($sq) use ($company) {
-                $sq->whereNull('sector_industrial')
-                   ->orWhere('sector_industrial', $company->sector ?? $company->industry_sector);
+                $sq->whereNull('industry_sector')
+                   ->orWhere('industry_sector', $company->industry_sector);
             })->where(function ($tq) use ($inspection) {
-                $tq->whereNull('tipo_inspeccion')
-                   ->orWhere('tipo_inspeccion', $inspection->tipo ?? $inspection->type);
+                $tq->whereNull('inspection_type')
+                   ->orWhere('inspection_type', $inspection->type);
             });
-        }])->orderBy('orden')->get();
+        }])->orderBy('order')->get();
 
         foreach ($templateCategories as $cat) {
             foreach ($cat->items as $tmplItem) {
@@ -202,7 +202,7 @@ class InspectionController extends Controller
 
         if ($data['status'] === 'Completada') {
             // Verificar si hay items pendientes
-            $pendingCount = $inspection->checklistItems()->where('estado', 'Pendiente')->count();
+            $pendingCount = $inspection->checklistItems()->where('status', 'Pendiente')->count();
             if ($pendingCount > 0 && !$request->boolean('force')) {
                 return back()->with('warning', "Aún quedan {$pendingCount} ítems del checklist en estado 'Pendiente'. Puedes evaluarlos o forzar el cierre.");
             }
