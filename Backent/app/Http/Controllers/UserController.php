@@ -21,9 +21,9 @@ class UserController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('nombre', 'like', "%{$search}%")
+                $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('matricula', 'like', "%{$search}%");
+                  ->orWhere('license_number', 'like', "%{$search}%");
             });
         }
 
@@ -32,11 +32,11 @@ class UserController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('activo', $request->input('status') === 'active');
+            $query->where('is_active', $request->input('status') === 'active');
         }
 
         $users = $query->withCount(['inspections', 'assignedCompanies'])
-            ->orderBy('nombre')
+            ->orderBy('name')
             ->paginate(10)
             ->withQueryString();
 
@@ -52,7 +52,7 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:usuarios,email'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', Password::min(6)],
             'role' => ['required', 'in:admin,inspector'],
             'phone' => ['nullable', 'string', 'max:50'],
@@ -77,7 +77,7 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('usuarios', 'email')->ignore($user->id)],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => ['nullable', Password::min(6)],
             'role' => ['required', 'in:admin,inspector'],
             'phone' => ['nullable', 'string', 'max:50'],

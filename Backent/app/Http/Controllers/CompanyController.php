@@ -21,19 +21,19 @@ class CompanyController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('razon_social', 'like', "%{$search}%")
-                  ->orWhere('cuit', 'like', "%{$search}%")
-                  ->orWhere('persona_contacto', 'like', "%{$search}%")
-                  ->orWhere('direccion', 'like', "%{$search}%");
+                $q->where('business_name', 'like', "%{$search}%")
+                  ->orWhere('tax_id', 'like', "%{$search}%")
+                  ->orWhere('contact_person', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('sector')) {
-            $query->where('sector', $request->input('sector'));
+            $query->where('industry_sector', $request->input('sector'));
         }
 
         if ($request->filled('status')) {
-            $query->where('activa', $request->input('status') === 'active');
+            $query->where('is_active', $request->input('status') === 'active');
         }
 
         // Si el admin pide ver papelera
@@ -42,13 +42,13 @@ class CompanyController extends Controller
         }
 
         $companies = $query->withCount('inspections')
-            ->orderBy('razon_social')
+            ->orderBy('business_name')
             ->paginate(10)
             ->withQueryString();
 
-        $sectors = Company::select('sector')
+        $sectors = Company::select('industry_sector')
             ->distinct()
-            ->pluck('sector');
+            ->pluck('industry_sector');
 
         return Inertia::render('Companies/Index', compact('companies', 'sectors'));
     }
@@ -66,7 +66,7 @@ class CompanyController extends Controller
 
         $data = $request->validate([
             'business_name' => ['required', 'string', 'max:255'],
-            'tax_id' => ['required', 'string', 'max:50', 'unique:empresas,cuit'],
+            'tax_id' => ['required', 'string', 'max:50', 'unique:companies,tax_id'],
             'address' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -76,7 +76,7 @@ class CompanyController extends Controller
             'contact_person' => ['nullable', 'string', 'max:255'],
             'is_active' => ['boolean'],
             'inspector_ids' => ['nullable', 'array'],
-            'inspector_ids.*' => ['exists:usuarios,id'],
+            'inspector_ids.*' => ['exists:users,id'],
         ]);
 
         $data['created_by'] = $user->id;
@@ -217,7 +217,7 @@ class CompanyController extends Controller
 
         $data = $request->validate([
             'business_name' => ['required', 'string', 'max:255'],
-            'tax_id' => ['required', 'string', 'max:50', Rule::unique('empresas', 'cuit')->ignore($company->id)],
+            'tax_id' => ['required', 'string', 'max:50', Rule::unique('companies')->ignore($company->id)],
             'address' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -227,7 +227,7 @@ class CompanyController extends Controller
             'contact_person' => ['nullable', 'string', 'max:255'],
             'is_active' => ['boolean'],
             'inspector_ids' => ['nullable', 'array'],
-            'inspector_ids.*' => ['exists:usuarios,id'],
+            'inspector_ids.*' => ['exists:users,id'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
@@ -253,7 +253,7 @@ class CompanyController extends Controller
 
         $data = $request->validate([
             'inspector_ids' => ['nullable', 'array'],
-            'inspector_ids.*' => ['exists:usuarios,id'],
+            'inspector_ids.*' => ['exists:users,id'],
         ]);
 
         $company->inspectors()->sync($data['inspector_ids'] ?? []);
