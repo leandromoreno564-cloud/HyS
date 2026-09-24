@@ -26,6 +26,10 @@ import {
     Plus,
     Trash2,
     ExternalLink,
+    Wifi,
+    WifiOff,
+    RefreshCw,
+    HardDriveDownload,
 } from 'lucide-react';
 
 const STATUS_OPTIONS = [
@@ -64,14 +68,40 @@ function validateImage(file) {
 }
 
 export default function CompaniesChecklist({ company, items }) {
-    const [stage, setStage] = useState(items && items.length > 0 ? 'saved' : 'upload'); // upload | draft | saved
+    const OFFLINE_ITEMS_KEY = `hys_offline_items_${company.id}`;
+    const OFFLINE_QUEUE_KEY = `hys_offline_queue_${company.id}`;
+
+    const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+    const [pendingQueue, setPendingQueue] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+        } catch {
+            return [];
+        }
+    });
+    const [isSyncingQueue, setIsSyncingQueue] = useState(false);
+
+    // Recupera de localStorage si el server vino vacío (por ej. si abrimos offline)
+    const initialSavedItems = useMemo(() => {
+        if (items && items.length > 0) return items;
+        try {
+            const cached = localStorage.getItem(OFFLINE_ITEMS_KEY);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+        } catch {}
+        return [];
+    }, [items, OFFLINE_ITEMS_KEY]);
+
+    const [stage, setStage] = useState(initialSavedItems.length > 0 ? 'saved' : 'upload'); // upload | draft | saved
     const [draftItems, setDraftItems] = useState([]);
-    const [savedItems, setSavedItems] = useState(items || []);
+    const [savedItems, setSavedItems] = useState(initialSavedItems);
     const [saving, setSaving] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(null); // { done, total }
     const [pageError, setPageError] = useState('');
     const [pageNotice, setPageNotice] = useState('');
-    const [sync, setSync] = useState('idle'); // idle | saving | saved | error
+    const [sync, setSync] = useState(pendingQueue.length > 0 ? 'offline' : 'idle'); // idle | saving | saved | error | offline
     const [viewer, setViewer] = useState(null); // { title, images: [{src,label}], index }
     const [downloading, setDownloading] = useState(false);
 
@@ -86,14 +116,130 @@ export default function CompaniesChecklist({ company, items }) {
         return promise;
     };
 
-    // Sincroniza con props frescas del server
+    // Sincroniza con props frescas del server y actualiza la caché local
     useEffect(() => {
         if (items && items.length > 0) {
             setSavedItems(items);
             setStage('saved');
             setDraftItems([]);
+            try {
+                localStorage.setItem(OFFLINE_ITEMS_KEY, JSON.stringify(items));
+            } catch (e) {
+                console.warn('No se pudo guardar copia offline:', e);
+            }
         }
-    }, [items]);
+    }, [items, OFFLINE_ITEMS_KEY]);
+
+    // Detección de conexión (Online / Offline)
+    useEffect(() => {
+        const handleOnline = () => {
+            setIsOnline(true);
+            setPageNotice('Conexión reestablecida.');
+        };
+        const handleOffline = () => {
+            setIsOnline(false);
+            setPageNotice('Modo Sin Conexión activo. Tus respuestas se guardan en este dispositivo.');
+        };
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
+
+    // Sincroniza la cola de cambios pendientes cuando hay internet
+    const syncQueue = useCallback(async () => {
+        if (!navigator.onLine || isSyncingQueue) return;
+        const queue = (() => {
+            try { return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]'); } catch { return []; }
+        })();
+        if (queue.length === 0) return;
+
+        setIsSyncingQueue(true);
+        setSync('saving');
+
+        const remaining = [];
+        let updatedItems = [...savedItems];
+        for (const change of queue) {
+            try {
+                const res = await axios.patch(`/checklist-items/${change.id}`, change.fields, jsonHeaders);
+                updatedItems = updatedItems.map((it) => (it.id === change.id ? res.data.item : it));
+            } catch (err) {
+                console.error('Error al sincronizar offline:', err);
+                remaining.push(change);
+            }
+        }
+
+        setSavedItems(updatedItems);
+        try {
+            localStorage.setItem(OFFLINE_ITEMS_KEY, JSON.stringify(updatedItems));
+            localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(remaining));
+        } catch {}
+        setPendingQueue(remaining);
+        setIsSyncingQueue(false);
+
+        if (remaining.length === 0) {
+            setSync('saved');
+            setPageNotice('¡Todos los cambios fuera de línea fueron sincronizados con éxito!');
+        } else {
+            setSync('offline');
+            setPageError(`Quedaron ${remaining.length} cambios pendientes de sincronizar.`);
+        }
+    }, [OFFLINE_ITEMS_KEY, OFFLINE_QUEUE_KEY, isSyncingQueue, savedItems]);
+
+    // Al volver a estar en línea, sincronizar automáticamente
+    useEffect(() => {
+        if (isOnline && pendingQueue.length > 0) {
+            syncQueue();
+        }
+    }, [isOnline]);
+
+    // Guardar copia local explícita para trabajar offline
+    const saveForOffline = () => {
+        try {
+            localStorage.setItem(OFFLINE_ITEMS_KEY, JSON.stringify(savedItems));
+            setPageNotice('Checklist guardado en este dispositivo. Ya podés auditar en la fábrica sin internet.');
+        } catch (e) {
+            setPageError('No se pudo guardar la copia local.');
+        }
+    };
+
+    // Actualiza el item optimísticamente en el estado y en localStorage
+    const updateLocalItem = useCallback((id, fields) => {
+        setSavedItems((prev) => {
+            const updated = prev.map((it) => (it.id === id ? { ...it, ...fields } : it));
+            try {
+                localStorage.setItem(OFFLINE_ITEMS_KEY, JSON.stringify(updated));
+            } catch {}
+            return updated;
+        });
+    }, [OFFLINE_ITEMS_KEY]);
+
+    // Encola un cambio para sincronizar al volver a tener conexión
+    const enqueueOfflineChange = useCallback((id, fields) => {
+        setPendingQueue((prev) => {
+            const idx = prev.findIndex((q) => q.id === id);
+            let nextQueue;
+            if (idx >= 0) {
+                nextQueue = [...prev];
+                nextQueue[idx] = {
+                    ...nextQueue[idx],
+                    fields: { ...nextQueue[idx].fields, ...fields },
+                    timestamp: Date.now(),
+                };
+            } else {
+                nextQueue = [...prev, { id, fields, timestamp: Date.now() }];
+            }
+            try {
+                localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(nextQueue));
+            } catch {}
+            return nextQueue;
+        });
+        setSync('offline');
+    }, [OFFLINE_QUEUE_KEY]);
 
     // Si se borraron todos los ítems guardados, volvemos a la pantalla de carga
     const effectiveStage = stage === 'saved' && savedItems.length === 0 ? 'upload' : stage;
@@ -295,12 +441,15 @@ export default function CompaniesChecklist({ company, items }) {
 
             revokeDraftUrls(draftItems);
             setSavedItems(saved);
+            try {
+                localStorage.setItem(OFFLINE_ITEMS_KEY, JSON.stringify(saved));
+            } catch {}
             setDraftItems([]);
             setStage('saved');
             setPageNotice(
                 failed > 0
                     ? `Relevamiento guardado, pero ${failed} foto(s) no se pudieron subir. Podés volver a agregarlas desde cada ítem.`
-                    : 'Relevamiento guardado correctamente.'
+                    : 'Relevamiento guardado correctamente y preparado para uso sin conexión.'
             );
         } catch (err) {
             setPageError(errMsg(err, 'No se pudo guardar el relevamiento.'));
@@ -310,23 +459,50 @@ export default function CompaniesChecklist({ company, items }) {
         }
     };
 
-    // ---------- GUARDADO (edición en vivo contra el server) ----------
+    // ---------- GUARDADO (edición en vivo contra el server / offline) ----------
     const patchSavedItem = (id, fields) => {
+        // 1. Guardado optimista inmediato en memoria y localStorage
+        updateLocalItem(id, fields);
+
+        // 2. Si no hay conexión a internet, encolar directamente
+        if (!navigator.onLine) {
+            enqueueOfflineChange(id, fields);
+            return Promise.resolve();
+        }
+
+        // 3. Con conexión: enviar actualización al servidor
         setSync('saving');
         const p = axios
             .patch(`/checklist-items/${id}`, fields, jsonHeaders)
             .then((res) => {
-                setSavedItems((prev) => prev.map((it) => (it.id === id ? res.data.item : it)));
-                setSync('saved');
+                setSavedItems((prev) => {
+                    const next = prev.map((it) => (it.id === id ? res.data.item : it));
+                    try {
+                        localStorage.setItem(OFFLINE_ITEMS_KEY, JSON.stringify(next));
+                    } catch {}
+                    return next;
+                });
+                setSync((cur) => (pendingQueue.length > 0 ? 'offline' : 'saved'));
             })
             .catch((err) => {
-                setSync('error');
-                setPageError(errMsg(err, 'No se pudo guardar el cambio.'));
+                const isNetErr = !err.response || err.code === 'ERR_NETWORK' || err.message === 'Network Error';
+                if (isNetErr) {
+                    setIsOnline(false);
+                    enqueueOfflineChange(id, fields);
+                    setPageNotice('Conexión perdida. El cambio se guardó en tu dispositivo y se enviará al reconectar.');
+                } else {
+                    setSync('error');
+                    setPageError(errMsg(err, 'No se pudo guardar el cambio.'));
+                }
             });
         return track(p);
     };
 
     const uploadPhoto = async (id, slot, file) => {
+        if (!navigator.onLine) {
+            setPageError('Para subir fotos al servidor se necesita conexión a internet. Guardá tus respuestas y subí las fotos cuando tengas señal.');
+            return;
+        }
         const problem = validateImage(file);
         if (problem) {
             setPageError(problem);
@@ -508,17 +684,58 @@ export default function CompaniesChecklist({ company, items }) {
                         </div>
 
                         {effectiveStage === 'saved' && (
-                            <button
-                                type="button"
-                                onClick={downloadPdf}
-                                disabled={downloading}
-                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-60"
-                            >
-                                {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-                                {downloading ? 'Generando PDF...' : 'Descargar PDF'}
-                            </button>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <button
+                                    type="button"
+                                    onClick={saveForOffline}
+                                    title="Guarda una copia en la memoria de este navegador para relevar sin internet"
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200/80 transition-colors"
+                                >
+                                    <HardDriveDownload className="w-4 h-4 text-slate-500" />
+                                    Guardar offline
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={downloadPdf}
+                                    disabled={downloading}
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-60"
+                                >
+                                    {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                                    {downloading ? 'Generando PDF...' : 'Descargar PDF'}
+                                </button>
+                            </div>
                         )}
                     </div>
+
+                    {/* Banner de estado de conexión / offline */}
+                    {(!isOnline || pendingQueue.length > 0) && (
+                        <div className="mt-4 flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs">
+                            <div className="flex items-center gap-2.5">
+                                <WifiOff className="w-4 h-4 text-amber-600 shrink-0" />
+                                <div>
+                                    <span className="font-bold">
+                                        {!isOnline ? 'Modo Sin Conexión' : 'Cambios fuera de línea pendientes'}
+                                    </span>
+                                    <span className="text-amber-800 ml-1.5">
+                                        {pendingQueue.length > 0
+                                            ? `Tenés ${pendingQueue.length} cambio(s) guardado(s) en este dispositivo.`
+                                            : 'Podés seguir relevando; tus respuestas se guardan localmente.'}
+                                    </span>
+                                </div>
+                            </div>
+                            {isOnline && pendingQueue.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={syncQueue}
+                                    disabled={isSyncingQueue}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-xs transition-colors shrink-0 disabled:opacity-50"
+                                >
+                                    <RefreshCw className={`w-3.5 h-3.5 ${isSyncingQueue ? 'animate-spin' : ''}`} />
+                                    {isSyncingQueue ? 'Sincronizando...' : 'Sincronizar ahora'}
+                                </button>
+                            )}
+                        </div>
+                    )}
 
                     {/* Mensajes globales */}
                     {pageError && (
@@ -631,7 +848,7 @@ export default function CompaniesChecklist({ company, items }) {
                                     </span>
                                     <span className="text-emerald-600 font-semibold">{stats.si} SI</span>
                                     <span className="text-rose-600 font-semibold">{stats.no} NO</span>
-                                    {effectiveStage === 'saved' && <SyncBadge state={sync} />}
+                                    {effectiveStage === 'saved' && <SyncBadge state={sync} pendingCount={pendingQueue.length} />}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button type="button" onClick={expandAll} className="text-[11px] font-semibold text-blue-600 hover:text-blue-700">
@@ -807,7 +1024,15 @@ export default function CompaniesChecklist({ company, items }) {
     );
 }
 
-function SyncBadge({ state }) {
+function SyncBadge({ state, pendingCount = 0 }) {
+    if (pendingCount > 0 || state === 'offline') {
+        return (
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md border border-amber-200">
+                <WifiOff className="w-3 h-3 text-amber-600" />
+                Modo offline ({pendingCount} pendiente{pendingCount !== 1 ? 's' : ''})
+            </span>
+        );
+    }
     if (state === 'saving')
         return (
             <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600">

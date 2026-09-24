@@ -157,17 +157,6 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                         <span>Exportar a Excel (CSV)</span>
                     </a>
 
-                    <div className="pt-4 px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                        Cuenta
-                    </div>
-                    <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-400 hover:text-rose-200 hover:bg-rose-950/40 transition-all text-left"
-                    >
-                        <LogOut className="w-4 h-4 text-rose-400" />
-                        <span>Cerrar Sesión</span>
-                    </button>
                 </nav>
 
                 {/* Footer institution card */}
