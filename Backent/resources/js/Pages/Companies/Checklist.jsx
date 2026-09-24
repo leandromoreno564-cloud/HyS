@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import {
     ArrowLeft,
@@ -30,6 +30,7 @@ import {
     WifiOff,
     RefreshCw,
     HardDriveDownload,
+    Settings,
 } from 'lucide-react';
 
 const STATUS_OPTIONS = [
@@ -104,6 +105,26 @@ export default function CompaniesChecklist({ company, items }) {
     const [sync, setSync] = useState(pendingQueue.length > 0 ? 'offline' : 'idle'); // idle | saving | saved | error | offline
     const [viewer, setViewer] = useState(null); // { title, images: [{src,label}], index }
     const [downloading, setDownloading] = useState(false);
+
+    const { auth } = usePage().props;
+    const isAdmin = auth?.user?.role === 'admin';
+    const [allowInspectorUpload, setAllowInspectorUpload] = useState(!!company.allow_inspector_upload_pdf);
+    const [togglingPermission, setTogglingPermission] = useState(false);
+    const canUploadPdf = isAdmin || allowInspectorUpload;
+
+    const toggleInspectorUpload = async () => {
+        if (!isAdmin || togglingPermission) return;
+        setTogglingPermission(true);
+        try {
+            const res = await axios.patch(`/companies/${company.id}/checklist/toggle-upload-permission`, {}, jsonHeaders);
+            setAllowInspectorUpload(res.data.allow_inspector_upload_pdf);
+            setPageNotice(res.data.message);
+        } catch (err) {
+            setPageError(errMsg(err, 'No se pudo actualizar el permiso.'));
+        } finally {
+            setTogglingPermission(false);
+        }
+    };
 
     const keyCounter = useRef(0);
     const newKey = () => `d${++keyCounter.current}`;
@@ -757,66 +778,123 @@ export default function CompaniesChecklist({ company, items }) {
                         </div>
                     )}
 
-                    {/* Zona de carga de PDF */}
+                    {/* Zona de carga de PDF y control de permisos */}
                     {effectiveStage === 'upload' && (
-                        <div
-                            onDragOver={(e) => {
-                                e.preventDefault();
-                                setIsDragging(true);
-                            }}
-                            onDragLeave={() => setIsDragging(false)}
-                            onDrop={handleDrop}
-                            className={`mt-6 rounded-2xl border border-dashed p-8 text-center transition-colors ${
-                                isDragging ? 'border-blue-500 bg-blue-50/60' : 'border-slate-300 bg-slate-50/60'
-                            }`}
-                        >
-                            <FileUp className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                            <p className="text-sm font-bold text-slate-800 mb-1">
-                                Subí el Relevamiento (PDF) para extraer el checklist
-                            </p>
-                            <p className="text-xs text-slate-500 mb-4 flex items-center justify-center gap-1.5 flex-wrap">
-                                Arrastrá el PDF acá, pegalo con{' '}
-                                <kbd className="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono">Ctrl+V</kbd> o elegilo
-                                del disco.
-                            </p>
-
-                            <div className="flex items-center justify-center gap-3 flex-wrap">
-                                <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-700 cursor-pointer transition-colors shadow-xs">
-                                    <FileUp className="w-3.5 h-3.5" />
-                                    Elegir PDF
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="application/pdf"
-                                        onChange={handlePdfChange}
-                                        className="hidden"
-                                    />
-                                </label>
-                                <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
-                                    <ClipboardPaste className="w-3.5 h-3.5" />o pegalo en cualquier parte de esta página
-                                </span>
-                            </div>
-
-                            {pdfState === 'loading' && (
-                                <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                    Leyendo {pdfFileName}...
-                                </p>
+                        <div className="mt-6 space-y-4">
+                            {/* Panel de control de permisos para el Administrador */}
+                            {isAdmin && (
+                                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 flex items-center justify-between gap-4 flex-wrap">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                            <FileUp className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-slate-800">
+                                                ¿Quién carga el PDF de relevamiento para esta empresa?
+                                            </p>
+                                            <p className="text-[11px] text-slate-500">
+                                                {allowInspectorUpload
+                                                    ? 'Opción activa: Tanto el Administrador como el Inspector tienen permiso para subir o reemplazar el PDF.'
+                                                    : 'Opción activa: Solo el Administrador puede subir el PDF. El inspector únicamente realizará la auditoría.'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={toggleInspectorUpload}
+                                        disabled={togglingPermission}
+                                        className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                                            allowInspectorUpload
+                                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                                : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
+                                        }`}
+                                    >
+                                        {togglingPermission ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : allowInspectorUpload ? (
+                                            <Check className="w-3.5 h-3.5" />
+                                        ) : (
+                                            <Settings className="w-3.5 h-3.5" />
+                                        )}
+                                        {allowInspectorUpload ? 'Permitido al Inspector' : 'Subir yo (Solo Admin)'}
+                                    </button>
+                                </div>
                             )}
-                            {pdfState === 'error' && (
-                                <p className="mt-4 flex items-center justify-center gap-1.5 text-xs font-medium text-amber-700">
-                                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                    {pdfMessage}
-                                </p>
-                            )}
-                            {savedItems.length > 0 && (
-                                <button
-                                    type="button"
-                                    onClick={() => setStage('saved')}
-                                    className="mt-4 text-xs font-semibold text-slate-500 hover:text-slate-700"
+
+                            {/* Si tiene permiso para subir: muestra la zona de carga */}
+                            {canUploadPdf ? (
+                                <div
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        setIsDragging(true);
+                                    }}
+                                    onDragLeave={() => setIsDragging(false)}
+                                    onDrop={handleDrop}
+                                    className={`rounded-2xl border border-dashed p-8 text-center transition-colors ${
+                                        isDragging ? 'border-blue-500 bg-blue-50/60' : 'border-slate-300 bg-slate-50/60'
+                                    }`}
                                 >
-                                    Cancelar y volver al relevamiento guardado
-                                </button>
+                                    <FileUp className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                                    <p className="text-sm font-bold text-slate-800 mb-1">
+                                        Subí el Relevamiento (PDF) para extraer el checklist
+                                    </p>
+                                    <p className="text-xs text-slate-500 mb-4 flex items-center justify-center gap-1.5 flex-wrap">
+                                        Arrastrá el PDF acá, pegalo con{' '}
+                                        <kbd className="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono">Ctrl+V</kbd> o elegilo
+                                        del disco.
+                                    </p>
+
+                                    <div className="flex items-center justify-center gap-3 flex-wrap">
+                                        <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-700 cursor-pointer transition-colors shadow-xs">
+                                            <FileUp className="w-3.5 h-3.5" />
+                                            Elegir PDF
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="application/pdf"
+                                                onChange={handlePdfChange}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                        <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
+                                            <ClipboardPaste className="w-3.5 h-3.5" />o pegalo en cualquier parte de esta página
+                                        </span>
+                                    </div>
+
+                                    {pdfState === 'loading' && (
+                                        <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600">
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            Leyendo {pdfFileName}...
+                                        </p>
+                                    )}
+                                    {pdfState === 'error' && (
+                                        <p className="mt-4 flex items-center justify-center gap-1.5 text-xs font-medium text-amber-700">
+                                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                            {pdfMessage}
+                                        </p>
+                                    )}
+                                    {savedItems.length > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setStage('saved')}
+                                            className="mt-4 text-xs font-semibold text-slate-500 hover:text-slate-700"
+                                        >
+                                            Cancelar y volver al relevamiento guardado
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                /* Vista para inspector cuando el admin aún no subió el PDF y no habilitó la subida */
+                                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-10 text-center">
+                                    <ClipboardList className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                                    <h3 className="text-sm font-bold text-slate-800 mb-1">
+                                        Relevamiento pendiente de carga
+                                    </h3>
+                                    <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                                        El administrador aún no ha cargado el PDF de relevamiento para <strong>{company.business_name}</strong> ni habilitó la subida para inspectores.
+                                        Una vez que el administrador suba el archivo o habilite el permiso, podrás auditar los ítems aquí e incluso trabajar en modo fuera de línea.
+                                    </p>
+                                </div>
                             )}
                         </div>
                     )}
@@ -999,15 +1077,33 @@ export default function CompaniesChecklist({ company, items }) {
                         </div>
                     )}
                     {effectiveStage === 'saved' && (
-                        <div className="mt-6 flex justify-end pt-4 border-t border-slate-100">
-                            <button
-                                type="button"
-                                onClick={startReplace}
-                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                            >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                                Reemplazar desde un nuevo PDF
-                            </button>
+                        <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-100 flex-wrap gap-3">
+                            {isAdmin && (
+                                <button
+                                    type="button"
+                                    onClick={toggleInspectorUpload}
+                                    disabled={togglingPermission}
+                                    className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-slate-800 transition-colors"
+                                >
+                                    <Settings className="w-3.5 h-3.5 text-slate-400" />
+                                    <span>
+                                        Permiso al inspector para reemplazar PDF:{' '}
+                                        <strong className={allowInspectorUpload ? 'text-emerald-600' : 'text-slate-700'}>
+                                            {allowInspectorUpload ? 'Habilitado' : 'Solo Administrador'}
+                                        </strong>
+                                    </span>
+                                </button>
+                            )}
+                            {canUploadPdf && (
+                                <button
+                                    type="button"
+                                    onClick={startReplace}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors ml-auto"
+                                >
+                                    <RotateCcw className="w-3.5 h-3.5" />
+                                    Reemplazar desde un nuevo PDF
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>

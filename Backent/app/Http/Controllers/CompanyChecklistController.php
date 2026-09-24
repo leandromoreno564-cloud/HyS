@@ -26,13 +26,52 @@ class CompanyChecklistController extends Controller
         }
     }
 
+    private function authorizeUpload(Company $company): void
+    {
+        $this->authorize404($company);
+
+        /** @var User $user */
+        $user = Auth::user();
+        if ($user->role !== 'admin' && !$company->allow_inspector_upload_pdf) {
+            abort(403, 'El administrador no ha habilitado la carga de PDF para inspectores en esta empresa.');
+        }
+    }
+
     public function index(Company $company)
     {
         $this->authorize404($company);
 
         return Inertia::render('Companies/Checklist', [
-            'company' => $company->only(['id', 'business_name', 'tax_id']),
+            'company' => [
+                'id' => $company->id,
+                'business_name' => $company->business_name,
+                'tax_id' => $company->tax_id,
+                'allow_inspector_upload_pdf' => (bool) $company->allow_inspector_upload_pdf,
+            ],
             'items' => $company->checklistItems()->get(),
+        ]);
+    }
+
+    /**
+     * Alterna si el inspector tiene permiso para subir o reemplazar el PDF de esta empresa.
+     */
+    public function toggleInspectorUpload(Request $request, Company $company)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        if ($user->role !== 'admin') {
+            abort(403, 'Solo el administrador puede configurar los permisos de subida de PDF.');
+        }
+
+        $company->allow_inspector_upload_pdf = !$company->allow_inspector_upload_pdf;
+        $company->save();
+
+        return response()->json([
+            'success' => true,
+            'allow_inspector_upload_pdf' => (bool) $company->allow_inspector_upload_pdf,
+            'message' => $company->allow_inspector_upload_pdf
+                ? 'El inspector ahora puede subir o reemplazar el PDF en esta empresa.'
+                : 'Carga de PDF restringida exclusivamente al administrador.',
         ]);
     }
 
@@ -43,7 +82,7 @@ class CompanyChecklistController extends Controller
      */
     public function extract(Request $request, Company $company)
     {
-        $this->authorize404($company);
+        $this->authorizeUpload($company);
 
         $request->validate([
             'pdf' => ['required', 'file', 'mimes:pdf', 'max:20480'],
@@ -82,7 +121,7 @@ class CompanyChecklistController extends Controller
      */
     public function store(Request $request, Company $company)
     {
-        $this->authorize404($company);
+        $this->authorizeUpload($company);
 
         $data = $request->validate([
             'items' => ['required', 'array', 'min:1'],

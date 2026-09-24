@@ -46,6 +46,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/companies/{company}/checklist', [CompanyChecklistController::class, 'index'])->name('companies.checklist.index');
     Route::post('/companies/{company}/checklist/extract', [CompanyChecklistController::class, 'extract'])->name('companies.checklist.extract');
     Route::post('/companies/{company}/checklist', [CompanyChecklistController::class, 'store'])->name('companies.checklist.store');
+    Route::patch('/companies/{company}/checklist/toggle-upload-permission', [CompanyChecklistController::class, 'toggleInspectorUpload'])->name('companies.checklist.toggle-upload');
     Route::get('/companies/{company}/checklist/pdf', [CompanyChecklistController::class, 'downloadPdf'])->name('companies.checklist.pdf');
     Route::post('/companies/{company}/checklist/items', [CompanyChecklistController::class, 'storeItem'])->name('companies.checklist.items.store');
     Route::patch('/companies/{company}/checklist/category', [CompanyChecklistController::class, 'renameCategory'])->name('companies.checklist.category');

@@ -26,12 +26,14 @@ class Company extends Model
         'contact_person',
         'created_by',
         'is_active',
+        'allow_inspector_upload_pdf',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'allow_inspector_upload_pdf' => 'boolean',
             'employee_count' => 'integer',
         ];
     }
