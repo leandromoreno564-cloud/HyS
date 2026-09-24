@@ -18,7 +18,7 @@ Route::get('/', function () {
 // Autenticación pública
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Registro público de Licenciados (queda inactivo hasta que el admin lo apruebe)
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
