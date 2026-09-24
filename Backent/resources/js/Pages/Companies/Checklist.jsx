@@ -1090,6 +1090,12 @@ function SavedRow({ row, onPatch, onUploadPhoto, onDeletePhoto, onDelete, onView
                 />
                 <StatusButtons value={row.status} onChange={(v) => onPatch({ status: v })} />
             </div>
+            {row.status === 'NO' && (
+                <div className="ml-8 flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-lg font-medium">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>Medida correctiva registrada automáticamente en el panel general.</span>
+                </div>
+            )}
             <div className="pl-8 space-y-2">
                 <textarea
                     value={description}

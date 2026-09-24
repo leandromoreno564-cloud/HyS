@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\CompanyChecklistItem;
+use App\Models\CorrectiveMeasure;
+use App\Models\Inspection;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -93,15 +95,16 @@ class CompanyChecklistController extends Controller
         ]);
 
         DB::transaction(function () use ($company, $data) {
-            // Al reemplazar el relevamiento, borramos las fotos viejas del disco también
+            // Al reemplazar el relevamiento, borramos las fotos viejas del disco y sus medidas asociadas
             foreach ($company->checklistItems()->get() as $old) {
                 if ($old->photo_1) Storage::disk('public')->delete($old->photo_1);
                 if ($old->photo_2) Storage::disk('public')->delete($old->photo_2);
+                CorrectiveMeasure::where('notes', 'checklist_item_' . $old->id)->delete();
             }
             $company->checklistItems()->delete();
 
             foreach ($data['items'] as $item) {
-                $company->checklistItems()->create([
+                $created = $company->checklistItems()->create([
                     'item_number' => $item['item_number'],
                     'category' => $item['category'] ?? null,
                     'question' => $item['question'],
@@ -109,6 +112,10 @@ class CompanyChecklistController extends Controller
                     'status' => $item['status'] ?? null,
                     'description' => $item['description'] ?? null,
                 ]);
+
+                if (($item['status'] ?? null) === 'NO') {
+                    $this->syncCorrectiveMeasure($created);
+                }
             }
         });
 
@@ -136,6 +143,8 @@ class CompanyChecklistController extends Controller
         ]);
 
         $item->update($data);
+
+        $this->syncCorrectiveMeasure($item);
 
         if ($request->expectsJson()) {
             return response()->json(['item' => $item]);
@@ -222,7 +231,7 @@ class CompanyChecklistController extends Controller
     }
 
     /**
-     * Elimina un ítem guardado junto con sus fotos.
+     * Elimina un ítem guardado junto con sus fotos y su medida correctiva asociada.
      */
     public function destroyItem(Request $request, CompanyChecklistItem $item)
     {
@@ -230,9 +239,86 @@ class CompanyChecklistController extends Controller
 
         if ($item->photo_1) Storage::disk('public')->delete($item->photo_1);
         if ($item->photo_2) Storage::disk('public')->delete($item->photo_2);
+        CorrectiveMeasure::where('notes', 'checklist_item_' . $item->id)->delete();
         $item->delete();
 
         return response()->json(['deleted' => true]);
+    }
+
+    /**
+     * Sincroniza automáticamente los incumplimientos (NO) del checklist con el módulo general de Medidas Correctivas.
+     */
+    private function syncCorrectiveMeasure(CompanyChecklistItem $item): void
+    {
+        $company = $item->company;
+        if (!$company) {
+            return;
+        }
+
+        // Obtener o crear una Inspección activa para esta empresa para anclar la medida correctiva
+        $inspection = Inspection::firstOrCreate(
+            [
+                'company_id' => $company->id,
+                'status' => 'En Progreso',
+            ],
+            [
+                'user_id' => Auth::id() ?? $company->created_by ?? 1,
+                'inspection_date' => now()->toDateString(),
+                'type' => 'General',
+                'general_observations' => 'Relevamiento General de Riesgos Laborales (Res. SRT 463/09)',
+                'progress_percentage' => 0,
+            ]
+        );
+
+        $tag = 'checklist_item_' . $item->id;
+        $measure = CorrectiveMeasure::where('notes', $tag)->first();
+
+        if ($item->status === 'NO') {
+            $catLabel = $item->category ? " [{$item->category}]" : "";
+            $obsLabel = $item->description ? " — Obs: {$item->description}" : "";
+            $desc = "Ítem {$item->item_number}{$catLabel}: {$item->question}{$obsLabel}";
+
+            $priority = 'Media';
+            $lower = strtolower(($item->category ?? '') . ' ' . $item->question);
+            if (
+                str_contains($lower, 'eléctric') ||
+                str_contains($lower, 'incendio') ||
+                str_contains($lower, 'caldera') ||
+                str_contains($lower, 'químic') ||
+                str_contains($lower, 'altura') ||
+                str_contains($lower, 'explos') ||
+                str_contains($lower, 'gas')
+            ) {
+                $priority = 'Alta';
+            }
+
+            if (!$measure) {
+                CorrectiveMeasure::create([
+                    'inspection_id' => $inspection->id,
+                    'description' => $desc,
+                    'priority' => $priority,
+                    'recommendations' => $item->reference ? "Adecuar según norma: {$item->reference}" : 'Subsanar condición de riesgo según Decreto 351/79.',
+                    'deadline' => now()->addDays($priority === 'Alta' ? 15 : 30)->toDateString(),
+                    'responsible_person' => $company->contact_person ?? 'Responsable de Seguridad del Establecimiento',
+                    'status' => 'Pendiente',
+                    'notes' => $tag,
+                ]);
+            } else {
+                $measure->update([
+                    'description' => $desc,
+                    'recommendations' => $item->reference ? "Adecuar según norma: {$item->reference}" : $measure->recommendations,
+                    'status' => in_array($measure->status, ['Completada', 'Cancelada']) ? 'Pendiente' : $measure->status,
+                ]);
+            }
+        } elseif ($measure) {
+            // Si el ítem ya no es "NO" (pasó a "SI" o "NO_APLICA"), se marca la medida como Completada
+            if ($measure->status !== 'Completada') {
+                $measure->update([
+                    'status' => 'Completada',
+                    'verification_date' => now()->toDateString(),
+                ]);
+            }
+        }
     }
 
     /**
