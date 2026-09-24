@@ -16,7 +16,8 @@ import {
     XCircle,
     Info,
     ChevronRight,
-    Search
+    Search,
+    Calendar,
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, title = '' }) {
@@ -40,6 +41,12 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             href: '/companies', 
             icon: Building2, 
             active: currentPath.startsWith('/companies') 
+        },
+        { 
+            name: 'Calendario & Agenda', 
+            href: '/calendar', 
+            icon: Calendar, 
+            active: currentPath.startsWith('/calendar') 
         },
         { 
             name: 'Medidas Correctivas', 

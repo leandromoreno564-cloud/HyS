@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CompanyChecklistController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CorrectiveMeasureController;
@@ -59,6 +60,11 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/corrective-measures', [CorrectiveMeasureController::class, 'index'])->name('corrective-measures.index');
     Route::post('/corrective-measures/{measure}/status', [CorrectiveMeasureController::class, 'updateStatus'])->name('corrective-measures.status');
     Route::delete('/corrective-measures/{measure}', [CorrectiveMeasureController::class, 'destroy'])->name('corrective-measures.destroy');
+
+    // Calendario & Agenda
+    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
+    Route::post('/calendar/inspections', [CalendarController::class, 'storeInspection'])->name('calendar.inspections.store');
+    Route::patch('/calendar/inspections/{inspection}/status', [CalendarController::class, 'updateInspectionStatus'])->name('calendar.inspections.status');
 
     // Informes y Reportes
     Route::get('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.csv');
