@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'n8n' => [
+        // URL del nodo Webhook del workflow de n8n que atiende el chat del checklist.
+        'checklist_chat_webhook_url' => env('N8N_CHECKLIST_CHAT_WEBHOOK_URL'),
+        // Opcional: si en n8n activaste "Header Auth" en el Webhook, poné acá el mismo valor.
+        'checklist_chat_secret' => env('N8N_CHECKLIST_CHAT_SECRET'),
+    ],
+
 ];
