@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
                     'license_number' => $request->user()->license_number,
                     'phone' => $request->user()->phone,
                     'is_active' => $request->user()->is_active,
+                    'avatar' => $request->user()->avatar,
                 ] : null,
             ],
             'unreadNotifications' => fn () => $request->user() ? $request->user()->appNotifications()->where('is_read', false)->count() : 0,

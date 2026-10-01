@@ -53,6 +53,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::patch('/checklist-items/{item}', [CompanyChecklistController::class, 'updateItem'])->name('checklist-items.update');
     Route::post('/checklist-items/{item}/photo', [CompanyChecklistController::class, 'uploadPhoto'])->name('checklist-items.photo.upload');
     Route::delete('/checklist-items/{item}/photo', [CompanyChecklistController::class, 'deletePhoto'])->name('checklist-items.photo.delete');
+    Route::post('/companies/{company}/checklist/chat', [CompanyChecklistController::class, 'chat'])->name('companies.checklist.chat');
 
     // Medidas Correctivas
     Route::get('/corrective-measures', [CorrectiveMeasureController::class, 'index'])->name('corrective-measures.index');

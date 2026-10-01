@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -252,6 +254,140 @@ class CompanyChecklistController extends Controller
         $query->update(['category' => trim($data['to'])]);
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Asistente conversacional (vive en el widget de chat del checklist).
+     *
+     * Laravel actúa de "proxy de confianza": arma el contexto completo del relevamiento,
+     * se lo manda a un workflow de n8n (que tiene el nodo de IA), y cuando n8n responde con
+     * instrucciones de qué ítems cambiar, es Laravel quien aplica esos cambios a la base
+     * de datos —nunca n8n directamente—, validando que los ítems pertenezcan a esta empresa.
+     *
+     * Requiere la variable de entorno N8N_CHECKLIST_CHAT_WEBHOOK_URL en el .env, apuntando
+     * a la URL del nodo Webhook del workflow (ver guía del asistente).
+     */
+    public function chat(Request $request, Company $company)
+    {
+        $this->authorize404($company);
+
+        $data = $request->validate([
+            'message' => ['required', 'string', 'max:2000'],
+            // Historial corto que manda el front para que la IA tenga contexto de la charla.
+            'history' => ['sometimes', 'array', 'max:20'],
+            'history.*.role' => ['required_with:history', 'string', 'in:user,assistant'],
+            'history.*.content' => ['required_with:history', 'string', 'max:2000'],
+        ]);
+
+        $webhookUrl = config('services.n8n.checklist_chat_webhook_url');
+        if (!$webhookUrl) {
+            return response()->json([
+                'reply' => 'El asistente todavía no está configurado. Falta definir N8N_CHECKLIST_CHAT_WEBHOOK_URL en el servidor.',
+                'updated_items' => [],
+            ], 503);
+        }
+
+        $items = $company->checklistItems()
+            ->orderBy('item_number')
+            ->get(['id', 'item_number', 'category', 'question', 'reference', 'status', 'description'])
+            ->map(fn (CompanyChecklistItem $it) => [
+                'id' => $it->id,
+                'item_number' => $it->item_number,
+                'category' => $it->category,
+                'question' => $it->question,
+                'reference' => $it->reference,
+                'status' => $it->status, // SI | NO | NO_APLICA | null
+                'description' => $it->description,
+            ]);
+
+        $payload = [
+            'company' => [
+                'id' => $company->id,
+                'business_name' => $company->business_name,
+                'tax_id' => $company->tax_id,
+            ],
+            'message' => $data['message'],
+            'history' => $data['history'] ?? [],
+            'items' => $items,
+        ];
+
+        try {
+            $headers = [];
+            // Autenticación simple del webhook: evita que cualquiera con la URL pueda llamarlo.
+            if ($secret = config('services.n8n.checklist_chat_secret')) {
+                $headers['X-Webhook-Secret'] = $secret;
+            }
+
+            $response = Http::withHeaders($headers)
+                ->timeout(30)
+                ->post($webhookUrl, $payload);
+
+            if (!$response->successful()) {
+                Log::warning('n8n checklist chat webhook failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return response()->json([
+                    'reply' => 'El asistente no pudo responder en este momento. Probá de nuevo en unos segundos.',
+                    'updated_items' => [],
+                ], 502);
+            }
+
+            $result = $response->json();
+        } catch (\Throwable $e) {
+            Log::error('n8n checklist chat webhook error', ['message' => $e->getMessage()]);
+
+            return response()->json([
+                'reply' => 'No se pudo contactar al asistente. Revisá que n8n esté corriendo.',
+                'updated_items' => [],
+            ], 502);
+        }
+
+        $reply = is_string($result['reply'] ?? null) ? $result['reply'] : 'Listo.';
+        $actions = is_array($result['actions'] ?? null) ? $result['actions'] : [];
+
+        $updatedItems = collect();
+
+        foreach ($actions as $action) {
+            if (!is_array($action) || ($action['type'] ?? null) !== 'update_item') {
+                continue;
+            }
+
+            // Se busca por item_number DENTRO de esta empresa: nunca se confía en un "id"
+            // que venga de n8n, así una respuesta mal armada no puede tocar otra empresa.
+            $itemNumber = $action['item_number'] ?? null;
+            if (!is_numeric($itemNumber)) {
+                continue;
+            }
+
+            /** @var CompanyChecklistItem|null $item */
+            $item = CompanyChecklistItem::where('company_id', $company->id)
+                ->where('item_number', (int) $itemNumber)
+                ->first();
+
+            if (!$item) {
+                continue;
+            }
+
+            $fields = [];
+            if (isset($action['status']) && in_array($action['status'], ['SI', 'NO', 'NO_APLICA', null], true)) {
+                $fields['status'] = $action['status'];
+            }
+            if (isset($action['description']) && is_string($action['description'])) {
+                $fields['description'] = $action['description'];
+            }
+
+            if ($fields !== []) {
+                $item->update($fields);
+                $updatedItems->push($item->fresh());
+            }
+        }
+
+        return response()->json([
+            'reply' => $reply,
+            'updated_items' => $updatedItems->values(),
+        ]);
     }
 
     /**
