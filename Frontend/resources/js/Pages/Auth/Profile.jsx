@@ -22,8 +22,16 @@ export default function Profile({ user }) {
             <div className="max-w-3xl mx-auto space-y-6">
                 <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs">
                     <div className="flex items-center gap-4 pb-6 border-b border-slate-100">
-                        <div className="w-16 h-16 rounded-2xl bg-blue-600 text-white font-bold text-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            {user.name?.charAt(0).toUpperCase()}
+                        <div className="w-16 h-16 rounded-2xl bg-blue-600 text-white font-bold text-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 overflow-hidden shrink-0">
+                            {user.avatar ? (
+                                <img
+                                    src={`/storage/${user.avatar}`}
+                                    alt={user.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                user.name?.charAt(0).toUpperCase()
+                            )}
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-slate-900">{user.name}</h2>

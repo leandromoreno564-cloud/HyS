@@ -6,15 +6,19 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.jsx'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.jsx',
+            ],
             refresh: true,
+            publicDirectory: '../Backent/public',
+            hotFile: '../Backent/public/hot',
+            buildDirectory: 'build',
         }),
         react(),
         tailwindcss(),
     ],
     server: {
-        watch: {
-            ignored: ['**/storage/framework/views/**'],
-        },
+        cors: true,
     },
 });

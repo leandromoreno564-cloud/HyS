@@ -154,17 +154,22 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                     </a>
                 </nav>
 
-                {/* Footer institution card */}
                 <div className="p-3 border-t border-slate-800 bg-slate-950/20">
-                    <div className="p-3 bg-slate-800/50 rounded-xl border border-slate-700/50">
-                        <p className="text-[11px] font-semibold text-slate-300">
-                            IES Nuevo Horizonte
-                        </p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                            Prácticas Profesionalizantes I & II
-                        </p>
-                    </div>
-                </div>
+  <div className="p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 text-center">
+    <p className="text-[11px] font-semibold text-slate-200 uppercase tracking-wider mb-2">
+      INTEGRANTES
+    </p>
+    <ul className="text-[10px] text-slate-400 space-y-1 list-none p-0 m-0">
+      <li>Argañaras Bruno</li>
+      <li>Mamani Cristian</li>
+      <li>Moreno Leandro</li>
+      <li>Murquite Leandro</li>
+      <li>Subelza Jhonatan</li>
+      <li>Velazque Nicolas</li>
+    </ul>
+  </div>
+</div>
+                
             </aside>
 
             {/* Main Area */}
@@ -210,8 +215,16 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                                 className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
                             >
-                                <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-semibold text-sm flex items-center justify-center">
-                                    {currentUser?.name?.charAt(0).toUpperCase() || 'U'}
+                                <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-semibold text-sm flex items-center justify-center overflow-hidden shrink-0">
+                                    {currentUser?.avatar ? (
+                                        <img
+                                            src={`/storage/${currentUser.avatar}`}
+                                            alt={currentUser.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        currentUser?.name?.charAt(0).toUpperCase() || 'U'
+                                    )}
                                 </div>
                                 <div className="text-left hidden sm:block">
                                     <span className="text-xs font-semibold text-slate-800 block truncate max-w-[120px]">

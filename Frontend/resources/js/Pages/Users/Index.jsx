@@ -107,8 +107,16 @@ export default function UsersIndex({ users }) {
                                         <tr key={user.id} className="hover:bg-slate-50/80 transition-colors">
                                             <td className="py-3.5 px-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">
-                                                        {user.name.charAt(0).toUpperCase()}
+                                                    <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm overflow-hidden shrink-0">
+                                                        {user.avatar ? (
+                                                            <img
+                                                                src={`/storage/${user.avatar}`}
+                                                                alt={user.name}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            user.name.charAt(0).toUpperCase()
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <span className="font-bold text-slate-900 text-sm block">
