@@ -3,7 +3,6 @@ server {
     server_name _;
     client_max_body_size 25m;
 
-    # Vite assets are generated from Frontend and served at the same origin.
     location /build/ {
         alias /usr/share/nginx/html/build/;
         try_files $uri =404;
@@ -11,9 +10,8 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
-    # Laravel owns all application routes, sessions and Inertia responses.
     location / {
-        proxy_pass http://backend:80;
+        proxy_pass ${BACKEND_URL};
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
