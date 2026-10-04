@@ -1,0 +1,45 @@
+services:
+  frontend:
+    build:
+      context: .
+      target: frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      target: backend
+    env_file:
+      - .env.docker
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+    expose:
+      - "80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - laravel_storage:/var/www/storage
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    env_file:
+      - .env.docker
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  laravel_storage:
