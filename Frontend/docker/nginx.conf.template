@@ -13,10 +13,9 @@ server {
     location / {
         proxy_pass ${BACKEND_URL};
         proxy_http_version 1.1;
-        # Preserve the upstream host so Easypanel routes this request to the
-        # backend service instead of sending it back to this frontend domain.
-        proxy_set_header Host $proxy_host;
-        proxy_set_header X-Forwarded-Host $host;
+        # BACKEND_URL uses Easypanel's private service network. Keeping the
+        # public frontend host avoids redirects to the backend service domain.
+        proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
