@@ -17,6 +17,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $query = User::query();
+        $focusedUserId = $request->integer('focus') ?: null;
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -35,12 +36,18 @@ class UserController extends Controller
             $query->where('is_active', $request->input('status') === 'active');
         }
 
+        // Una notificación puede llevar a una cuenta que no estaría en la primera página.
+        // La colocamos primero para poder identificarla y aprobarla sin buscarla manualmente.
+        if ($focusedUserId && User::whereKey($focusedUserId)->exists()) {
+            $query->orderByRaw('id = ? desc', [$focusedUserId]);
+        }
+
         $users = $query->withCount(['inspections', 'assignedCompanies'])
             ->orderBy('name')
             ->paginate(10)
             ->withQueryString();
 
-        return Inertia::render('Users/Index', compact('users'));
+        return Inertia::render('Users/Index', compact('users', 'focusedUserId'));
     }
 
     public function create()

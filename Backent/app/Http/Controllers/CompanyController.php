@@ -186,7 +186,13 @@ class CompanyController extends Controller
             abort(403, 'No tiene acceso a esta empresa.');
         }
 
-        $company->load(['creator', 'inspectors', 'inspections.user', 'inspections.observations']);
+        $company->load([
+            'creator',
+            'inspectors',
+            'inspections.user',
+            'inspections.observations',
+            'checklists' => fn ($query) => $query->withCount('items'),
+        ]);
         $inspectors = User::where('role', 'inspector')->where('is_active', true)->get();
 
         return Inertia::render('Companies/Show', compact('company', 'inspectors'));

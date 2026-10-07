@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Badge from '@/Components/Badge';
 import { Link, router } from '@inertiajs/react';
 import { 
     Users, 
@@ -9,13 +8,10 @@ import {
     Shield, 
     Award, 
     Phone, 
-    Edit, 
-    Power,
-    CheckCircle,
-    XCircle
+    Edit,
 } from 'lucide-react';
 
-export default function UsersIndex({ users }) {
+export default function UsersIndex({ users, focusedUserId = null }) {
     const [search, setSearch] = useState('');
     const [role, setRole] = useState('');
 
@@ -104,7 +100,14 @@ export default function UsersIndex({ users }) {
                             <tbody className="divide-y divide-slate-100">
                                 {users?.data?.length > 0 ? (
                                     users.data.map((user) => (
-                                        <tr key={user.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <tr
+                                            key={user.id}
+                                            className={`transition-colors ${
+                                                Number(user.id) === Number(focusedUserId)
+                                                    ? 'bg-blue-100/70 hover:bg-blue-100 ring-1 ring-inset ring-blue-200'
+                                                    : 'hover:bg-slate-50/80'
+                                            }`}
+                                        >
                                             <td className="py-3.5 px-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm overflow-hidden shrink-0">
@@ -153,22 +156,28 @@ export default function UsersIndex({ users }) {
                                                 {user.inspections_count || 0}
                                             </td>
                                             <td className="py-3.5 px-4">
-                                                <Badge>{user.is_active ? 'Activo' : 'Inactivo'}</Badge>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        role="switch"
+                                                        aria-checked={user.is_active}
+                                                        onClick={() => handleToggleStatus(user.id)}
+                                                        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                                            user.is_active ? 'bg-emerald-500' : 'bg-slate-300'
+                                                        }`}
+                                                        title={user.is_active ? 'Desactivar acceso' : 'Aprobar y habilitar acceso'}
+                                                    >
+                                                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform ${
+                                                            user.is_active ? 'translate-x-[18px]' : 'translate-x-1'
+                                                        }`} />
+                                                    </button>
+                                                    <span className={`text-[11px] font-semibold ${user.is_active ? 'text-emerald-700' : 'text-slate-500'}`}>
+                                                        {user.is_active ? 'Activo' : Number(user.id) === Number(focusedUserId) ? 'Pendiente de aprobación' : 'Inactivo'}
+                                                    </span>
+                                                </div>
                                             </td>
                                             <td className="py-3.5 px-4 text-right whitespace-nowrap">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleToggleStatus(user.id)}
-                                                        className={`p-1.5 rounded-lg transition-colors ${
-                                                            user.is_active 
-                                                                ? 'text-emerald-600 hover:bg-emerald-50' 
-                                                                : 'text-slate-400 hover:bg-slate-100'
-                                                        }`}
-                                                        title={user.is_active ? 'Desactivar acceso' : 'Habilitar acceso'}
-                                                    >
-                                                        <Power className="w-4 h-4" />
-                                                    </button>
                                                     <Link
                                                         href={`/users/${user.id}/edit`}
                                                         className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

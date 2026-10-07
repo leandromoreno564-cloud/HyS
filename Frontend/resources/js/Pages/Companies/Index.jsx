@@ -124,14 +124,23 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
                             <tbody className="divide-y divide-slate-100">
                                 {companies?.data?.length > 0 ? (
                                     companies.data.map((company) => (
-                                        <tr key={company.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <tr
+                                            key={company.id}
+                                            onClick={() => !company.deleted_at && router.visit(`/companies/${company.id}`)}
+                                            onKeyDown={(e) => {
+                                                if (!company.deleted_at && (e.key === 'Enter' || e.key === ' ')) {
+                                                    e.preventDefault();
+                                                    router.visit(`/companies/${company.id}`);
+                                                }
+                                            }}
+                                            role={company.deleted_at ? undefined : 'link'}
+                                            tabIndex={company.deleted_at ? undefined : 0}
+                                            className={`transition-colors ${company.deleted_at ? '' : 'cursor-pointer hover:bg-slate-50/80 focus:outline-none focus:bg-blue-50/60'}`}
+                                        >
                                             <td className="py-3.5 px-4">
-                                                <Link 
-                                                    href={`/companies/${company.id}`}
-                                                    className="font-bold text-slate-900 hover:text-blue-600 text-sm block"
-                                                >
+                                                <span className="font-bold text-slate-900 text-sm block">
                                                     {company.business_name}
-                                                </Link>
+                                                </span>
                                                 <span className="font-mono text-slate-400 text-[11px]">
                                                     CUIT: {company.tax_id}
                                                 </span>
@@ -183,7 +192,10 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
                                                     {company.deleted_at ? (
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleRestore(company.id)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleRestore(company.id);
+                                                            }}
                                                             className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg"
                                                             title="Restaurar de papelera"
                                                         >
@@ -192,6 +204,7 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
                                                     ) : (
                                                         <Link
                                                             href={`/companies/${company.id}`}
+                                                            onClick={(e) => e.stopPropagation()}
                                                             className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
                                                             title="Ver Ficha"
                                                         >

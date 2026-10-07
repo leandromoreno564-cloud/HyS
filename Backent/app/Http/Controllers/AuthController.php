@@ -70,7 +70,8 @@ class AuthController extends Controller
                 'title' => 'Nuevo Licenciado pendiente de aprobación',
                 'message' => "{$newUser->name} ({$newUser->email}) se registró y espera que habilites su acceso.",
                 'type' => 'warning',
-                'link' => '/users',
+                // Abre el listado y destaca la cuenta exacta que debe aprobarse.
+                'link' => '/users?focus=' . $newUser->id,
                 'is_read' => false,
             ]);
         }
