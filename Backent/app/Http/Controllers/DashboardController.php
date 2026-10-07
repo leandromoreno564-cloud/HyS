@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
-use App\Models\CorrectiveMeasure;
 use App\Models\Inspection;
 use App\Models\Observation;
 use App\Models\User;
@@ -35,23 +34,6 @@ class DashboardController extends Controller
         $completedInspections = Inspection::where('status', 'Completada')->count();
         $inProgressInspections = Inspection::where('status', 'En Progreso')->count();
         
-        $pendingMeasures = CorrectiveMeasure::whereIn('status', ['Pendiente', 'En Progreso'])->count();
-        $overdueMeasures = CorrectiveMeasure::whereIn('status', ['Pendiente', 'En Progreso'])
-            ->whereNotNull('deadline')
-            ->where('deadline', '<', Carbon::today())
-            ->count();
-
-        // Alertas de medidas correctivas críticas o vencidas
-        $criticalAlerts = CorrectiveMeasure::with(['inspection.company', 'observation'])
-            ->whereIn('status', ['Pendiente', 'En Progreso'])
-            ->where(function ($q) {
-                $q->where('priority', 'Crítica')
-                  ->orWhere('deadline', '<', Carbon::today());
-            })
-            ->orderBy('deadline', 'asc')
-            ->limit(5)
-            ->get();
-
         // Gráfico de inspecciones por mes (últimos 6 meses)
         $months = [];
         $monthlyCounts = [];
@@ -93,9 +75,6 @@ class DashboardController extends Controller
             'totalInspections',
             'completedInspections',
             'inProgressInspections',
-            'pendingMeasures',
-            'overdueMeasures',
-            'criticalAlerts',
             'months',
             'monthlyCounts',
             'statusCounts',
@@ -116,25 +95,6 @@ class DashboardController extends Controller
         $criticalObsCount = Observation::whereHas('inspection', function ($q) use ($user) {
             $q->where('user_id', $user->id);
         })->whereIn('severity', ['Crítico', 'Mayor'])->count();
-
-        // Medidas correctivas pendientes en sus inspecciones
-        $myPendingMeasures = CorrectiveMeasure::whereHas('inspection', function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        })->whereIn('status', ['Pendiente', 'En Progreso'])->count();
-
-        // Alertas inmediatas
-        $myAlerts = CorrectiveMeasure::with(['inspection.company'])
-            ->whereHas('inspection', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            })
-            ->whereIn('status', ['Pendiente', 'En Progreso'])
-            ->where(function ($q) {
-                $q->where('priority', 'Crítica')
-                  ->orWhere('deadline', '<=', Carbon::today()->addDays(3));
-            })
-            ->orderBy('deadline', 'asc')
-            ->limit(5)
-            ->get();
 
         // Gráfico últimos 6 meses para este inspector
         $months = [];
@@ -165,8 +125,6 @@ class DashboardController extends Controller
             'inProgressCount',
             'completedCount',
             'criticalObsCount',
-            'myPendingMeasures',
-            'myAlerts',
             'months',
             'monthlyCounts',
             'recentInspections',

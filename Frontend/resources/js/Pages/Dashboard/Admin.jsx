@@ -6,12 +6,10 @@ import { Link } from '@inertiajs/react';
 import { 
     Building2, 
     ClipboardCheck, 
-    AlertTriangle, 
     Users, 
     Clock, 
     CheckCircle2, 
     TrendingUp,
-    ShieldAlert,
     FileText
 } from 'lucide-react';
 
@@ -21,9 +19,6 @@ export default function AdminDashboard({
     totalInspections,
     completedInspections,
     inProgressInspections,
-    pendingMeasures,
-    overdueMeasures,
-    criticalAlerts = [],
     months = [],
     monthlyCounts = [],
     statusCounts = {},
@@ -45,7 +40,7 @@ export default function AdminDashboard({
                             Seguimiento de Seguridad e Higiene Laboral
                         </h2>
                         <p className="text-xs text-blue-100/80 mt-1">
-                            Monitoreo centralizado de empresas, inspectores y medidas correctivas.
+                            Monitoreo centralizado de empresas, inspectores e inspecciones.
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -59,33 +54,8 @@ export default function AdminDashboard({
                     </div>
                 </div>
 
-                {/* Overdue Alert Banner if exists */}
-                {overdueMeasures > 0 && (
-                    <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-700">
-                                <ShieldAlert className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-rose-900">
-                                    Atención: {overdueMeasures} Medida(s) Correctiva(s) Vencida(s)
-                                </h4>
-                                <p className="text-xs text-rose-700">
-                                    Existen medidas de seguridad que han superado la fecha límite sin implementarse.
-                                </p>
-                            </div>
-                        </div>
-                        <Link
-                            href="/corrective-measures?overdue=1"
-                            className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl transition-colors"
-                        >
-                            Ver Vencidas
-                        </Link>
-                    </div>
-                )}
-
                 {/* KPI Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                     <StatCard
                         title="Empresas Registradas"
                         value={totalCompanies}
@@ -99,13 +69,6 @@ export default function AdminDashboard({
                         subtitle={`${completedInspections} finalizadas • ${inProgressInspections} en curso`}
                         icon={ClipboardCheck}
                         color="emerald"
-                    />
-                    <StatCard
-                        title="Medidas Pendientes"
-                        value={pendingMeasures}
-                        subtitle={`${overdueMeasures} vencidas`}
-                        icon={AlertTriangle}
-                        color={overdueMeasures > 0 ? 'rose' : 'amber'}
                     />
                     <StatCard
                         title="Inspectores & Usuarios"
@@ -255,64 +218,6 @@ export default function AdminDashboard({
                         </div>
                     </div>
 
-                    {/* Critical Alerts */}
-                    <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs">
-                        <div className="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-900">
-                                    Medidas Críticas / Urgentes
-                                </h3>
-                                <p className="text-xs text-slate-500">
-                                    Acciones de seguridad con prioridad crítica o plazo próximo
-                                </p>
-                            </div>
-                            <Link
-                                href="/corrective-measures"
-                                className="text-xs font-semibold text-blue-600 hover:text-blue-700"
-                            >
-                                Ver todas
-                            </Link>
-                        </div>
-
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs">
-                                <thead>
-                                    <tr className="border-b border-slate-100 text-slate-400 font-semibold uppercase tracking-wider">
-                                        <th className="pb-3">Descripción</th>
-                                        <th className="pb-3">Empresa</th>
-                                        <th className="pb-3">Plazo</th>
-                                        <th className="pb-3 text-right">Prioridad</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {criticalAlerts.length > 0 ? (
-                                        criticalAlerts.map((alert) => (
-                                            <tr key={alert.id} className="hover:bg-slate-50/80 transition-colors">
-                                                <td className="py-3 font-medium text-slate-800 max-w-[180px] truncate">
-                                                    {alert.description}
-                                                </td>
-                                                <td className="py-3 text-slate-600">
-                                                    {alert.inspection?.company?.business_name || 'N/A'}
-                                                </td>
-                                                <td className="py-3 text-slate-500 font-mono">
-                                                    {alert.deadline ? new Date(alert.deadline).toLocaleDateString('es-AR') : 'Sin fecha'}
-                                                </td>
-                                                <td className="py-3 text-right">
-                                                    <Badge>{alert.priority}</Badge>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={4} className="py-6 text-center text-slate-400 text-xs">
-                                                No hay alertas críticas pendientes de resolución.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

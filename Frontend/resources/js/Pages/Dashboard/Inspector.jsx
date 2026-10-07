@@ -7,7 +7,6 @@ import {
     ClipboardCheck, 
     Clock, 
     Building2, 
-    AlertTriangle, 
     CheckCircle2, 
     Calendar
 } from 'lucide-react';
@@ -17,8 +16,6 @@ export default function InspectorDashboard({
     inProgressCount,
     completedCount,
     criticalObsCount,
-    myPendingMeasures,
-    myAlerts = [],
     months = [],
     monthlyCounts = [],
     recentInspections = [],
@@ -39,7 +36,7 @@ export default function InspectorDashboard({
                             Mis Inspecciones y Tareas en Terreno
                         </h2>
                         <p className="text-xs text-slate-300 mt-1">
-                            Gestiona tus checklists técnicos, observaciones con fotos y medidas correctivas.
+                            Gestiona tus checklists técnicos y observaciones con fotos.
                         </p>
                     </div>
                 </div>
@@ -68,10 +65,10 @@ export default function InspectorDashboard({
                         color="emerald"
                     />
                     <StatCard
-                        title="Medidas Pendientes"
-                        value={myPendingMeasures}
-                        subtitle={`${criticalObsCount} hallazgos críticos`}
-                        icon={AlertTriangle}
+                        title="Hallazgos Críticos"
+                        value={criticalObsCount}
+                        subtitle="Observaciones que requieren atención"
+                        icon={Calendar}
                         color={criticalObsCount > 0 ? 'rose' : 'indigo'}
                     />
                 </div>
@@ -210,40 +207,6 @@ export default function InspectorDashboard({
                             </div>
                         </div>
 
-                        {/* Critical Alerts */}
-                        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs">
-                            <h3 className="text-sm font-bold text-slate-900 mb-1">
-                                Mis Alertas y Próximos Vencimientos
-                            </h3>
-                            <p className="text-xs text-slate-500 mb-4">
-                                Medidas con plazo menor a 3 días o críticas
-                            </p>
-
-                            <div className="space-y-3">
-                                {myAlerts.length > 0 ? (
-                                    myAlerts.map((alert) => (
-                                        <div key={alert.id} className="p-3 bg-amber-50/60 border border-amber-200 rounded-xl space-y-1.5">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs font-bold text-amber-900">
-                                                    {alert.inspection?.company?.business_name}
-                                                </span>
-                                                <Badge>{alert.priority}</Badge>
-                                            </div>
-                                            <p className="text-xs text-slate-700 line-clamp-2">
-                                                {alert.description}
-                                            </p>
-                                            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-                                                <span>Plazo: {alert.deadline ? new Date(alert.deadline).toLocaleDateString('es-AR') : 'Sin fecha'}</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-xs text-slate-400 py-4 text-center">
-                                        No tienes medidas urgentes por vencer.
-                                    </p>
-                                )}
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

@@ -3,7 +3,6 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyChecklistController;
 use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\CorrectiveMeasureController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
@@ -54,11 +53,6 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('/checklist-items/{item}/photo', [CompanyChecklistController::class, 'uploadPhoto'])->name('checklist-items.photo.upload');
     Route::delete('/checklist-items/{item}/photo', [CompanyChecklistController::class, 'deletePhoto'])->name('checklist-items.photo.delete');
     Route::post('/companies/{company}/checklist/chat', [CompanyChecklistController::class, 'chat'])->name('companies.checklist.chat');
-
-    // Medidas Correctivas
-    Route::get('/corrective-measures', [CorrectiveMeasureController::class, 'index'])->name('corrective-measures.index');
-    Route::post('/corrective-measures/{measure}/status', [CorrectiveMeasureController::class, 'updateStatus'])->name('corrective-measures.status');
-    Route::delete('/corrective-measures/{measure}', [CorrectiveMeasureController::class, 'destroy'])->name('corrective-measures.destroy');
 
     // Informes y Reportes
     Route::get('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.csv');
