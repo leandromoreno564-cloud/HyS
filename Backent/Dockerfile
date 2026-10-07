@@ -8,8 +8,16 @@ RUN npm ci
 COPY Frontend/ ./
 RUN mkdir -p /app/Backent/public && npm run build
 
-FROM composer:2 AS composer-dependencies
+FROM php:8.3-cli AS composer-dependencies
 WORKDIR /var/www
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip libzip-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd zip \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY Backent/composer.json Backent/composer.lock ./
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
@@ -17,8 +25,9 @@ FROM php:8.3-apache
 WORKDIR /var/www
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libonig-dev libzip-dev \
-    && docker-php-ext-install bcmath mbstring pdo_mysql zip \
+    && apt-get install -y --no-install-recommends libonig-dev libzip-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install bcmath gd mbstring pdo_mysql zip \
     && a2enmod rewrite headers \
     && rm -rf /var/lib/apt/lists/*
 
