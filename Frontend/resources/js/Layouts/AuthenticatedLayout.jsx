@@ -140,11 +140,11 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                         Exportación
                     </div>
                     <a
-                        href="/reports/export-csv"
+                        href="/reports/export-excel"
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all"
                     >
                         <FileText className="w-4 h-4 text-slate-400" />
-                        <span>Exportar a Excel (CSV)</span>
+                        <span>Exportar a Excel</span>
                     </a>
                 </nav>
 

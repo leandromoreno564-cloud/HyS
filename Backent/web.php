@@ -54,7 +54,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::delete('/checklist-items/{item}/photo', [CompanyChecklistController::class, 'deletePhoto'])->name('checklist-items.photo.delete');
 
     // Informes y Reportes
-    Route::get('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.csv');
+    Route::get('/reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.excel');
 
     // Rutas exclusivas para Administradores
     Route::middleware('role:admin')->group(function () {

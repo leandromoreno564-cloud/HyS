@@ -55,7 +55,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('/companies/{company}/checklist/chat', [CompanyChecklistController::class, 'chat'])->name('companies.checklist.chat');
 
     // Informes y Reportes
-    Route::get('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.csv');
+    Route::get('/reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.excel');
 
     // Rutas exclusivas para Administradores
     Route::middleware('role:admin')->group(function () {
