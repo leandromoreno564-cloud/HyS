@@ -12,6 +12,7 @@ class CompanyChecklistItem extends Model
 
     protected $fillable = [
         'company_id',
+        'company_checklist_id',
         'item_number',
         'category',
         'question',
@@ -32,5 +33,10 @@ class CompanyChecklistItem extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function checklist(): BelongsTo
+    {
+        return $this->belongsTo(CompanyChecklist::class, 'company_checklist_id');
     }
 }

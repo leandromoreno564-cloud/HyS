@@ -56,6 +56,11 @@ class Company extends Model
         return $this->hasMany(CompanyChecklistItem::class)->orderBy('item_number');
     }
 
+    public function checklists(): HasMany
+    {
+        return $this->hasMany(CompanyChecklist::class)->latest('surveyed_at')->latest('id');
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

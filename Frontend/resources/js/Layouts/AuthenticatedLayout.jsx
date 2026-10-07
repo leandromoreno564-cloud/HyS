@@ -41,12 +41,6 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             icon: Building2, 
             active: currentPath.startsWith('/companies') 
         },
-        { 
-            name: 'Medidas Correctivas', 
-            href: '/corrective-measures', 
-            icon: AlertTriangle, 
-            active: currentPath.startsWith('/corrective-measures') 
-        },
     ];
 
     if (currentUser?.role === 'admin') {
@@ -154,22 +148,6 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                     </a>
                 </nav>
 
-                <div className="p-3 border-t border-slate-800 bg-slate-950/20">
-  <div className="p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 text-center">
-    <p className="text-[11px] font-semibold text-slate-200 uppercase tracking-wider mb-2">
-      INTEGRANTES
-    </p>
-    <ul className="text-[10px] text-slate-400 space-y-1 list-none p-0 m-0">
-      <li>Argañaras Bruno</li>
-      <li>Mamani Cristian</li>
-      <li>Moreno Leandro</li>
-      <li>Murquite Leandro</li>
-      <li>Subelza Jhonatan</li>
-      <li>Velazque Nicolas</li>
-    </ul>
-  </div>
-</div>
-                
             </aside>
 
             {/* Main Area */}

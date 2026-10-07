@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\CompanyChecklist;
 use App\Models\CompanyChecklistItem;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -26,13 +27,27 @@ class CompanyChecklistController extends Controller
         }
     }
 
-    public function index(Company $company)
+    private function resolveChecklist(Request $request, Company $company): ?CompanyChecklist
+    {
+        $id = $request->input('checklist_id', $request->input('checklist'));
+
+        if ($id === null) {
+            return $company->checklists()->first();
+        }
+
+        return $company->checklists()->whereKey($id)->firstOrFail();
+    }
+
+    public function index(Request $request, Company $company)
     {
         $this->authorize404($company);
+        $checklist = $request->boolean('new') ? null : $this->resolveChecklist($request, $company);
 
         return Inertia::render('Companies/Checklist', [
             'company' => $company->only(['id', 'business_name', 'tax_id']),
-            'items' => $company->checklistItems()->get(),
+            'checklist' => $checklist,
+            'checklists' => $company->checklists()->get(['id', 'name', 'surveyed_at', 'created_at']),
+            'items' => $checklist?->items()->get() ?? [],
         ]);
     }
 
@@ -76,7 +91,7 @@ class CompanyChecklistController extends Controller
     }
 
     /**
-     * Guarda (o reemplaza) el relevamiento completo de la empresa: todos los ítems con su
+     * Guarda un nuevo relevamiento completo de la empresa: todos los ítems con su
      * estado (SI/NO/NO_APLICA) y descripción. No incluye fotos: eso se sube aparte, ítem por
      * ítem, para no chocar con el límite de archivos por request de PHP.
      */
@@ -94,16 +109,16 @@ class CompanyChecklistController extends Controller
             'items.*.description' => ['nullable', 'string'],
         ]);
 
-        DB::transaction(function () use ($company, $data) {
-            // Al reemplazar el relevamiento, borramos las fotos viejas del disco también
-            foreach ($company->checklistItems()->get() as $old) {
-                if ($old->photo_1) Storage::disk('public')->delete($old->photo_1);
-                if ($old->photo_2) Storage::disk('public')->delete($old->photo_2);
-            }
-            $company->checklistItems()->delete();
+        $checklist = DB::transaction(function () use ($company, $data) {
+            $checklist = $company->checklists()->create([
+                'created_by' => Auth::id(),
+                'name' => 'Relevamiento ' . now()->format('d/m/Y H:i'),
+                'surveyed_at' => now()->toDateString(),
+            ]);
 
             foreach ($data['items'] as $item) {
-                $company->checklistItems()->create([
+                $checklist->items()->create([
+                    'company_id' => $company->id,
                     'item_number' => $item['item_number'],
                     'category' => $item['category'] ?? null,
                     'question' => $item['question'],
@@ -112,11 +127,13 @@ class CompanyChecklistController extends Controller
                     'description' => $item['description'] ?? null,
                 ]);
             }
+
+            return $checklist;
         });
 
         // El front guarda por axios y necesita los IDs para subir las fotos que ya adjuntó
         if ($request->expectsJson()) {
-            return response()->json(['items' => $company->checklistItems()->get()]);
+            return response()->json(['checklist' => $checklist, 'items' => $checklist->items()->get()]);
         }
 
         return back()->with('success', 'Relevamiento guardado correctamente.');
@@ -209,11 +226,15 @@ class CompanyChecklistController extends Controller
             'category' => ['nullable', 'string', 'max:255'],
             'question' => ['nullable', 'string'],
             'reference' => ['nullable', 'string'],
+            'checklist_id' => ['required', 'integer'],
         ]);
 
-        $next = ((int) CompanyChecklistItem::where('company_id', $company->id)->max('item_number')) + 1;
+        $checklist = $company->checklists()->whereKey($data['checklist_id'])->firstOrFail();
 
-        $item = $company->checklistItems()->create([
+        $next = ((int) $checklist->items()->max('item_number')) + 1;
+
+        $item = $checklist->items()->create([
+            'company_id' => $company->id,
             'item_number' => $next,
             'category' => $data['category'] ?? null,
             'question' => $data['question'] ?: 'Nuevo ítem',
@@ -247,9 +268,11 @@ class CompanyChecklistController extends Controller
         $data = $request->validate([
             'from' => ['nullable', 'string'],
             'to' => ['required', 'string', 'max:255'],
+            'checklist_id' => ['required', 'integer'],
         ]);
 
-        $query = CompanyChecklistItem::where('company_id', $company->id);
+        $query = CompanyChecklistItem::where('company_id', $company->id)
+            ->where('company_checklist_id', $data['checklist_id']);
         $data['from'] === null ? $query->whereNull('category') : $query->where('category', $data['from']);
         $query->update(['category' => trim($data['to'])]);
 
@@ -287,7 +310,12 @@ class CompanyChecklistController extends Controller
             ], 503);
         }
 
-        $items = $company->checklistItems()
+        $checklist = $this->resolveChecklist($request, $company);
+        if (!$checklist) {
+            return response()->json(['reply' => 'Primero seleccioná o creá un relevamiento.', 'updated_items' => []], 422);
+        }
+
+        $items = $checklist->items()
             ->orderBy('item_number')
             ->get(['id', 'item_number', 'category', 'question', 'reference', 'status', 'description'])
             ->map(fn (CompanyChecklistItem $it) => [
@@ -362,7 +390,7 @@ class CompanyChecklistController extends Controller
             }
 
             /** @var CompanyChecklistItem|null $item */
-            $item = CompanyChecklistItem::where('company_id', $company->id)
+            $item = CompanyChecklistItem::where('company_checklist_id', $checklist->id)
                 ->where('item_number', (int) $itemNumber)
                 ->first();
 
@@ -394,11 +422,13 @@ class CompanyChecklistController extends Controller
      * Descarga el relevamiento guardado (con todas las ediciones, estados, observaciones
      * y fotos) como PDF. Requiere: composer require barryvdh/laravel-dompdf
      */
-    public function downloadPdf(Company $company)
+    public function downloadPdf(Request $request, Company $company)
     {
         $this->authorize404($company);
 
-        $items = $company->checklistItems()->get();
+        $checklist = $this->resolveChecklist($request, $company);
+        abort_unless($checklist, 404, 'Todavía no hay un relevamiento guardado para esta empresa.');
+        $items = $checklist->items()->get();
         if ($items->isEmpty()) {
             abort(404, 'Todavía no hay un relevamiento guardado para esta empresa.');
         }

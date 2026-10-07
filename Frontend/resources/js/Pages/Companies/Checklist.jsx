@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import axios from 'axios';
 import ChecklistChatWidget from '@/Components/ChecklistChatWidget';
 import {
@@ -64,7 +64,9 @@ function validateImage(file) {
     return null;
 }
 
-export default function CompaniesChecklist({ company, items }) {
+export default function CompaniesChecklist({ company, checklist, checklists = [], items }) {
+    const [activeChecklist, setActiveChecklist] = useState(checklist || null);
+    const [history, setHistory] = useState(checklists);
     const [stage, setStage] = useState(items && items.length > 0 ? 'saved' : 'upload'); // upload | draft | saved
     const [draftItems, setDraftItems] = useState([]);
     const [savedItems, setSavedItems] = useState(items || []);
@@ -94,7 +96,9 @@ export default function CompaniesChecklist({ company, items }) {
             setStage('saved');
             setDraftItems([]);
         }
-    }, [items]);
+        setActiveChecklist(checklist || null);
+        setHistory(checklists);
+    }, [items, checklist, checklists]);
 
     // Si se borraron todos los ítems guardados, volvemos a la pantalla de carga
     const effectiveStage = stage === 'saved' && savedItems.length === 0 ? 'upload' : stage;
@@ -190,11 +194,7 @@ export default function CompaniesChecklist({ company, items }) {
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-    const startReplace = () => {
-        setStage('upload');
-        setPdfFileName(null);
-        setPdfState('idle');
-    };
+    const startNewChecklist = () => router.get(`/companies/${company.id}/checklist?new=1`);
 
     // ---------- BORRADOR (todavía sin guardar) ----------
     const updateDraft = (key, field, value) =>
@@ -266,6 +266,8 @@ export default function CompaniesChecklist({ company, items }) {
 
             const res = await axios.post(`/companies/${company.id}/checklist`, { items: payload }, jsonHeaders);
             let saved = res.data.items;
+            setActiveChecklist(res.data.checklist);
+            setHistory((prev) => [res.data.checklist, ...prev]);
             const byNumber = new Map(saved.map((i) => [i.item_number, i]));
 
             const pending = [];
@@ -371,9 +373,9 @@ export default function CompaniesChecklist({ company, items }) {
     const addSavedItem = async (category) => {
         try {
             const res = await track(
-                axios.post(
+                    axios.post(
                     `/companies/${company.id}/checklist/items`,
-                    { category: category === NO_CATEGORY ? null : category, question: 'Nuevo ítem' },
+                    { checklist_id: activeChecklist.id, category: category === NO_CATEGORY ? null : category, question: 'Nuevo ítem' },
                     jsonHeaders
                 )
             );
@@ -411,7 +413,7 @@ export default function CompaniesChecklist({ company, items }) {
         } else {
             try {
                 await track(
-                    axios.patch(`/companies/${company.id}/checklist/category`, { from: fromValue, to }, jsonHeaders)
+                    axios.patch(`/companies/${company.id}/checklist/category`, { checklist_id: activeChecklist.id, from: fromValue, to }, jsonHeaders)
                 );
                 setSavedItems((prev) => prev.map((it) => (matches(it) ? { ...it, category: to } : it)));
             } catch (err) {
@@ -434,7 +436,7 @@ export default function CompaniesChecklist({ company, items }) {
         document.activeElement?.blur?.();
         try {
             await Promise.allSettled([...pendingSaves.current]);
-            const res = await axios.get(`/companies/${company.id}/checklist/pdf`, {
+            const res = await axios.get(`/companies/${company.id}/checklist/pdf?checklist=${activeChecklist.id}`, {
                 responseType: 'blob',
                 headers: { Accept: 'application/pdf' },
             });
@@ -518,18 +520,41 @@ export default function CompaniesChecklist({ company, items }) {
                             </div>
                         </div>
 
-                        {effectiveStage === 'saved' && (
-                            <button
-                                type="button"
-                                onClick={downloadPdf}
-                                disabled={downloading}
-                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-60"
-                            >
-                                {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-                                {downloading ? 'Generando PDF...' : 'Descargar PDF'}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {effectiveStage === 'saved' && (
+                                <button
+                                    type="button"
+                                    onClick={downloadPdf}
+                                    disabled={downloading}
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-60"
+                                >
+                                    {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                                    {downloading ? 'Generando PDF...' : 'Descargar PDF'}
+                                </button>
+                            )}
+                            <button type="button" onClick={startNewChecklist} className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors">
+                                <Plus className="w-4 h-4" /> Nuevo relevamiento
                             </button>
-                        )}
+                        </div>
                     </div>
+
+                    {history.length > 0 && (
+                        <div className="mt-4 flex items-center gap-2 text-xs">
+                            <label htmlFor="checklist-history" className="font-semibold text-slate-600">Historial:</label>
+                            <select
+                                id="checklist-history"
+                                value={activeChecklist?.id || ''}
+                                onChange={(e) => router.get(`/companies/${company.id}/checklist?checklist=${e.target.value}`)}
+                                className="max-w-xs px-3 py-2 border border-slate-200 rounded-lg text-slate-700 bg-white"
+                            >
+                                {history.map((entry) => (
+                                    <option key={entry.id} value={entry.id}>
+                                        {entry.name || `Relevamiento del ${entry.surveyed_at}`}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     {/* Mensajes globales */}
                     {pageError && (
@@ -626,7 +651,7 @@ export default function CompaniesChecklist({ company, items }) {
                                 <p className="text-[11px] text-amber-700 mt-0.5">
                                     Editá lo que haga falta y podés adjuntar fotos ya mismo (hasta 2 por ítem): se suben solas cuando toques
                                     "Guardar Relevamiento".
-                                    {savedItems.length > 0 && ' Guardar va a reemplazar el relevamiento anterior de esta empresa.'}
+                                    {' Al guardar se creará un nuevo registro en el historial de la empresa.'}
                                 </p>
                             </div>
                         </div>
@@ -817,11 +842,11 @@ export default function CompaniesChecklist({ company, items }) {
                         <div className="mt-6 flex justify-end pt-4 border-t border-slate-100">
                             <button
                                 type="button"
-                                onClick={startReplace}
+                                onClick={startNewChecklist}
                                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                             >
                                 <RotateCcw className="w-3.5 h-3.5" />
-                                Reemplazar desde un nuevo PDF
+                                Crear nuevo relevamiento desde PDF
                             </button>
                         </div>
                     )}
@@ -836,7 +861,7 @@ export default function CompaniesChecklist({ company, items }) {
                 />
             )}
 
-            {effectiveStage === 'saved' && <ChecklistChatWidget company={company} onItemsUpdated={applyChatUpdates} />}
+            {effectiveStage === 'saved' && <ChecklistChatWidget company={company} checklistId={activeChecklist?.id} onItemsUpdated={applyChatUpdates} />}
         </AuthenticatedLayout>
     );
 }

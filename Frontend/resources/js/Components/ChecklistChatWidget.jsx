@@ -14,7 +14,7 @@ const MAX_HISTORY_SENT = 12; // mensajes que se mandan como contexto, para no in
  * directamente), así que acá simplemente mostramos la respuesta y fusionamos los ítems
  * actualizados que el backend ya validó y guardó.
  */
-export default function ChecklistChatWidget({ company, onItemsUpdated }) {
+export default function ChecklistChatWidget({ company, checklistId, onItemsUpdated }) {
     const [open, setOpen] = useState(false);
     const [messages, setMessages] = useState([
         {
@@ -58,7 +58,7 @@ export default function ChecklistChatWidget({ company, onItemsUpdated }) {
 
             const res = await axios.post(
                 `/companies/${company.id}/checklist/chat`,
-                { message: text, history },
+                { message: text, history, checklist_id: checklistId },
                 { headers: { Accept: 'application/json' } }
             );
 
