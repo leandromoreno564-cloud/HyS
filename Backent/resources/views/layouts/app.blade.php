@@ -237,11 +237,6 @@
                             <i class="fa-solid fa-clipboard-check"></i> Inspecciones
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('corrective-measures.*') ? 'active' : '' }}" href="{{ route('corrective-measures.index') }}">
-                            <i class="fa-solid fa-list-check"></i> Medidas Correctivas
-                        </a>
-                    </li>
                 </ul>
 
                 @if(auth()->user()->isAdmin())
