@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { ShieldCheck, Lock, User, ArrowRight, CircleUserRound } from 'lucide-react';
 import loginBg from '../../../images/login-bg.jpg';
 
@@ -130,9 +130,9 @@ export default function Login() {
                         <div className="mt-3 text-center">
                             <span className="text-xs text-slate-400">
                                 ¿Sos Licenciado en Seguridad y no tenés cuenta?{' '}
-                                <a href="/register" className="font-semibold text-amber-400 hover:text-amber-300">
+                                <Link href="/register" prefetch="mount" className="font-semibold text-amber-400 hover:text-amber-300">
                                     Registrate acá
-                                </a>
+                                </Link>
                             </span>
                         </div>
 

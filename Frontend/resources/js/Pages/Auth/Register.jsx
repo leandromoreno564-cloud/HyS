@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import {
     ShieldCheck,
     Lock,
@@ -14,6 +14,7 @@ import {
     FileDigit,
     Camera,
 } from 'lucide-react';
+import loginBg from '../../../images/login-bg.jpg';
 
 export default function Register() {
     const { data, setData, post, processing, errors } = useForm({
@@ -45,41 +46,43 @@ export default function Register() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-            {/* Ambient Background Glows */}
-            <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-                <div className="flex justify-center">
-                    <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/30">
-                        <ShieldCheck className="w-8 h-8" />
-                    </div>
-                </div>
-                <h2 className="mt-4 text-center text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                    Registro de Licenciado
-                </h2>
-                <p className="mt-1 text-center text-xs sm:text-sm text-slate-400">
-                    Creá tu cuenta para realizar inspecciones en HyS Control
-                </p>
+        <div className="min-h-screen flex bg-[#0b1322]">
+            <div
+                className="hidden lg:flex lg:w-[58%] relative bg-cover bg-center"
+                style={{ backgroundImage: `url(${loginBg})` }}
+            >
+                <div className="absolute inset-0 bg-linear-to-r from-black/10 via-black/10 to-[#0b1322]" />
+                <div className="absolute top-0 left-0 w-24 h-full bg-linear-to-br from-slate-900/70 to-transparent" />
             </div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
-                <div className="bg-white/95 backdrop-blur-md py-8 px-6 shadow-2xl rounded-3xl sm:px-10 border border-white/20">
-                    <div className="mb-5 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2.5">
-                        <BadgeCheck className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                        <p className="text-xs text-amber-700">
-                            Tu cuenta quedará <strong>pendiente de aprobación</strong>. Un administrador
-                            debe habilitarla antes de que puedas ingresar al sistema. Te avisaremos
-                            por correo el resultado.
-                        </p>
+            <div className="flex-1 flex flex-col justify-center items-center px-4 py-8 sm:px-6 relative overflow-hidden">
+                <div className="hidden lg:block absolute -bottom-10 -right-10 w-40 h-72 rotate-12 overflow-hidden pointer-events-none">
+                    <div className="absolute inset-0 bg-slate-800/60" />
+                    <div className="absolute left-8 top-0 w-5 h-full bg-amber-400/90" />
+                </div>
+
+                <div className="lg:hidden mb-6 text-center">
+                    <div className="flex justify-center mb-3">
+                        <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/30">
+                            <ShieldCheck className="w-8 h-8" />
+                        </div>
+                    </div>
+                    <h2 className="text-2xl font-bold tracking-tight text-white">HyS Control</h2>
+                    <p className="mt-1 text-xs text-slate-400">Plataforma Integral de Inspecciones de Seguridad e Higiene Laboral</p>
+                </div>
+
+                <div className="w-full max-w-xl relative z-10">
+                <div className="bg-slate-900/70 backdrop-blur-xl py-6 px-5 shadow-2xl rounded-3xl sm:px-8 border border-white/10 [&_input]:bg-slate-800/50 [&_input]:border-slate-600/60 [&_input]:text-white [&_input]:placeholder:text-slate-400 [&_input:focus]:ring-amber-400 [&_input:focus]:border-amber-400 [&_input]:shadow-none">
+                    <div className="flex flex-col items-center mb-5">
+                        <BadgeCheck className="w-8 h-8 text-white mb-1.5" strokeWidth={1.5} />
+                        <h1 className="text-lg font-bold text-white">Registro de Licenciado</h1>
                     </div>
 
                     <form className="space-y-4" onSubmit={handleSubmit}>
                         {/* Foto de perfil */}
                         <div className="flex justify-center">
                             <label className="cursor-pointer group">
-                                <div className="w-20 h-20 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden group-hover:border-blue-500 transition-colors">
+                                <div className="w-20 h-20 rounded-2xl bg-slate-800/60 border-2 border-dashed border-slate-600 flex items-center justify-center overflow-hidden group-hover:border-amber-400 transition-colors">
                                     {avatarPreview ? (
                                         <img src={avatarPreview} alt="Vista previa" className="w-full h-full object-cover" />
                                     ) : (
@@ -92,19 +95,19 @@ export default function Register() {
                                     onChange={handleAvatarChange}
                                     className="hidden"
                                 />
-                                <p className="mt-1.5 text-[11px] text-center text-slate-500 font-semibold">
+                                <p className="mt-1.5 text-[11px] text-center text-slate-400 font-semibold">
                                     Foto de perfil
                                 </p>
                             </label>
                         </div>
                         {errors.avatar && (
-                            <p className="text-xs text-rose-600 font-medium text-center">{errors.avatar}</p>
+                            <p className="text-xs text-rose-400 font-medium text-center">{errors.avatar}</p>
                         )}
 
                         {/* Nombre y Apellido */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                                     Nombre
                                 </label>
                                 <div className="mt-1.5 relative rounded-xl shadow-xs">
@@ -123,7 +126,7 @@ export default function Register() {
                                 {errors.first_name && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.first_name}</p>}
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                                     Apellido
                                 </label>
                                 <div className="mt-1.5 relative rounded-xl shadow-xs">
@@ -145,7 +148,7 @@ export default function Register() {
 
                         {/* Email */}
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                                 Correo Electrónico
                             </label>
                             <div className="mt-1.5 relative rounded-xl shadow-xs">
@@ -167,7 +170,7 @@ export default function Register() {
                         {/* DNI y Legajo */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                                     DNI
                                 </label>
                                 <div className="mt-1.5 relative rounded-xl shadow-xs">
@@ -187,7 +190,7 @@ export default function Register() {
                                 {errors.dni && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.dni}</p>}
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                                     Legajo
                                 </label>
                                 <div className="mt-1.5 relative rounded-xl shadow-xs">
@@ -210,7 +213,7 @@ export default function Register() {
                         {/* Teléfono y Matrícula */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                                     Teléfono
                                 </label>
                                 <div className="mt-1.5 relative rounded-xl shadow-xs">
@@ -228,7 +231,7 @@ export default function Register() {
                                 {errors.phone && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.phone}</p>}
                             </div>
                             <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                                     Matrícula
                                 </label>
                                 <div className="mt-1.5 relative rounded-xl shadow-xs">
@@ -251,7 +254,7 @@ export default function Register() {
 
                         {/* Password */}
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                                 Contraseña
                             </label>
                             <div className="mt-1.5 relative rounded-xl shadow-xs">
@@ -264,6 +267,7 @@ export default function Register() {
                                     onChange={(e) => setData('password', e.target.value)}
                                     placeholder="••••••••"
                                     required
+                                    minLength={8}
                                     className="block w-full pl-10 pr-10 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
                                 />
                                 <button
@@ -277,14 +281,14 @@ export default function Register() {
                                 </button>
                             </div>
                             <p className="mt-1.5 text-[11px] text-slate-400">
-                                Mínimo 8 caracteres, con al menos un número y un símbolo.
+                                Mínimo 8 caracteres.
                             </p>
                             {errors.password && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.password}</p>}
                         </div>
 
                         {/* Confirmar Password */}
                         <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                                 Confirmar Contraseña
                             </label>
                             <div className="mt-1.5 relative rounded-xl shadow-xs">
@@ -316,7 +320,7 @@ export default function Register() {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50"
+                                className="w-full flex justify-center items-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold text-slate-900 bg-amber-400 hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-amber-400 transition-all disabled:opacity-50"
                             >
                                 {processing ? 'Creando cuenta...' : 'Crear Cuenta'}
                                 <ArrowRight className="w-4 h-4" />
@@ -324,13 +328,15 @@ export default function Register() {
                         </div>
                     </form>
 
-                    <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-                        <a href="/login" className="text-xs font-semibold text-slate-500 hover:text-slate-700">
+                    <div className="mt-5 pt-4 border-t border-white/10 text-center">
+                        <Link href="/login" prefetch="mount" className="text-xs font-semibold text-slate-400 hover:text-amber-300">
                             ¿Ya tenés cuenta? Iniciar sesión
-                        </a>
+                        </Link>
                     </div>
                 </div>
+                <p className="mt-3 text-center text-[11px] text-slate-500">IES "Nuevo Horizonte" • Tecnicatura en Desarrollo de Software</p>
             </div>
+        </div>
         </div>
     );
 }
