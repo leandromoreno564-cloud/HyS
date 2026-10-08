@@ -67,8 +67,6 @@ export default function Register() {
                             <ShieldCheck className="w-8 h-8" />
                         </div>
                     </div>
-                    <h2 className="text-2xl font-bold tracking-tight text-white">HyS Control</h2>
-                    <p className="mt-1 text-xs text-slate-400">Plataforma Integral de Inspecciones de Seguridad e Higiene Laboral</p>
                 </div>
 
                 <div className="w-full max-w-xl relative z-10">
@@ -180,8 +178,9 @@ export default function Register() {
                                     <input
                                         type="text"
                                         inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={data.dni}
-                                        onChange={(e) => setData('dni', e.target.value)}
+                                        onChange={(e) => setData('dni', e.target.value.replace(/\D/g, ''))}
                                         placeholder="30123456"
                                         required
                                         className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
@@ -222,9 +221,11 @@ export default function Register() {
                                     </div>
                                     <input
                                         type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
                                         value={data.phone}
-                                        onChange={(e) => setData('phone', e.target.value)}
-                                        placeholder="+54 11 ...."
+                                        onChange={(e) => setData('phone', e.target.value.replace(/\D/g, ''))}
+                                        placeholder="541112345678"
                                         className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
                                     />
                                 </div>

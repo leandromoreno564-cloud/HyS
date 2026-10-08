@@ -84,10 +84,8 @@ class CompanyController extends Controller
 
         $company = Company::create($data);
 
-        // Si es inspector quien registra, se le auto-asigna a la empresa
-        if ($user->isInspector()) {
-            $company->inspectors()->syncWithoutDetaching([$user->id]);
-        } elseif ($user->isAdmin() && !empty($data['inspector_ids'])) {
+        // Solo los administradores pueden relacionar inspectores con una empresa.
+        if ($user->isAdmin() && !empty($data['inspector_ids'])) {
             $company->inspectors()->sync($data['inspector_ids']);
         }
 

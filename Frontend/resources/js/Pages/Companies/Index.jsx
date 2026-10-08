@@ -22,6 +22,7 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
 
     const [search, setSearch] = useState('');
     const [sector, setSector] = useState('');
+    const [status, setStatus] = useState('');
     const [trashed, setTrashed] = useState(false);
 
     const handleFilter = (e) => {
@@ -29,6 +30,7 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
         router.get('/companies', {
             search: search || undefined,
             sector: sector || undefined,
+            status: status || undefined,
             trashed: trashed ? 1 : undefined,
         }, { preserveState: true });
     };
@@ -87,6 +89,18 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
                         </select>
                     </div>
 
+                    <div className="w-full md:w-40">
+                        <select
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none text-slate-700 bg-white"
+                        >
+                            <option value="">Todos los estados</option>
+                            <option value="active">Activas</option>
+                            <option value="inactive">Inactivas</option>
+                        </select>
+                    </div>
+
                     {isAdmin && (
                         <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer whitespace-nowrap">
                             <input
@@ -116,6 +130,7 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
                                     <th className="py-3.5 px-4">Razón Social / CUIT</th>
                                     <th className="py-3.5 px-4">Sector Industrial</th>
                                     <th className="py-3.5 px-4">Contacto & Ubicación</th>
+                                    <th className="py-3.5 px-4 text-center">Estado</th>
                                     <th className="py-3.5 px-4">Inspectores Asignados</th>
                                     <th className="py-3.5 px-4 text-center">Inspecciones</th>
                                     <th className="py-3.5 px-4 text-right">Acciones</th>
@@ -167,6 +182,9 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
                                                     </p>
                                                 )}
                                             </td>
+                                            <td className="py-3.5 px-4 text-center">
+                                                <Badge size="sm">{company.is_active ? 'Activo' : 'Inactivo'}</Badge>
+                                            </td>
                                             <td className="py-3.5 px-4">
                                                 {company.inspectors?.length > 0 ? (
                                                     <div className="flex flex-wrap gap-1">
@@ -217,7 +235,7 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={6} className="py-10 text-center text-slate-400 text-xs">
+                                        <td colSpan={7} className="py-10 text-center text-slate-400 text-xs">
                                             No se encontraron empresas con los filtros aplicados.
                                         </td>
                                     </tr>

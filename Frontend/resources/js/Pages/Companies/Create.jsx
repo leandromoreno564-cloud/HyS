@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { useForm, Link } from '@inertiajs/react';
+import { useForm, Link, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import {
     Building2,
@@ -51,6 +51,8 @@ const REQUIRED_FIELDS = [
 const emptyPdfExtra = { domicilio: '', postal_code: '', locality: '', province: '', establishment_number: '', surface_m2: '' };
 
 export default function CompaniesCreate({ inspectors = [] }) {
+    const { auth } = usePage().props;
+    const isAdmin = auth?.user?.role === 'admin';
     const { data, setData, post, processing, errors } = useForm({
         business_name: '',
         tax_id: '',
@@ -61,6 +63,7 @@ export default function CompaniesCreate({ inspectors = [] }) {
         employee_count: 10,
         website: '',
         contact_person: '',
+        is_active: true,
         inspector_ids: [],
     });
 
@@ -512,47 +515,61 @@ export default function CompaniesCreate({ inspectors = [] }) {
                                     className="mt-1.5 block w-full px-3.5 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
                                 />
                             </div>
-                        </div>
 
-                        {/* Asignación de Inspectores */}
-                        <div className="pt-6 border-t border-slate-100">
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
-                                Inspectores Asignados (Permisos de Inspección)
-                            </label>
-                            <p className="text-xs text-slate-500 mb-4">
-                                Seleccione qué inspectores o técnicos tendrán acceso para auditar esta empresa.
-                            </p>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                                {inspectors.map((insp) => {
-                                    const selected = data.inspector_ids.includes(insp.id);
-                                    return (
-                                        <div
-                                            key={insp.id}
-                                            onClick={() => toggleInspector(insp.id)}
-                                            className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                                                selected
-                                                    ? 'bg-blue-50/80 border-blue-500 shadow-xs'
-                                                    : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                                            }`}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={selected}
-                                                onChange={() => {}}
-                                                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
-                                            />
-                                            <div>
-                                                <p className="text-xs font-bold text-slate-900">{insp.name}</p>
-                                                <p className="text-[11px] text-slate-500 font-mono">
-                                                    {insp.license_number ? `Mat. ${insp.license_number}` : insp.email}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                            <div className="sm:col-span-2 flex items-center gap-2 pt-1">
+                                <input
+                                    type="checkbox"
+                                    id="is_active"
+                                    checked={data.is_active}
+                                    onChange={(e) => setData('is_active', e.target.checked)}
+                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                />
+                                <label htmlFor="is_active" className="text-xs font-semibold text-slate-700 cursor-pointer">
+                                    Empresa activa
+                                </label>
                             </div>
                         </div>
+
+                        {isAdmin && (
+                            <div className="pt-6 border-t border-slate-100">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
+                                    Inspectores Asignados (Permisos de Inspección)
+                                </label>
+                                <p className="text-xs text-slate-500 mb-4">
+                                    Seleccione qué inspectores o técnicos tendrán acceso para auditar esta empresa.
+                                </p>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                    {inspectors.map((insp) => {
+                                        const selected = data.inspector_ids.includes(insp.id);
+                                        return (
+                                            <div
+                                                key={insp.id}
+                                                onClick={() => toggleInspector(insp.id)}
+                                                className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
+                                                    selected
+                                                        ? 'bg-blue-50/80 border-blue-500 shadow-xs'
+                                                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                                                }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selected}
+                                                    onChange={() => {}}
+                                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                                />
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-900">{insp.name}</p>
+                                                    <p className="text-[11px] text-slate-500 font-mono">
+                                                        {insp.license_number ? `Mat. ${insp.license_number}` : insp.email}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                             <Link
