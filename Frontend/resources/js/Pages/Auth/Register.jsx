@@ -61,17 +61,17 @@ export default function Register() {
                 </div>
 
                 <div className="w-full max-w-xl lg:max-w-md relative z-10">
-                <div className="bg-slate-900/70 backdrop-blur-xl py-6 px-5 shadow-2xl rounded-3xl sm:px-8 lg:py-5 lg:px-6 border border-white/10 [&_input]:bg-slate-800/50 [&_input]:border-slate-600/60 [&_input]:text-white [&_input]:placeholder:text-slate-400 [&_input:focus]:ring-amber-400 [&_input:focus]:border-amber-400 [&_input]:shadow-none">
-                    <div className="flex flex-col items-center mb-5">
+                <div className="bg-slate-900/70 backdrop-blur-xl py-6 px-5 shadow-2xl rounded-3xl sm:px-8 lg:py-4 lg:px-6 border border-white/10 [&_input]:bg-slate-800/50 [&_input]:border-slate-600/60 [&_input]:text-white [&_input]:placeholder:text-slate-400 [&_input:focus]:ring-amber-400 [&_input:focus]:border-amber-400 [&_input]:shadow-none lg:[&_input]:py-2">
+                    <div className="flex flex-col items-center mb-5 lg:mb-3">
                         <BadgeCheck className="w-8 h-8 text-white mb-1.5" strokeWidth={1.5} />
                         <h1 className="text-lg font-bold text-white">Registro de Licenciado</h1>
                     </div>
 
-                    <form className="space-y-4" onSubmit={handleSubmit}>
+                    <form className="space-y-4 lg:space-y-3" onSubmit={handleSubmit}>
                         {/* Foto de perfil */}
                         <div className="flex justify-center">
                             <label className="cursor-pointer group">
-                                <div className="w-20 h-20 rounded-2xl bg-slate-800/60 border-2 border-dashed border-slate-600 flex items-center justify-center overflow-hidden group-hover:border-amber-400 transition-colors">
+                                <div className="w-20 h-20 lg:w-16 lg:h-16 rounded-2xl bg-slate-800/60 border-2 border-dashed border-slate-600 flex items-center justify-center overflow-hidden group-hover:border-amber-400 transition-colors">
                                     {avatarPreview ? (
                                         <img src={avatarPreview} alt="Vista previa" className="w-full h-full object-cover" />
                                     ) : (
@@ -312,7 +312,7 @@ export default function Register() {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="w-full flex justify-center items-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold text-slate-900 bg-amber-400 hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-amber-400 transition-all disabled:opacity-50"
+                                className="w-full flex justify-center items-center gap-2 py-2.5 lg:py-2 px-4 rounded-xl text-sm font-bold text-slate-900 bg-amber-400 hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-amber-400 transition-all disabled:opacity-50"
                             >
                                 {processing ? 'Creando cuenta...' : 'Crear Cuenta'}
                                 <ArrowRight className="w-4 h-4" />
@@ -320,7 +320,7 @@ export default function Register() {
                         </div>
                     </form>
 
-                    <div className="mt-5 pt-4 border-t border-white/10 text-center">
+                    <div className="mt-5 lg:mt-3 pt-4 lg:pt-3 border-t border-white/10 text-center">
                         <Link href="/login" prefetch="mount" className="text-xs font-semibold text-slate-400 hover:text-amber-300">
                             ¿Ya tenés cuenta? Iniciar sesión
                         </Link>
