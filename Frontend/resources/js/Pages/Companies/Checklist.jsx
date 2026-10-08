@@ -578,65 +578,99 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
 
                     {/* Zona de carga de PDF */}
                     {effectiveStage === 'upload' && (
-                        <div
-                            onDragOver={(e) => {
-                                e.preventDefault();
-                                setIsDragging(true);
-                            }}
-                            onDragLeave={() => setIsDragging(false)}
-                            onDrop={handleDrop}
-                            className={`mt-6 rounded-2xl border border-dashed p-8 text-center transition-colors ${
-                                isDragging ? 'border-blue-500 bg-blue-50/60' : 'border-slate-300 bg-slate-50/60'
-                            }`}
-                        >
-                            <FileUp className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                            <p className="text-sm font-bold text-slate-800 mb-1">
-                                Subí el Relevamiento (PDF) para extraer el checklist
-                            </p>
-                            <p className="text-xs text-slate-500 mb-4 flex items-center justify-center gap-1.5 flex-wrap">
-                                Arrastrá el PDF acá, pegalo con{' '}
-                                <kbd className="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono">Ctrl+V</kbd> o elegilo
-                                del disco.
-                            </p>
+                        <div className="mt-6 space-y-4">
+                            <div
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    setIsDragging(true);
+                                }}
+                                onDragLeave={() => setIsDragging(false)}
+                                onDrop={handleDrop}
+                                className={`rounded-2xl border border-dashed p-8 text-center transition-colors ${
+                                    isDragging ? 'border-blue-500 bg-blue-50/60' : 'border-slate-300 bg-slate-50/60'
+                                }`}
+                            >
+                                <FileUp className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                                <p className="text-sm font-bold text-slate-800 mb-1">
+                                    Subí el Relevamiento (PDF) para extraer el checklist
+                                </p>
+                                <p className="text-xs text-slate-500 mb-4 flex items-center justify-center gap-1.5 flex-wrap">
+                                    Arrastrá el PDF acá, pegalo con{' '}
+                                    <kbd className="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono">Ctrl+V</kbd> o elegilo
+                                    del disco.
+                                </p>
 
-                            <div className="flex items-center justify-center gap-3 flex-wrap">
-                                <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-700 cursor-pointer transition-colors shadow-xs">
-                                    <FileUp className="w-3.5 h-3.5" />
-                                    Elegir PDF
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept="application/pdf"
-                                        onChange={handlePdfChange}
-                                        className="hidden"
-                                    />
-                                </label>
-                                <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
-                                    <ClipboardPaste className="w-3.5 h-3.5" />o pegalo en cualquier parte de esta página
-                                </span>
+                                <div className="flex items-center justify-center gap-3 flex-wrap">
+                                    <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-700 cursor-pointer transition-colors shadow-xs">
+                                        <FileUp className="w-3.5 h-3.5" />
+                                        Elegir PDF
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="application/pdf"
+                                            onChange={handlePdfChange}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
+                                        <ClipboardPaste className="w-3.5 h-3.5" />o pegalo en cualquier parte de esta página
+                                    </span>
+                                </div>
+
+                                {pdfState === 'loading' && (
+                                    <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600">
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        Leyendo {pdfFileName}...
+                                    </p>
+                                )}
+                                {pdfState === 'error' && (
+                                    <p className="mt-4 flex items-center justify-center gap-1.5 text-xs font-medium text-amber-700">
+                                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                        {pdfMessage}
+                                    </p>
+                                )}
+                                {savedItems.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setStage('saved')}
+                                        className="mt-4 text-xs font-semibold text-slate-500 hover:text-slate-700"
+                                    >
+                                        Cancelar y volver al relevamiento guardado
+                                    </button>
+                                )}
                             </div>
 
-                            {pdfState === 'loading' && (
-                                <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                    Leyendo {pdfFileName}...
-                                </p>
-                            )}
-                            {pdfState === 'error' && (
-                                <p className="mt-4 flex items-center justify-center gap-1.5 text-xs font-medium text-amber-700">
-                                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                    {pdfMessage}
-                                </p>
-                            )}
-                            {savedItems.length > 0 && (
-                                <button
-                                    type="button"
-                                    onClick={() => setStage('saved')}
-                                    className="mt-4 text-xs font-semibold text-slate-500 hover:text-slate-700"
-                                >
-                                    Cancelar y volver al relevamiento guardado
-                                </button>
-                            )}
+                            <section className="rounded-2xl border border-cyan-200 bg-cyan-50/60 p-5 text-left">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-10 h-10 shrink-0 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center">
+                                        <ClipboardList className="w-5 h-5" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-sm font-bold text-slate-900">Relevamiento Agua</h3>
+                                        <p className="mt-0.5 text-xs text-slate-600">
+                                            Formularios oficiales de Provincia ART disponibles para consultar, descargar y cargar en esta sección.
+                                        </p>
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            <a
+                                                href="/pdf/provincia_art_rgrl_formulario_b.pdf"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs font-semibold text-cyan-800 hover:border-cyan-400 hover:text-cyan-950 transition-colors"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" /> Formulario B
+                                            </a>
+                                            <a
+                                                href="/pdf/provincia_art_rgrl_formulario_c.pdf"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs font-semibold text-cyan-800 hover:border-cyan-400 hover:text-cyan-950 transition-colors"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" /> Formulario C
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
                     )}
 

@@ -12,16 +12,25 @@ import {
     Mail, 
     Calendar,
     CheckCircle2,
-    ClipboardList
+    ClipboardList,
+    UserPlus
 } from 'lucide-react';
 
 export default function CompaniesShow({ company, inspectors = [] }) {
     const { auth } = usePage().props;
     const isAdmin = auth?.user?.role === 'admin';
+    const isInspector = auth?.user?.role === 'inspector';
+    const isAssignedInspector = company.inspectors?.some((inspector) => inspector.id === auth?.user?.id);
 
     const handleDelete = () => {
         if (confirm(`¿Está seguro de enviar a la papelera a ${company.business_name}?`)) {
             router.delete(`/companies/${company.id}`);
+        }
+    };
+
+    const handleInspectorRequest = () => {
+        if (confirm(`¿Desea solicitar ser inspector asignado de ${company.business_name}?`)) {
+            router.post(`/companies/${company.id}/request-inspector`);
         }
     };
 
@@ -39,6 +48,16 @@ export default function CompaniesShow({ company, inspectors = [] }) {
                     </Link>
 
                     <div className="flex items-center gap-2">
+                        {isInspector && !isAssignedInspector && (
+                            <button
+                                type="button"
+                                onClick={handleInspectorRequest}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold rounded-xl border border-amber-200 transition-colors"
+                            >
+                                <UserPlus className="w-3.5 h-3.5" />
+                                Solicitar asignación
+                            </button>
+                        )}
                         <Link
                             href={`/companies/${company.id}/checklist`}
                             className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors"

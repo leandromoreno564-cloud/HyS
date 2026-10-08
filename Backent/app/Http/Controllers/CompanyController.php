@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AppNotification;
 use App\Models\Company;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ class CompanyController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $query = Company::accessibleBy($user)->with(['creator', 'inspectors']);
+        $query = Company::visibleBy($user)->with(['creator', 'inspectors']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -65,7 +66,7 @@ class CompanyController extends Controller
         $user = Auth::user();
 
         $data = $request->validate([
-            'business_name' => ['required', 'string', 'max:255'],
+            'business_name' => ['required', 'string', 'max:255', 'unique:companies,business_name'],
             'tax_id' => ['required', 'string', 'max:50', 'unique:companies,tax_id'],
             'address' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
@@ -84,8 +85,9 @@ class CompanyController extends Controller
 
         $company = Company::create($data);
 
-        // Solo los administradores pueden relacionar inspectores con una empresa.
-        if ($user->isAdmin() && !empty($data['inspector_ids'])) {
+        if ($user->isInspector()) {
+            $company->inspectors()->attach($user->id);
+        } elseif ($user->isAdmin() && !empty($data['inspector_ids'])) {
             $company->inspectors()->sync($data['inspector_ids']);
         }
 
@@ -180,7 +182,7 @@ class CompanyController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        if (!$company->isAccessibleBy($user)) {
+        if (!$company->isVisibleBy($user)) {
             abort(403, 'No tiene acceso a esta empresa.');
         }
 
@@ -220,7 +222,7 @@ class CompanyController extends Controller
         }
 
         $data = $request->validate([
-            'business_name' => ['required', 'string', 'max:255'],
+            'business_name' => ['required', 'string', 'max:255', Rule::unique('companies', 'business_name')->ignore($company->id)],
             'tax_id' => ['required', 'string', 'max:50', Rule::unique('companies')->ignore($company->id)],
             'address' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
@@ -263,6 +265,47 @@ class CompanyController extends Controller
         $company->inspectors()->sync($data['inspector_ids'] ?? []);
 
         return back()->with('success', 'Inspectores asignados correctamente a la empresa.');
+    }
+
+    public function requestInspectorAssignment(Company $company)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        if (! $user->isInspector()) {
+            abort(403, 'Solo los inspectores pueden solicitar una asignación.');
+        }
+
+        if ($company->inspectors()->whereKey($user->id)->exists()) {
+            return back()->with('info', 'Ya está asignado como inspector de esta empresa.');
+        }
+
+        $title = 'Solicitud de asignación de inspector';
+        $message = "{$user->name} solicita ser asignado como inspector de {$company->business_name}.";
+        $link = route('companies.edit', $company);
+
+        $alreadyRequested = AppNotification::query()
+            ->where('title', $title)
+            ->where('message', $message)
+            ->where('link', $link)
+            ->exists();
+
+        if ($alreadyRequested) {
+            return back()->with('info', 'La solicitud ya fue enviada a los administradores.');
+        }
+
+        User::query()
+            ->where('role', 'admin')
+            ->where('is_active', true)
+            ->each(fn (User $admin) => AppNotification::create([
+                'user_id' => $admin->id,
+                'title' => $title,
+                'message' => $message,
+                'type' => 'warning',
+                'link' => $link,
+            ]));
+
+        return back()->with('success', 'Solicitud enviada a los administradores.');
     }
 
     public function destroy(Company $company)

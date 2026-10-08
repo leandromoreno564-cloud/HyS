@@ -80,6 +80,21 @@ class Company extends Model
         });
     }
 
+    /**
+     * Empresas que el usuario puede consultar.
+     *
+     * Los inspectores pueden consultar el padrón completo, pero las reglas de
+     * acceso para editar o administrar una empresa siguen usando accessibleBy.
+     */
+    public function scopeVisibleBy(Builder $query, User $user): Builder
+    {
+        if ($user->isAdmin() || $user->isInspector()) {
+            return $query;
+        }
+
+        return $query->accessibleBy($user);
+    }
+
     public function isAccessibleBy(User $user): bool
     {
         if ($user->isAdmin()) {
@@ -87,5 +102,10 @@ class Company extends Model
         }
 
         return $this->created_by === $user->id || $this->inspectors->contains('id', $user->id);
+    }
+
+    public function isVisibleBy(User $user): bool
+    {
+        return $user->isAdmin() || $user->isInspector() || $this->isAccessibleBy($user);
     }
 }

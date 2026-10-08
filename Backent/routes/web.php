@@ -40,6 +40,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Gestión de Empresas
     Route::post('/companies/extract-pdf', [CompanyController::class, 'extractPdf'])->name('companies.extract-pdf');
     Route::resource('companies', CompanyController::class);
+    Route::post('/companies/{company}/request-inspector', [CompanyController::class, 'requestInspectorAssignment'])
+        ->name('companies.request-inspector');
 
     // Relevamiento / Checklist por Empresa
     Route::get('/companies/{company}/checklist', [CompanyChecklistController::class, 'index'])->name('companies.checklist.index');
