@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useForm } from '@inertiajs/react';
 import {
-    ShieldCheck,
     Lock,
     Mail,
     User,
@@ -61,16 +60,8 @@ export default function Register() {
                     <div className="absolute left-8 top-0 w-5 h-full bg-amber-400/90" />
                 </div>
 
-                <div className="lg:hidden mb-6 text-center">
-                    <div className="flex justify-center mb-3">
-                        <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/30">
-                            <ShieldCheck className="w-8 h-8" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="w-full max-w-xl relative z-10">
-                <div className="bg-slate-900/70 backdrop-blur-xl py-6 px-5 shadow-2xl rounded-3xl sm:px-8 border border-white/10 [&_input]:bg-slate-800/50 [&_input]:border-slate-600/60 [&_input]:text-white [&_input]:placeholder:text-slate-400 [&_input:focus]:ring-amber-400 [&_input:focus]:border-amber-400 [&_input]:shadow-none">
+                <div className="w-full max-w-xl lg:max-w-md relative z-10">
+                <div className="bg-slate-900/70 backdrop-blur-xl py-6 px-5 shadow-2xl rounded-3xl sm:px-8 lg:py-5 lg:px-6 border border-white/10 [&_input]:bg-slate-800/50 [&_input]:border-slate-600/60 [&_input]:text-white [&_input]:placeholder:text-slate-400 [&_input:focus]:ring-amber-400 [&_input:focus]:border-amber-400 [&_input]:shadow-none">
                     <div className="flex flex-col items-center mb-5">
                         <BadgeCheck className="w-8 h-8 text-white mb-1.5" strokeWidth={1.5} />
                         <h1 className="text-lg font-bold text-white">Registro de Licenciado</h1>
