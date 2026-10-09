@@ -19,6 +19,7 @@ import {
     Search,
     Calendar,
 } from 'lucide-react';
+import HySHelpAssistant from '../Components/HySHelpAssistant';
 
 export default function AuthenticatedLayout({ children, title = '' }) {
     const { auth, flash, unreadNotifications } = usePage().props;
@@ -314,6 +315,9 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                     {children}
                 </main>
             </div>
+
+            {/* Asistente Flotante Interactivo de Ayuda y Uso del Sistema */}
+            <HySHelpAssistant />
         </div>
     );
 }
