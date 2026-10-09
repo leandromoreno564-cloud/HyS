@@ -42,7 +42,7 @@
                 Este asistente ayuda a los alumnos e inspectores a entender <b>para qué sirve cada botón</b> de la plataforma, cómo cargar evidencias fotográficas desde el celular, cómo funciona el canvas de firma digital y cómo generar el informe oficial con código QR.
             </p>
             <div class="p-4 rounded-xl bg-blue-950/40 border border-blue-800/40 text-xs text-blue-200">
-                👉 <b>Haz clic en el botón flotante circular de la esquina inferior derecha</b> ("Guía del Sistema") para abrir la ventana de ayuda e interactuar con el asistente.
+                👉 <b>Haz clic en el botón flotante circular de la esquina inferior derecha</b> ("Guía del Sistema") para abrir la ventana de ayuda con el menú vertical de preguntas.
             </div>
         </div>
 
@@ -86,7 +86,7 @@
         </button>
 
         <!-- Ventana de Chat (Oculta por defecto) -->
-        <div id="assistant-chat-window" class="hidden w-[92vw] sm:w-[420px] h-[540px] max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden text-slate-800 animate-in fade-in duration-200">
+        <div id="assistant-chat-window" class="hidden w-[94vw] sm:w-[440px] h-[580px] max-h-[88vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden text-slate-800 animate-in fade-in duration-200">
             
             <!-- Header -->
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white px-4 py-3.5 flex items-center justify-between shadow-md shrink-0 border-b border-indigo-800/40">
@@ -102,7 +102,7 @@
                             </span>
                         </h3>
                         <p class="text-[10px] text-slate-300 leading-tight">
-                            Aprende para qué sirve cada botón y pantalla
+                            Manual interactivo de botones y funciones
                         </p>
                     </div>
                 </div>
@@ -121,49 +121,7 @@
 
             <!-- Cuerpo de Mensajes -->
             <div id="chat-messages" class="flex-1 p-3.5 overflow-y-auto space-y-3 bg-slate-50/70 text-xs text-slate-700">
-                <!-- Mensaje de bienvenida -->
-                <div class="flex flex-col items-start">
-                    <div class="max-w-[88%] p-3 rounded-2xl shadow-sm leading-relaxed whitespace-pre-line bg-white text-slate-800 border border-slate-200/80 rounded-bl-xs">
-¡Hola, Inspector/a! 👋 Soy tu <b>Asistente de Uso de HyS Control</b>.
-
-¿Tienes dudas sobre para qué sirve algún botón, cómo cargar una foto o cómo generar el informe? Toca una opción abajo o escribe tu consulta.
-                    </div>
-                    <span class="text-[9px] text-slate-400 mt-1 px-1 font-mono">Ahora</span>
-                </div>
-            </div>
-
-            <!-- Accesos rápidos sugeridos -->
-            <div class="bg-white border-t border-slate-200 px-3 py-2 shrink-0">
-                <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <span class="text-amber-500">✨</span>
-                    <span>Preguntas frecuentes sobre la web:</span>
-                </div>
-                <div class="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin">
-                    <button onclick="sendQuickQuery('extraer pdf')" class="whitespace-nowrap px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg text-[10px] font-semibold transition border border-slate-200 shrink-0">
-                        🔘 ¿Para qué sirve extraer PDF?
-                    </button>
-                    <button onclick="sendQuickQuery('subir foto')" class="whitespace-nowrap px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg text-[10px] font-semibold transition border border-slate-200 shrink-0">
-                        📸 ¿Cómo subir fotos y evidencias?
-                    </button>
-                    <button onclick="sendQuickQuery('firmar')" class="whitespace-nowrap px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg text-[10px] font-semibold transition border border-slate-200 shrink-0">
-                        ✍️ ¿Cómo firmar en pantalla táctil?
-                    </button>
-                    <button onclick="sendQuickQuery('descargar pdf')" class="whitespace-nowrap px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg text-[10px] font-semibold transition border border-slate-200 shrink-0">
-                        📄 ¿Cómo descargar informe con QR?
-                    </button>
-                    <button onclick="sendQuickQuery('crear empresa')" class="whitespace-nowrap px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg text-[10px] font-semibold transition border border-slate-200 shrink-0">
-                        🏢 ¿Cómo crear una empresa?
-                    </button>
-                    <button onclick="sendQuickQuery('agregar medida')" class="whitespace-nowrap px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg text-[10px] font-semibold transition border border-slate-200 shrink-0">
-                        ⚠️ ¿Cómo agregar medidas correctivas?
-                    </button>
-                    <button onclick="sendQuickQuery('estados checklist')" class="whitespace-nowrap px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg text-[10px] font-semibold transition border border-slate-200 shrink-0">
-                        📋 ¿Qué significa Cumple / No Cumple?
-                    </button>
-                    <button onclick="sendQuickQuery('calendario')" class="whitespace-nowrap px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-lg text-[10px] font-semibold transition border border-slate-200 shrink-0">
-                        📅 ¿Cómo usar el calendario?
-                    </button>
-                </div>
+                <!-- Se puebla dinámicamente con initChat() -->
             </div>
 
             <!-- Input de texto -->
@@ -180,40 +138,82 @@
 
     <!-- Script de conocimiento e interacción -->
     <script>
+        const QUESTIONS_MENU = [
+            { id: 'extraer pdf', icon: '🔘', title: '¿Para qué sirve cada botón del checklist?' },
+            { id: 'subir foto', icon: '📸', title: '¿Cómo cargar fotos y evidencias desde el cel?' },
+            { id: 'firmar', icon: '✍️', title: '¿Cómo funciona la firma digital en pantalla?' },
+            { id: 'descargar pdf', icon: '📄', title: '¿Cómo descargar el informe final con QR?' },
+            { id: 'crear empresa', icon: '🏢', title: '¿Cómo crear y asignar una nueva empresa?' },
+            { id: 'calendario', icon: '📅', title: '¿Cómo usar la agenda y calendario de visitas?' },
+            { id: 'agregar medida', icon: '⚠️', title: '¿Cómo agregar y seguir medidas correctivas?' }
+        ];
+
         const KNOWLEDGE_BASE = [
             {
-                keywords: ['extraer pdf', 'subir pdf', 'importar pdf', 'boton pdf', 'cargar pdf', 'pdf checklist'],
-                answer: `📄 <b>Botón "Extraer / Cargar PDF":</b><br>Sirve para importar automáticamente una lista de cotejo (checklist) desde un archivo PDF oficial que ya tengas escaneado o digitalizado.<br><br>• <b>Cómo funciona:</b> Subes el PDF y el sistema analiza el texto, reconociendo categorías y preguntas normativas.<br>• <b>Beneficio:</b> Evita tener que tipear a mano los 30 o 50 ítems del checklist uno por uno.<br>• <b>Ubicación:</b> Está disponible en la parte superior del Checklist de la Empresa.`
+                keywords: ['extraer pdf', 'subir pdf', 'importar pdf', 'boton pdf', 'cargar pdf', 'pdf checklist', 'botones checklist', 'cada boton'],
+                answer: `🔘 <b>¿Para qué sirve cada botón del Checklist?</b><br><br>• 📄 <b>Botón "Extraer PDF":</b> Escanea un informe PDF oficial que subas y carga automáticamente todas las preguntas del checklist sin tener que escribirlas a mano.<br><br>• 📸 <b>Botón "Cámara / Foto":</b> Abre la cámara o galería para adjuntar hasta 2 fotos de evidencia del peligro encontrado.<br><br>• ✍️ <b>Botón "Firmar":</b> Abre la pantalla táctil para firmar el acta con el dedo junto al responsable de la empresa.<br><br>• 📄 <b>Botón "Descargar PDF":</b> Genera el dictamen técnico final con fotos, medidas y código QR de validación.`
             },
             {
-                keywords: ['foto', 'fotos', 'evidencia', 'camara', 'adjuntar foto', 'subir foto', 'subir evidencia'],
-                answer: `📸 <b>Botón de la Cámara / Evidencia Fotográfica:</b><br>Sirve para documentar visualmente el peligro o hallazgo encontrado durante la inspección en la empresa.<br><br>• <b>Capacidad:</b> Puedes subir hasta <b>2 fotografías por ítem</b> del checklist.<br>• <b>Nivel de Gravedad:</b> Puedes clasificar el hallazgo como <i>Menor, Moderada, Mayor o Crítica</i>.<br>• <b>Visor Lightbox:</b> Al hacer clic sobre cualquier foto guardada, se abre en tamaño completo para ver los detalles técnicos.`
+                keywords: ['foto', 'fotos', 'evidencia', 'camara', 'adjuntar foto', 'subir foto', 'subir evidencia', 'celular', 'cel'],
+                answer: `📸 <b>¿Cómo cargar fotos y evidencias desde el celular?</b><br><br>1. Al lado de cada ítem del checklist verás el botón con el ícono de la <b>Cámara</b>.<br>2. Al tocarlo, puedes sacar la foto en el momento en la empresa o elegir una de tu galería.<br>3. Puedes subir hasta <b>2 fotos por ítem</b>.<br>4. Selecciona el nivel de gravedad del peligro: <i>Menor, Moderada, Mayor o Crítica</i>.<br>5. Presiona <b>"Guardar Evidencia"</b>.<br><br>💡 <i>Si tocas la foto guardada, se abre en tamaño gigante (Lightbox) para revisar los detalles técnicos.</i>`
             },
             {
                 keywords: ['firma', 'firmar', 'signature', 'pantalla tactil', 'canvas', 'firma digital', 'rubrica'],
-                answer: `✍️ <b>Botón "Firmar en Pantalla" (Canvas Digital):</b><br>Abre un recuadro táctil interactivo para registrar las firmas manuscritas al finalizar la inspección.<br><br>• <b>Quiénes firman:</b><br>&nbsp;&nbsp;1. El Inspector matriculado / alumno.<br>&nbsp;&nbsp;2. El Representante o responsable del establecimiento inspeccionado.<br>• <b>En el celular:</b> Se puede firmar directamente con el dedo o con un lápiz táctil.<br>• <b>Botón Limpiar:</b> Si la firma salió desprolija, presionas "Limpiar" y se puede volver a trazar.`
+                answer: `✍️ <b>¿Cómo funciona la firma digital en pantalla?</b><br><br>Al finalizar la inspección en el establecimiento:<br><br>1. En la parte inferior del checklist verás el recuadro blanco de <b>Firma Digital</b>.<br>2. Puedes firmar directamente <b>con el dedo en la pantalla del celular</b> o con el mouse en la computadora.<br>3. Firman dos personas: el <b>Inspector/a</b> y el <b>Responsable de la empresa</b>.<br>4. Si la firma salió corrida o desprolija, presionas <b>"Limpiar"</b> y se puede volver a trazar.<br>5. Al guardar, las firmas quedan estampadas de forma inalterable en el informe oficial.`
             },
             {
-                keywords: ['descargar pdf', 'informe oficial', 'informe pdf', 'acta', 'qr', 'exportar pdf', 'verificar qr'],
-                answer: `📄 <b>Botón "Descargar Informe Oficial en PDF":</b><br>Emite el dictamen técnico formal definitivo de la inspección con validez institucional.<br><br>• <b>Contenido del PDF:</b> Membrete del IES Nuevo Horizonte, datos de la empresa, checklist con fotos en miniatura, medidas correctivas recomendadas y firmas digitales estampadas.<br>• <b>Verificación QR:</b> El documento incluye un código QR único que cualquier persona puede escanear con su celular para validar la autenticidad del acta en la web pública (<code>/verify/{token}</code>).`
+                keywords: ['descargar pdf', 'informe oficial', 'informe pdf', 'acta', 'qr', 'exportar pdf', 'verificar qr', 'informe final'],
+                answer: `📄 <b>¿Cómo descargar el informe final con QR?</b><br><br>1. Una vez completado el checklist y registradas las firmas, presiona el botón azul <b>"Descargar Informe PDF"</b>.<br>2. El sistema emite un documento formal con:<br>&nbsp;&nbsp;• Membrete oficial del IES Nuevo Horizonte.<br>&nbsp;&nbsp;• Datos completos de la empresa y fecha de inspección.<br>&nbsp;&nbsp;• Las preguntas del checklist con sus fotos de evidencia en miniatura.<br>&nbsp;&nbsp;• El plan de medidas correctivas recomendadas.<br>&nbsp;&nbsp;• Las firmas manuscritas del inspector y la empresa.<br><br>📱 <b>Verificación QR:</b> En la esquina del documento hay un código QR que cualquier persona puede escanear con su celular para comprobar la autenticidad del acta en la web pública (<code>/verify/{token}</code>).`
             },
             {
-                keywords: ['medida correctiva', 'agregar medida', 'plan de accion', 'plazo', 'responsable', 'costo'],
-                answer: `⚠️ <b>Botón "Agregar Medida Correctiva":</b><br>Permite registrar una acción técnica obligatoria que la empresa debe realizar para solucionar un peligro detectado.<br><br>• <b>Campos requeridos:</b><br>&nbsp;&nbsp;- Descripción de la medida técnica a implementar.<br>&nbsp;&nbsp;- Fecha límite de cumplimiento (plazo legal).<br>&nbsp;&nbsp;- Responsable asignado (empresa o contratista).<br>&nbsp;&nbsp;- Nivel de prioridad (<i>Baja, Media, Alta o Urgente</i>).<br>&nbsp;&nbsp;- Estimación de costo aproximado (opcional).`
-            },
-            {
-                keywords: ['crear empresa', 'nueva empresa', 'alta empresa', 'agregar empresa', 'registrar empresa'],
-                answer: `🏢 <b>Cómo crear una nueva Empresa:</b><br>1. Ve al menú lateral izquierdo y haz clic en <b>"Empresas"</b>.<br>2. En la esquina superior derecha, toca el botón azul <b>"+ Nueva Empresa"</b>.<br>3. Completa los datos del establecimiento: Razón Social, CUIT, Rubro (Metalúrgica, Construcción, Comercio), cantidad de empleados y dirección exacta.<br>4. Presiona <b>"Guardar Empresa"</b> y quedará lista para inspeccionar.`
-            },
-            {
-                keywords: ['cumple', 'no cumple', 'no aplica', 'estados checklist', 'marcar checklist'],
-                answer: `📋 <b>Estados de cada ítem del Checklist:</b><br>• ✅ <b>Cumple:</b> El establecimiento cumple satisfactoriamente con la norma.<br>• ❌ <b>No Cumple:</b> Se detectó un peligro o irregularidad (recomendado: tomar foto y generar medida correctiva).<br>• ⚪ <b>No Aplica:</b> La exigencia no corresponde a este rubro o actividad.<br><br><i>La barra superior calcula automáticamente el avance al 100%.</i>`
+                keywords: ['crear empresa', 'nueva empresa', 'alta empresa', 'agregar empresa', 'registrar empresa', 'asignar empresa'],
+                answer: `🏢 <b>¿Cómo crear y asignar una nueva Empresa?</b><br><br>1. En el menú lateral izquierdo, haz clic en <b>"Empresas"</b>.<br>2. Presiona el botón <b>"+ Nueva Empresa"</b> en la esquina superior.<br>3. Completa los datos obligatorios:<br>&nbsp;&nbsp;• <b>Razón Social:</b> Nombre formal de la empresa.<br>&nbsp;&nbsp;• <b>CUIT:</b> Número tributario de 11 dígitos sin guiones.<br>&nbsp;&nbsp;• <b>Rubro:</b> Metalúrgica, Construcción, Comercio, Salud, etc.<br>&nbsp;&nbsp;• <b>Cantidad de Empleados:</b> Para calcular exigencias de horas profesionales.<br>&nbsp;&nbsp;• <b>Dirección y Contacto:</b> Teléfono y persona a cargo.<br>4. Presiona <b>"Guardar Empresa"</b>.<br><br>👥 <i>El Administrador puede asignar qué inspectores específicos auditarán cada empresa.</i>`
             },
             {
                 keywords: ['calendario', 'agenda', 'visita', 'programar visita', 'fecha inspeccion', 'agendar'],
-                answer: `📅 <b>Sección Calendario & Agenda:</b><br>Permite planificar las visitas de campo para que los inspectores no se superpongan en el mismo día y horario.<br><br>• <b>Vista Mensual y Semanal:</b> Muestra las inspecciones con etiquetas de colores según su estado.<br>• <b>Al tocar un día:</b> Creas una nueva cita seleccionando la empresa, el inspector y la hora programada.`
+                answer: `📅 <b>¿Cómo usar la agenda y calendario de visitas?</b><br><br>Sirve para organizar las fechas de inspección técnica en campo:<br><br>1. Entra a la sección <b>"Calendario & Agenda"</b> en el menú lateral.<br>2. Verás una vista mensual y semanal con las visitas programadas.<br>3. Toca cualquier día del calendario para <b>agendar una nueva visita</b>.<br>4. Elige la empresa, el inspector asignado, la fecha y el horario previsto.<br>5. Cada visita tiene etiquetas de colores según su estado: <i>Pendiente (amarillo), En Proceso (azul) o Completada (verde)</i>.`
+            },
+            {
+                keywords: ['medida correctiva', 'agregar medida', 'plan de accion', 'plazo', 'responsable', 'costo', 'medidas'],
+                answer: `⚠️ <b>¿Cómo agregar y seguir medidas correctivas?</b><br><br>Cuando encuentras un peligro en la empresa:<br><br>1. En la sección <b>"Medidas Correctivas"</b> o dentro del ítem no cumplido, presiona <b>"+ Agregar Medida"</b>.<br>2. Describe la acción técnica obligatoria (ej: <i>"Instalar disyuntor diferencial de 30mA en tablero seccional T2"</i>).<br>3. Fija la <b>Fecha Límite (Plazo)</b> de cumplimiento legal.<br>4. Asigna el responsable (ej: <i>"Mantenimiento eléctrico de la empresa"</i>).<br>5. Define la prioridad: <i>Urgente (24hs), Alta (5 a 15 días), Media o Baja</i>.<br>6. El sistema permite filtrar medidas <i>Abiertas, En Proceso y Solucionadas</i>.`
             }
         ];
+
+        function getMenuHTML() {
+            let html = `
+                <div class="mt-2.5 p-2 bg-slate-100/90 border border-slate-200/90 rounded-2xl w-full space-y-1.5 shadow-inner">
+                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1 pt-0.5 flex items-center gap-1">
+                        <span class="text-amber-500">✨</span><span>Toca una pregunta para ver la respuesta:</span>
+                    </div>
+            `;
+            QUESTIONS_MENU.forEach(item => {
+                html += `
+                    <button onclick="sendQuickQuery('${item.id}')" class="w-full text-left px-3 py-2 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl text-slate-800 hover:text-blue-700 font-medium text-xs transition flex items-center justify-between shadow-xs group cursor-pointer">
+                        <span class="flex items-center gap-2">
+                            <span class="text-sm shrink-0">${item.icon}</span>
+                            <span class="leading-tight">${item.title}</span>
+                        </span>
+                        <span class="text-slate-300 group-hover:text-blue-600 font-bold transition text-xs shrink-0 ml-1">➔</span>
+                    </button>
+                `;
+            });
+            html += `</div>`;
+            return html;
+        }
+
+        function initChat() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = `
+                <div class="flex flex-col items-start w-full">
+                    <div class="w-full p-3.5 rounded-2xl shadow-sm leading-relaxed bg-white text-slate-800 border border-slate-200/80 rounded-bl-xs space-y-2">
+                        <p class="font-medium">¡Hola, Inspector/a! 👋 Soy tu <b>Asistente de Uso de HyS Control</b>.</p>
+                        <p class="text-slate-600">¿Tienes dudas sobre cómo usar la web o qué hace cada botón? Selecciona una opción del menú o escribe tu duda abajo:</p>
+                        ${getMenuHTML()}
+                    </div>
+                    <span class="text-[9px] text-slate-400 mt-1 px-1 font-mono">Ahora</span>
+                </div>
+            `;
+        }
 
         function toggleAssistant(show) {
             const btn = document.getElementById('btn-open-assistant');
@@ -228,21 +228,43 @@
             }
         }
 
-        function appendMessage(sender, text) {
+        function appendUserMessage(text) {
             const container = document.getElementById('chat-messages');
             const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const isUser = (sender === 'user');
-
             const msgDiv = document.createElement('div');
-            msgDiv.className = `flex flex-col ${isUser ? 'items-end' : 'items-start'}`;
+            msgDiv.className = 'flex flex-col items-end w-full';
             msgDiv.innerHTML = `
-                <div class="max-w-[88%] p-3 rounded-2xl shadow-sm leading-relaxed ${isUser ? 'bg-blue-600 text-white rounded-br-xs font-medium' : 'bg-white text-slate-800 border border-slate-200/80 rounded-bl-xs'}">
+                <div class="max-w-[88%] p-3 rounded-2xl shadow-sm leading-relaxed bg-blue-600 text-white rounded-br-xs font-medium">
                     ${text}
                 </div>
                 <span class="text-[9px] text-slate-400 mt-1 px-1 font-mono">${now}</span>
             `;
             container.appendChild(msgDiv);
             container.scrollTop = container.scrollHeight;
+        }
+
+        function appendBotMessage(answerHtml) {
+            const container = document.getElementById('chat-messages');
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'flex flex-col items-start w-full';
+            msgDiv.innerHTML = `
+                <div class="w-full p-3.5 rounded-2xl shadow-sm leading-relaxed bg-white text-slate-800 border border-slate-200/80 rounded-bl-xs space-y-2">
+                    <div>${answerHtml}</div>
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                        <button onclick="showMenuAgain()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-blue-50 text-blue-700 border border-slate-200 hover:border-blue-300 rounded-lg text-[11px] font-semibold transition cursor-pointer">
+                            <span>📋</span><span>Ver lista de preguntas</span>
+                        </button>
+                    </div>
+                </div>
+                <span class="text-[9px] text-slate-400 mt-1 px-1 font-mono">${now}</span>
+            `;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showMenuAgain() {
+            appendBotMessage(`<b>Aquí tienes el menú de preguntas del sistema:</b><br>${getMenuHTML()}`);
         }
 
         function findAnswer(query) {
@@ -255,15 +277,17 @@
                 const text = item.keywords.join(' ') + ' ' + item.answer.toLowerCase();
                 if (words.some(w => text.includes(w))) return item.answer;
             }
-            return `🤔 No encontré una explicación exacta para <b>"${query}"</b>.<br><br>Puedes consultar sobre estos botones o funciones clave:<br>• <b>"extraer pdf"</b> (checklist automático)<br>• <b>"foto"</b> (evidencias desde el celular)<br>• <b>"firmar"</b> (firma digital táctil)<br>• <b>"descargar pdf"</b> (informe con QR)<br>• <b>"crear empresa"</b> (alta de establecimiento)<br>• <b>"medida correctiva"</b> (plazos y costos)`;
+            return `🤔 No encontré una explicación exacta para <b>"${query}"</b>.<br><br>Puedes tocar una de las preguntas de la lista para ver la guía correspondiente.`;
         }
 
         function sendQuickQuery(query) {
-            appendMessage('user', query);
+            const menuItem = QUESTIONS_MENU.find(m => m.id === query);
+            const userLabel = menuItem ? menuItem.title : query;
+            appendUserMessage(userLabel);
             setTimeout(() => {
                 const answer = findAnswer(query);
-                appendMessage('bot', answer);
-            }, 250);
+                appendBotMessage(answer);
+            }, 200);
         }
 
         function handleFormSubmit(e) {
@@ -271,20 +295,20 @@
             const input = document.getElementById('chat-input');
             const val = input.value.trim();
             if (!val) return;
-            appendMessage('user', val);
+            appendUserMessage(val);
             input.value = '';
             setTimeout(() => {
                 const answer = findAnswer(val);
-                appendMessage('bot', answer);
-            }, 250);
+                appendBotMessage(answer);
+            }, 200);
         }
 
         function resetChat() {
-            const container = document.getElementById('chat-messages');
-            container.innerHTML = '';
-            appendMessage('bot', 'Conversación reiniciada. 🔄 ¿Sobre qué botón o función de la web deseas información?');
+            initChat();
         }
 
+        // Iniciar chat con el menú vertical
+        initChat();
         lucide.createIcons();
     </script>
 </body>
