@@ -16,22 +16,15 @@ import {
     Calendar, 
     QrCode, 
     UserCheck,
-    Search,
-    BookOpen,
-    Scale,
-    ShieldAlert,
-    Briefcase,
-    Layers
+    Search
 } from 'lucide-react';
 
-// Secciones temáticas del Asistente HyS (sin emojis)
+// Secciones temáticas del Asistente HyS con títulos exactos
 const SECTIONS = [
     {
         id: 'manual',
-        title: 'Manual de la Web',
-        shortTitle: 'Manual Web',
+        title: 'Manual web',
         desc: 'Botones y funciones de la plataforma',
-        badge: '6 temas',
         questions: [
             { id: 'extraer_pdf', title: '¿Para qué sirve cada botón del checklist?' },
             { id: 'subir_foto', title: '¿Cómo cargar fotos y evidencias desde el celular?' },
@@ -43,10 +36,8 @@ const SECTIONS = [
     },
     {
         id: 'normativas',
-        title: 'Leyes y Normativas HyS',
-        shortTitle: 'Leyes y Normas',
+        title: 'Leyes y normas',
         desc: 'Ley 19.587, Decretos 351, 911 y 617',
-        badge: '6 temas',
         questions: [
             { id: 'ley_19587', title: 'Ley 19.587: Pilares de Higiene y Seguridad Laboral' },
             { id: 'decreto_351', title: 'Decreto 351/79: Industria, Comercios y Servicios' },
@@ -58,10 +49,8 @@ const SECTIONS = [
     },
     {
         id: 'riesgos',
-        title: 'Riesgos y Medidas Correctivas',
-        shortTitle: 'Riesgos y Medidas',
+        title: 'Riesgos y medidas',
         desc: 'Evaluación de gravedad, plazos y planes',
-        badge: '5 temas',
         questions: [
             { id: 'matriz_riesgo', title: '¿Cómo clasificar la gravedad de los peligros?' },
             { id: 'plazos_medidas', title: '¿Qué plazos legales fijar para subsanar faltas?' },
@@ -72,10 +61,8 @@ const SECTIONS = [
     },
     {
         id: 'gestion',
-        title: 'Empresas y Legajo Técnico',
-        shortTitle: 'Empresas y Legajo',
+        title: 'Empresas y legajo',
         desc: 'Legajo técnico, ART y contratistas',
-        badge: '4 temas',
         questions: [
             { id: 'legajo_tecnico', title: '¿Qué documentos debe tener el Legajo Técnico de HyS?' },
             { id: 'horas_profesional', title: '¿Cuántas horas de profesional exige la ley por empresa?' },
@@ -85,10 +72,8 @@ const SECTIONS = [
     },
     {
         id: 'faq_campo',
-        title: 'Preguntas Frecuentes y Campo',
-        shortTitle: 'F.A.Q. y Campo',
+        title: 'FAQ y campo',
         desc: 'Tips de campo, sin conexión y firmas',
-        badge: '4 temas',
         questions: [
             { id: 'modo_offline', title: '¿Se puede usar la app si no hay señal en la fábrica?' },
             { id: 'validez_qr', title: '¿Por qué el código QR garantiza validez legal?' },
@@ -98,9 +83,9 @@ const SECTIONS = [
     }
 ];
 
-// Base de conocimiento completa (sin emojis y sin marcas de asteriscos)
+// Base de conocimiento limpia
 const KNOWLEDGE_BASE = [
-    // --- MANUAL DE LA WEB ---
+    // --- MANUAL WEB ---
     {
         id: 'extraer_pdf',
         sectionId: 'manual',
@@ -187,7 +172,7 @@ Sirve para organizar las fechas de inspección técnica en campo:
 5. Cada visita tiene etiquetas según su estado: Pendiente (amarillo), En Proceso (azul) o Completada (verde).`
     },
 
-    // --- LEYES Y NORMATIVAS HYS ---
+    // --- LEYES Y NORMAS ---
     {
         id: 'ley_19587',
         sectionId: 'normativas',
@@ -265,7 +250,7 @@ Estandariza los colores de seguridad en plantas industriales y obras:
 • Azul: Acción de mando obligatorio (ejemplo: "Uso obligatorio de casco", "Uso de gafas de seguridad").`
     },
 
-    // --- RIESGOS Y MEDIDAS CORRECTIVAS ---
+    // --- RIESGOS Y MEDIDAS ---
     {
         id: 'matriz_riesgo',
         sectionId: 'riesgos',
@@ -327,7 +312,7 @@ Si durante la auditoría detectas una situación con riesgo inminente de vida:
 4. Si está resuelta, se toma una foto de la mejora implementada y se marca como Solucionada, cerrando el ciclo de no conformidad.`
     },
 
-    // --- EMPRESAS Y LEGAJO TÉCNICO ---
+    // --- EMPRESAS Y LEGAJO ---
     {
         id: 'legajo_tecnico',
         sectionId: 'gestion',
@@ -376,7 +361,7 @@ Antes de permitir el ingreso a trabajar en el establecimiento u obra:
 • Inspección de equipos: Verificación de herramientas eléctricas, andamios tubulares normalizados y arneses con fecha vigente.`
     },
 
-    // --- F.A.Q. Y TRABAJO EN CAMPO ---
+    // --- FAQ Y CAMPO ---
     {
         id: 'modo_offline',
         sectionId: 'faq_campo',
@@ -426,7 +411,6 @@ Si el encargado o propietario se niega a estampar su firma digital:
 // Función para renderizar texto limpio de asteriscos y emojis con formato ordenado
 function renderCleanMessageText(text) {
     if (!text) return null;
-    // Eliminación de cualquier emoji y cualquier asterisco **
     const clean = text
         .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '')
         .replace(/\*\*/g, '');
@@ -458,13 +442,13 @@ function renderCleanMessageText(text) {
 
 export default function HySHelpAssistant() {
     const [isOpen, setIsOpen] = useState(false);
-    const [activeSection, setActiveSection] = useState('manual');
+    const [openSectionId, setOpenSectionId] = useState(null);
     const [messages, setMessages] = useState([
         {
             sender: 'bot',
             type: 'welcome',
-            text: 'Hola, Inspector/a. Soy el Asistente de HyS Control.\n\nPuedes navegar por las secciones temáticas arriba o seleccionar una pregunta de la lista:',
-            sectionId: 'manual',
+            text: 'Hola, Inspector/a. Soy el Asistente de HyS Control.\n\nSelecciona una sección para desplegar sus preguntas o escribe tu consulta:',
+            showAccordion: true,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
     ]);
@@ -482,10 +466,10 @@ export default function HySHelpAssistant() {
             scrollToBottom();
             setTimeout(() => inputRef.current?.focus(), 150);
         }
-    }, [isOpen, messages, isTyping]);
+    }, [isOpen, messages, isTyping, openSectionId]);
 
-    const getSection = (secId) => {
-        return SECTIONS.find(s => s.id === secId) || SECTIONS[0];
+    const toggleSection = (sectionId) => {
+        setOpenSectionId(prev => (prev === sectionId ? null : sectionId));
     };
 
     const findAnswer = (query) => {
@@ -527,22 +511,9 @@ export default function HySHelpAssistant() {
         }
 
         return {
-            answer: `No se encontró una explicación exacta para "${query}".\n\nPuedes seleccionar una de las secciones arriba o tocar una pregunta de la lista.`,
-            sectionId: activeSection
+            answer: `No se encontró una explicación exacta para "${query}".\n\nPuedes seleccionar una de las secciones en el menú o tocar una pregunta desplegada.`,
+            sectionId: null
         };
-    };
-
-    const handleSwitchSection = (sectionId) => {
-        setActiveSection(sectionId);
-        const sec = getSection(sectionId);
-        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        setMessages(prev => [...prev, {
-            sender: 'bot',
-            text: `Sección: ${sec.title}\n${sec.desc}:`,
-            sectionId: sectionId,
-            timestamp: timeStr
-        }]);
     };
 
     const handleSelectQuestion = (questionId, questionTitle, sectionId) => {
@@ -561,7 +532,6 @@ export default function HySHelpAssistant() {
             setMessages(prev => [...prev, {
                 sender: 'bot',
                 text: result.answer,
-                currentSectionId: result.sectionId || sectionId || activeSection,
                 showMenuButtons: true,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }]);
@@ -587,13 +557,9 @@ export default function HySHelpAssistant() {
 
         setTimeout(() => {
             const result = findAnswer(text);
-            if (result.sectionId) {
-                setActiveSection(result.sectionId);
-            }
             setMessages(prev => [...prev, {
                 sender: 'bot',
                 text: result.answer,
-                currentSectionId: result.sectionId || activeSection,
                 showMenuButtons: true,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }]);
@@ -601,33 +567,23 @@ export default function HySHelpAssistant() {
         }, 220);
     };
 
-    const handleShowSectionQuestions = (sectionId) => {
-        const sec = getSection(sectionId);
+    const handleShowAccordion = () => {
         setMessages(prev => [...prev, {
             sender: 'bot',
-            text: `Preguntas de ${sec.title}:`,
-            sectionId: sectionId,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }]);
-    };
-
-    const handleShowAllSections = () => {
-        setMessages(prev => [...prev, {
-            sender: 'bot',
-            text: 'Secciones Disponibles del Asistente:\nSelecciona la temática que deseas consultar:',
-            showSectionsList: true,
+            text: 'Selecciona una sección para desplegar sus preguntas:',
+            showAccordion: true,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }]);
     };
 
     const handleResetChat = () => {
-        setActiveSection('manual');
+        setOpenSectionId(null);
         setMessages([
             {
                 sender: 'bot',
                 type: 'welcome',
-                text: 'Conversación reiniciada. Selecciona una sección o haz tu consulta:',
-                sectionId: 'manual',
+                text: 'Conversación reiniciada. Selecciona una sección para desplegar sus preguntas:',
+                showAccordion: true,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }
         ]);
@@ -656,7 +612,7 @@ export default function HySHelpAssistant() {
             {isOpen && (
                 <div className="w-[94vw] sm:w-[460px] h-[600px] max-h-[88vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden text-slate-800 animate-in fade-in duration-200">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white px-4 py-3 flex items-center justify-between shadow-md shrink-0 border-b border-indigo-800/40">
+                    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white px-4 py-3.5 flex items-center justify-between shadow-md shrink-0 border-b border-indigo-800/40">
                         <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-400 flex items-center justify-center shadow-inner">
                                 <Bot className="w-5 h-5 text-white" />
@@ -698,26 +654,6 @@ export default function HySHelpAssistant() {
                         </div>
                     </div>
 
-                    {/* Barra superior de Secciones (Pestañas limpias sin emojis) */}
-                    <div className="bg-slate-100/90 border-b border-slate-200 px-2 py-1.5 flex items-center gap-1.5 overflow-x-auto scrollbar-thin shrink-0 shadow-inner">
-                        {SECTIONS.map((sec) => {
-                            const isActive = activeSection === sec.id;
-                            return (
-                                <button
-                                    key={sec.id}
-                                    onClick={() => handleSwitchSection(sec.id)}
-                                    className={`whitespace-nowrap px-3 py-1 rounded-xl text-[11px] font-bold transition shrink-0 cursor-pointer ${
-                                        isActive
-                                            ? 'bg-blue-600 text-white shadow-xs'
-                                            : 'bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300'
-                                    }`}
-                                >
-                                    {sec.shortTitle}
-                                </button>
-                            );
-                        })}
-                    </div>
-
                     {/* Mensajes y cuerpo de conversación */}
                     <div className="flex-1 p-3.5 overflow-y-auto space-y-3.5 bg-slate-50/70 text-xs text-slate-700">
                         {messages.map((msg, index) => (
@@ -734,71 +670,69 @@ export default function HySHelpAssistant() {
                                 >
                                     {renderCleanMessageText(msg.text)}
 
-                                    {/* Lista de preguntas vertical (una debajo de la otra, sin emojis) */}
-                                    {msg.sectionId && (
-                                        <div className="mt-3 p-2 bg-slate-100/90 border border-slate-200/90 rounded-2xl w-full space-y-1.5 shadow-inner">
-                                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1 pt-0.5 flex items-center justify-between">
-                                                <span>Seleccione una pregunta para ver la respuesta:</span>
-                                                <span className="text-[9px] text-blue-600 font-mono font-bold">
-                                                    {getSection(msg.sectionId)?.badge}
-                                                </span>
+                                    {/* Menú de Secciones Desplegables (Acordeón con desglose) */}
+                                    {msg.showAccordion && (
+                                        <div className="mt-3 p-1.5 bg-slate-100/90 border border-slate-200/90 rounded-2xl w-full space-y-1.5 shadow-inner">
+                                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 pt-1 pb-0.5 flex items-center justify-between">
+                                                <span>Secciones temáticas:</span>
+                                                <span className="text-[9px] text-slate-400">Toca para desplegar</span>
                                             </div>
-                                            {getSection(msg.sectionId)?.questions.map((item) => (
-                                                <button
-                                                    key={item.id}
-                                                    onClick={() => handleSelectQuestion(item.id, item.title, msg.sectionId)}
-                                                    className="w-full text-left px-3 py-2 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl text-slate-800 hover:text-blue-700 font-medium text-xs transition flex items-center justify-between shadow-xs group cursor-pointer"
-                                                >
-                                                    <span className="leading-tight pr-2">{item.title}</span>
-                                                    <span className="text-slate-300 group-hover:text-blue-600 font-bold transition text-xs shrink-0">
-                                                        ➔
-                                                    </span>
-                                                </button>
-                                            ))}
+
+                                            {SECTIONS.map((sec) => {
+                                                const isOpen = openSectionId === sec.id;
+                                                return (
+                                                    <div 
+                                                        key={sec.id} 
+                                                        className="rounded-xl overflow-hidden border border-slate-200/90 bg-white shadow-xs transition"
+                                                    >
+                                                        {/* Fila de sección (tipo: Manual web ➔) */}
+                                                        <button
+                                                            onClick={() => toggleSection(sec.id)}
+                                                            className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between transition cursor-pointer ${
+                                                                isOpen 
+                                                                    ? 'bg-blue-50 text-blue-800 font-bold border-b border-blue-100' 
+                                                                    : 'hover:bg-slate-50 text-slate-800 font-semibold text-xs'
+                                                            }`}
+                                                        >
+                                                            <span className="text-xs">{sec.title}</span>
+                                                            <span className={`text-xs transition-transform duration-200 ${
+                                                                isOpen ? 'text-blue-600 font-bold' : 'text-slate-400 font-normal'
+                                                            }`}>
+                                                                {isOpen ? '▼' : '➔'}
+                                                            </span>
+                                                        </button>
+
+                                                        {/* Desglose de preguntas al hacer clic */}
+                                                        {isOpen && (
+                                                            <div className="p-1.5 bg-slate-50/80 space-y-1 border-t border-slate-100 animate-in fade-in duration-150">
+                                                                {sec.questions.map((q) => (
+                                                                    <button
+                                                                        key={q.id}
+                                                                        onClick={() => handleSelectQuestion(q.id, q.title, sec.id)}
+                                                                        className="w-full text-left px-3 py-2 bg-white hover:bg-blue-50 border border-slate-200/70 hover:border-blue-300 rounded-lg text-slate-700 hover:text-blue-700 text-xs transition flex items-center justify-between group cursor-pointer"
+                                                                    >
+                                                                        <span className="leading-tight pr-2">{q.title}</span>
+                                                                        <span className="text-slate-300 group-hover:text-blue-600 font-bold text-xs shrink-0">
+                                                                            ➔
+                                                                        </span>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
 
-                                    {/* Menú vertical de todas las secciones */}
-                                    {msg.showSectionsList && (
-                                        <div className="mt-3 p-2 bg-slate-100/90 border border-slate-200 rounded-2xl w-full space-y-1.5 shadow-inner">
-                                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1 pt-0.5">
-                                                Selecciona una sección temática:
-                                            </div>
-                                            {SECTIONS.map((sec) => (
-                                                <button
-                                                    key={sec.id}
-                                                    onClick={() => handleSwitchSection(sec.id)}
-                                                    className="w-full text-left p-2.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl transition flex items-center justify-between shadow-xs group cursor-pointer"
-                                                >
-                                                    <div>
-                                                        <div className="font-bold text-slate-800 group-hover:text-blue-700 text-xs">{sec.title}</div>
-                                                        <div className="text-[10px] text-slate-500">{sec.desc}</div>
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="text-[9px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full">
-                                                            {sec.badge}
-                                                        </span>
-                                                        <span className="text-slate-300 group-hover:text-blue-600 font-bold text-xs">➔</span>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {/* Botones de navegación contextual (sin emojis) */}
+                                    {/* Botón para volver a desplegar el menú de secciones */}
                                     {msg.showMenuButtons && (
-                                        <div className="pt-2.5 mt-2 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
+                                        <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center gap-1.5">
                                             <button
-                                                onClick={() => handleShowSectionQuestions(msg.currentSectionId || activeSection)}
-                                                className="inline-flex items-center px-2.5 py-1.5 bg-slate-100 hover:bg-blue-50 text-blue-700 border border-slate-200 hover:border-blue-300 rounded-lg text-[11px] font-semibold transition cursor-pointer"
+                                                onClick={handleShowAccordion}
+                                                className="inline-flex items-center px-3 py-1.5 bg-slate-100 hover:bg-blue-50 text-blue-700 border border-slate-200 hover:border-blue-300 rounded-lg text-[11px] font-semibold transition cursor-pointer"
                                             >
-                                                Preguntas de esta sección
-                                            </button>
-                                            <button
-                                                onClick={handleShowAllSections}
-                                                className="inline-flex items-center px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-[11px] font-semibold transition cursor-pointer"
-                                            >
-                                                Ver todas las secciones
+                                                Ver secciones y preguntas
                                             </button>
                                         </div>
                                     )}
