@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="100%" height="100%" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <rect width="600" height="340" rx="16" fill="#0f172a"/>
+  
+  <!-- Barra superior -->
+  <rect width="600" height="42" rx="16" fill="#1e293b"/>
+  <rect y="26" width="600" height="16" fill="#1e293b"/>
+  <circle cx="24" cy="21" r="5" fill="#ef4444"/>
+  <circle cx="40" cy="21" r="5" fill="#f59e0b"/>
+  <circle cx="56" cy="21" r="5" fill="#10b981"/>
+  <text x="80" y="25" fill="#94a3b8" font-size="11" font-weight="600">HyS Control • Agenda y Calendario de Auditorias</text>
+  
+  <!-- Contenedor -->
+  <rect x="20" y="58" width="560" height="262" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  
+  <text x="38" y="86" fill="#f8fafc" font-size="14" font-weight="700">Agenda Tecnica: Programacion de Visitas en Campo</text>
+  <text x="38" y="103" fill="#64748b" font-size="11">Planificacion mensual y seguimiento de estados de inspeccion</text>
+
+  <!-- Grilla de calendario -->
+  <rect x="38" y="118" width="340" height="182" rx="10" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  
+  <!-- Dias semana -->
+  <text x="56" y="136" fill="#94a3b8" font-size="9" font-weight="700">LUN</text>
+  <text x="106" y="136" fill="#94a3b8" font-size="9" font-weight="700">MAR</text>
+  <text x="156" y="136" fill="#94a3b8" font-size="9" font-weight="700">MIE</text>
+  <text x="206" y="136" fill="#94a3b8" font-size="9" font-weight="700">JUE</text>
+  <text x="256" y="136" fill="#94a3b8" font-size="9" font-weight="700">VIE</text>
+  <text x="306" y="136" fill="#94a3b8" font-size="9" font-weight="700">SAB</text>
+
+  <!-- Celdas con visitas -->
+  <!-- Dia 12 con visita completada -->
+  <rect x="48" y="150" width="46" height="42" rx="6" fill="#1e293b"/>
+  <text x="54" y="164" fill="#cbd5e1" font-size="10">12</text>
+  <rect x="52" y="172" width="38" height="14" rx="3" fill="#10b981"/>
+  <text x="56" y="182" fill="#ffffff" font-size="7" font-weight="700">REALIZADA</text>
+
+  <!-- Dia 13 con visita pendiente -->
+  <rect x="98" y="150" width="46" height="42" rx="6" fill="#1e293b"/>
+  <text x="104" y="164" fill="#cbd5e1" font-size="10">13</text>
+  <rect x="102" y="172" width="38" height="14" rx="3" fill="#f59e0b"/>
+  <text x="106" y="182" fill="#ffffff" font-size="7" font-weight="700">PENDIENTE</text>
+
+  <!-- Dia 14 con visita en proceso -->
+  <rect x="148" y="150" width="46" height="42" rx="6" fill="#1e293b"/>
+  <text x="154" y="164" fill="#cbd5e1" font-size="10">14</text>
+  <rect x="152" y="172" width="38" height="14" rx="3" fill="#2563eb"/>
+  <text x="156" y="182" fill="#ffffff" font-size="7" font-weight="700">EN CURSO</text>
+
+  <!-- Panel lateral de detalle de visita -->
+  <rect x="390" y="118" width="168" height="182" rx="10" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="402" y="138" fill="#60a5fa" font-size="11" font-weight="700">Detalle de la Visita:</text>
+  <text x="402" y="156" fill="#f8fafc" font-size="10" font-weight="600">Empresa: Metalurgica</text>
+  <text x="402" y="172" fill="#94a3b8" font-size="9">Inspector: Lic. Urquiza</text>
+  <text x="402" y="188" fill="#94a3b8" font-size="9">Horario: 09:30 hs</text>
+  
+  <rect x="402" y="202" width="144" height="20" rx="4" fill="#f59e0b" fill-opacity="0.2" stroke="#f59e0b" stroke-width="1"/>
+  <text x="424" y="216" fill="#fcd34d" font-size="9" font-weight="700">Estado: Pendiente</text>
+
+  <rect x="402" y="246" width="144" height="36" rx="6" fill="#2563eb"/>
+  <text x="420" y="268" fill="#ffffff" font-size="10" font-weight="700">+ Agendar Visita</text>
+</svg>

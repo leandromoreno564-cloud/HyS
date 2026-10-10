@@ -15,8 +15,9 @@ import {
     AlertTriangle, 
     Calendar, 
     QrCode, 
-    UserCheck,
-    Search
+    UserCheck, 
+    Search, 
+    Maximize2
 } from 'lucide-react';
 
 // Secciones temáticas del Asistente HyS con títulos exactos
@@ -83,13 +84,15 @@ const SECTIONS = [
     }
 ];
 
-// Base de conocimiento limpia
+// Base de conocimiento limpia con capturas ilustrativas en la seccion de manual
 const KNOWLEDGE_BASE = [
     // --- MANUAL WEB ---
     {
         id: 'extraer_pdf',
         sectionId: 'manual',
         keywords: ['extraer pdf', 'subir pdf', 'importar pdf', 'boton pdf', 'cargar pdf', 'pdf checklist', 'botones checklist', 'cada boton', 'botones'],
+        image: '/manual/extraer_pdf.svg',
+        imageTitle: 'Captura ilustrativa: Botones del checklist e importacion de PDF',
         answer: `¿Para qué sirve cada botón del Checklist?
 
 • Botón "Extraer PDF": Escanea un informe PDF oficial que subas y carga automáticamente todas las preguntas del checklist sin tener que escribirlas a mano.
@@ -101,6 +104,8 @@ const KNOWLEDGE_BASE = [
         id: 'subir_foto',
         sectionId: 'manual',
         keywords: ['foto', 'fotos', 'evidencia', 'camara', 'adjuntar foto', 'subir foto', 'subir evidencia', 'celular', 'cel'],
+        image: '/manual/subir_foto.svg',
+        imageTitle: 'Captura ilustrativa: Carga de fotos de evidencia y clasificacion de gravedad',
         answer: `¿Cómo cargar fotos y evidencias desde el celular?
 
 1. Al lado de cada ítem del checklist se encuentra el botón con el ícono de la Cámara.
@@ -115,6 +120,8 @@ Nota: Si tocas la foto guardada, se abre en tamaño ampliado (Lightbox) para rev
         id: 'firmar',
         sectionId: 'manual',
         keywords: ['firma', 'firmar', 'signature', 'pantalla tactil', 'canvas', 'firma digital', 'rubrica'],
+        image: '/manual/firmar.svg',
+        imageTitle: 'Captura ilustrativa: Panel de firma digital manuscrita en pantalla',
         answer: `¿Cómo funciona la firma digital en pantalla?
 
 Al finalizar la inspección en el establecimiento:
@@ -128,6 +135,8 @@ Al finalizar la inspección en el establecimiento:
         id: 'descargar_pdf',
         sectionId: 'manual',
         keywords: ['descargar pdf', 'informe oficial', 'informe pdf', 'acta', 'qr', 'exportar pdf', 'verificar qr', 'informe final'],
+        image: '/manual/descargar_pdf.svg',
+        imageTitle: 'Captura ilustrativa: Informe tecnico final con codigo de verificacion QR',
         answer: `¿Cómo descargar el informe final con QR?
 
 1. Una vez completado el checklist y registradas las firmas, presiona el botón azul "Descargar Informe PDF".
@@ -144,6 +153,8 @@ Verificación QR: En la esquina del documento hay un código QR que cualquier pe
         id: 'crear_empresa',
         sectionId: 'manual',
         keywords: ['crear empresa', 'nueva empresa', 'alta empresa', 'agregar empresa', 'registrar empresa', 'asignar empresa'],
+        image: '/manual/crear_empresa.svg',
+        imageTitle: 'Captura ilustrativa: Formulario de alta y registro de empresa',
         answer: `¿Cómo crear y registrar una nueva Empresa?
 
 1. En el menú lateral izquierdo, haz clic en "Empresas".
@@ -162,6 +173,8 @@ El Administrador puede asignar qué inspectores específicos auditarán cada emp
         id: 'calendario',
         sectionId: 'manual',
         keywords: ['calendario', 'agenda', 'visita', 'programar visita', 'fecha inspeccion', 'agendar'],
+        image: '/manual/calendario.svg',
+        imageTitle: 'Captura ilustrativa: Agenda y calendario de visitas tecnicas',
         answer: `¿Cómo usar la agenda y calendario de visitas?
 
 Sirve para organizar las fechas de inspección técnica en campo:
@@ -443,6 +456,7 @@ function renderCleanMessageText(text) {
 export default function HySHelpAssistant() {
     const [isOpen, setIsOpen] = useState(false);
     const [openSectionId, setOpenSectionId] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
     const [messages, setMessages] = useState([
         {
             sender: 'bot',
@@ -477,19 +491,18 @@ export default function HySHelpAssistant() {
 
         // 1. Coincidencia exacta por ID de conocimiento
         const byId = KNOWLEDGE_BASE.find(item => item.id === cleanQuery);
-        if (byId) return { answer: byId.answer, sectionId: byId.sectionId };
+        if (byId) return { answer: byId.answer, image: byId.image, imageTitle: byId.imageTitle };
 
         // 2. Coincidencia directa por keywords
         for (const item of KNOWLEDGE_BASE) {
             if (item.keywords.some(k => cleanQuery.includes(k))) {
-                return { answer: item.answer, sectionId: item.sectionId };
+                return { answer: item.answer, image: item.image, imageTitle: item.imageTitle };
             }
         }
 
         // 3. Coincidencia por palabras clave
         const queryWords = cleanQuery.split(/\s+/).filter(w => w.length > 2);
         let bestMatch = null;
-        let bestSection = null;
         let maxMatches = 0;
 
         for (const item of KNOWLEDGE_BASE) {
@@ -501,18 +514,18 @@ export default function HySHelpAssistant() {
 
             if (matches > maxMatches) {
                 maxMatches = matches;
-                bestMatch = item.answer;
-                bestSection = item.sectionId;
+                bestMatch = item;
             }
         }
 
         if (maxMatches >= 1 && bestMatch) {
-            return { answer: bestMatch, sectionId: bestSection };
+            return { answer: bestMatch.answer, image: bestMatch.image, imageTitle: bestMatch.imageTitle };
         }
 
         return {
             answer: `No se encontró una explicación exacta para "${query}".\n\nPuedes seleccionar una de las secciones en el menú o tocar una pregunta desplegada.`,
-            sectionId: null
+            image: null,
+            imageTitle: null
         };
     };
 
@@ -532,6 +545,8 @@ export default function HySHelpAssistant() {
             setMessages(prev => [...prev, {
                 sender: 'bot',
                 text: result.answer,
+                image: result.image,
+                imageTitle: result.imageTitle,
                 showMenuButtons: true,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }]);
@@ -560,6 +575,8 @@ export default function HySHelpAssistant() {
             setMessages(prev => [...prev, {
                 sender: 'bot',
                 text: result.answer,
+                image: result.image,
+                imageTitle: result.imageTitle,
                 showMenuButtons: true,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }]);
@@ -578,6 +595,7 @@ export default function HySHelpAssistant() {
 
     const handleResetChat = () => {
         setOpenSectionId(null);
+        setSelectedImage(null);
         setMessages([
             {
                 sender: 'bot',
@@ -591,6 +609,48 @@ export default function HySHelpAssistant() {
 
     return (
         <div className="fixed bottom-5 right-5 z-50 font-sans print:hidden">
+            {/* Modal de Zoom / Lightbox de Capturas Ilustrativas */}
+            {selectedImage && (
+                <div 
+                    onClick={() => setSelectedImage(null)}
+                    className="fixed inset-0 z-60 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+                >
+                    <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-slate-900 border border-slate-700 text-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl flex flex-col"
+                    >
+                        <div className="p-3.5 bg-slate-800/90 border-b border-slate-700 flex items-center justify-between">
+                            <h4 className="text-xs font-bold text-white truncate pr-2">
+                                {selectedImage.title}
+                            </h4>
+                            <button
+                                onClick={() => setSelectedImage(null)}
+                                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 transition cursor-pointer"
+                                title="Cerrar ampliacion"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="p-3 bg-slate-950 flex items-center justify-center overflow-auto max-h-[70vh]">
+                            <img 
+                                src={selectedImage.src} 
+                                alt={selectedImage.title}
+                                className="max-h-[65vh] w-auto rounded-lg shadow-lg"
+                            />
+                        </div>
+                        <div className="p-2.5 bg-slate-800/90 border-t border-slate-700 flex items-center justify-between text-[11px] text-slate-400">
+                            <span>Haz clic en la X o fuera de la imagen para cerrar</span>
+                            <button
+                                onClick={() => setSelectedImage(null)}
+                                className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Botón flotante para abrir el asistente */}
             {!isOpen && (
                 <button
@@ -610,7 +670,7 @@ export default function HySHelpAssistant() {
 
             {/* Ventana de chat desplegable */}
             {isOpen && (
-                <div className="w-[94vw] sm:w-[460px] h-[600px] max-h-[88vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden text-slate-800 animate-in fade-in duration-200">
+                <div className="w-[94vw] sm:w-[470px] h-[610px] max-h-[88vh] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden text-slate-800 animate-in fade-in duration-200">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white px-4 py-3.5 flex items-center justify-between shadow-md shrink-0 border-b border-indigo-800/40">
                         <div className="flex items-center gap-3">
@@ -669,6 +729,31 @@ export default function HySHelpAssistant() {
                                     }`}
                                 >
                                     {renderCleanMessageText(msg.text)}
+
+                                    {/* Captura ilustrativa del manual */}
+                                    {msg.image && (
+                                        <div className="mt-3 pt-2.5 border-t border-slate-100">
+                                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                                                <span>Captura ilustrativa:</span>
+                                                <span className="text-[9px] text-blue-600 font-semibold">Toca para ampliar</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedImage({ src: msg.image, title: msg.imageTitle || 'Captura del manual' })}
+                                                className="w-full text-left rounded-xl overflow-hidden border border-slate-200 hover:border-blue-400 shadow-xs hover:shadow-md transition group cursor-pointer bg-slate-900"
+                                            >
+                                                <img 
+                                                    src={msg.image} 
+                                                    alt={msg.imageTitle || 'Captura'} 
+                                                    className="w-full h-auto object-cover group-hover:opacity-95 transition"
+                                                />
+                                                <div className="p-2 bg-slate-50 text-[11px] font-medium text-slate-700 flex items-center justify-between border-t border-slate-200/60">
+                                                    <span className="truncate pr-2">{msg.imageTitle || 'Ver en grande'}</span>
+                                                    <span className="text-blue-600 font-bold shrink-0 text-xs">Ampliar ➔</span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    )}
 
                                     {/* Menú de Secciones Desplegables (Acordeón con desglose) */}
                                     {msg.showAccordion && (

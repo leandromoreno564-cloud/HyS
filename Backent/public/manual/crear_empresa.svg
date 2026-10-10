@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="100%" height="100%" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <rect width="600" height="340" rx="16" fill="#0f172a"/>
+  
+  <!-- Barra superior -->
+  <rect width="600" height="42" rx="16" fill="#1e293b"/>
+  <rect y="26" width="600" height="16" fill="#1e293b"/>
+  <circle cx="24" cy="21" r="5" fill="#ef4444"/>
+  <circle cx="40" cy="21" r="5" fill="#f59e0b"/>
+  <circle cx="56" cy="21" r="5" fill="#10b981"/>
+  <text x="80" y="25" fill="#94a3b8" font-size="11" font-weight="600">HyS Control • Gestion de Empresas y Clientes</text>
+  
+  <!-- Contenedor -->
+  <rect x="20" y="58" width="560" height="262" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  
+  <text x="38" y="86" fill="#f8fafc" font-size="14" font-weight="700">Formulario: Alta y Registro de Nueva Empresa</text>
+  <text x="38" y="103" fill="#64748b" font-size="11">Completa los datos fiscales para calcular horas y requerimientos tecnicos</text>
+
+  <!-- Campo 1: Razon Social -->
+  <text x="38" y="128" fill="#cbd5e1" font-size="10" font-weight="600">RAZON SOCIAL</text>
+  <rect x="38" y="134" width="250" height="32" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="50" y="154" fill="#f1f5f9" font-size="11">Metalurgica Aconcagua S.A.</text>
+
+  <!-- Campo 2: CUIT -->
+  <text x="308" y="128" fill="#cbd5e1" font-size="10" font-weight="600">CUIT (11 DIGITOS)</text>
+  <rect x="308" y="134" width="250" height="32" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="320" y="154" fill="#f1f5f9" font-size="11">30-71234567-8</text>
+
+  <!-- Campo 3: Rubro -->
+  <text x="38" y="188" fill="#cbd5e1" font-size="10" font-weight="600">RUBRO / ACTIVIDAD</text>
+  <rect x="38" y="194" width="250" height="32" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="50" y="214" fill="#f1f5f9" font-size="11">Industria Metalmecanica (CIIU 2811)</text>
+
+  <!-- Campo 4: Empleados -->
+  <text x="308" y="188" fill="#cbd5e1" font-size="10" font-weight="600">CANTIDAD DE EMPLEADOS</text>
+  <rect x="308" y="194" width="250" height="32" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <text x="320" y="214" fill="#f1f5f9" font-size="11">45 operarios</text>
+
+  <!-- Boton guardar -->
+  <rect x="38" y="250" width="520" height="40" rx="8" fill="#2563eb"/>
+  <text x="238" y="275" fill="#ffffff" font-size="12" font-weight="700">Guardar Empresa y Asignar Inspectores</text>
+</svg>
