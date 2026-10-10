@@ -84,7 +84,7 @@ const SECTIONS = [
     }
 ];
 
-// Base de conocimiento limpia con capturas ilustrativas en la seccion de manual
+// Base de conocimiento limpia con capturas ilustrativas
 const KNOWLEDGE_BASE = [
     // --- MANUAL WEB ---
     {
@@ -455,7 +455,7 @@ function renderCleanMessageText(text) {
 
 export default function HySHelpAssistant() {
     const [isOpen, setIsOpen] = useState(false);
-    const [openSectionId, setOpenSectionId] = useState(null);
+    const [openSectionId, setOpenSectionId] = useState('manual');
     const [selectedImage, setSelectedImage] = useState(null);
     const [messages, setMessages] = useState([
         {
@@ -478,7 +478,8 @@ export default function HySHelpAssistant() {
     useEffect(() => {
         if (isOpen) {
             scrollToBottom();
-            setTimeout(() => inputRef.current?.focus(), 150);
+            const timer = setTimeout(() => scrollToBottom(), 120);
+            return () => clearTimeout(timer);
         }
     }, [isOpen, messages, isTyping, openSectionId]);
 
@@ -491,12 +492,12 @@ export default function HySHelpAssistant() {
 
         // 1. Coincidencia exacta por ID de conocimiento
         const byId = KNOWLEDGE_BASE.find(item => item.id === cleanQuery);
-        if (byId) return { answer: byId.answer, image: byId.image, imageTitle: byId.imageTitle };
+        if (byId) return { answer: byId.answer, image: byId.image, imageTitle: byId.imageTitle, sectionId: byId.sectionId };
 
         // 2. Coincidencia directa por keywords
         for (const item of KNOWLEDGE_BASE) {
             if (item.keywords.some(k => cleanQuery.includes(k))) {
-                return { answer: item.answer, image: item.image, imageTitle: item.imageTitle };
+                return { answer: item.answer, image: item.image, imageTitle: item.imageTitle, sectionId: item.sectionId };
             }
         }
 
@@ -519,37 +520,49 @@ export default function HySHelpAssistant() {
         }
 
         if (maxMatches >= 1 && bestMatch) {
-            return { answer: bestMatch.answer, image: bestMatch.image, imageTitle: bestMatch.imageTitle };
+            return { answer: bestMatch.answer, image: bestMatch.image, imageTitle: bestMatch.imageTitle, sectionId: bestMatch.sectionId };
         }
 
         return {
-            answer: `No se encontró una explicación exacta para "${query}".\n\nPuedes seleccionar una de las secciones en el menú o tocar una pregunta desplegada.`,
+            answer: `No se encontró una explicación exacta para "${query}".\n\nPuedes seleccionar una de las secciones en el cuestionario de abajo o tocar una pregunta desplegada.`,
             image: null,
-            imageTitle: null
+            imageTitle: null,
+            sectionId: null
         };
     };
 
     const handleSelectQuestion = (questionId, questionTitle, sectionId) => {
         const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        setMessages(prev => [...prev, {
-            sender: 'user',
-            text: questionTitle,
-            timestamp: timeStr
-        }]);
+        setMessages(prev => {
+            // Quitamos el acordeon de los mensajes anteriores para que siempre quede ABAJO
+            const updated = prev.map(m => ({ ...m, showAccordion: false }));
+            return [...updated, {
+                sender: 'user',
+                text: questionTitle,
+                timestamp: timeStr
+            }];
+        });
 
         setIsTyping(true);
 
         setTimeout(() => {
             const result = findAnswer(questionId);
-            setMessages(prev => [...prev, {
-                sender: 'bot',
-                text: result.answer,
-                image: result.image,
-                imageTitle: result.imageTitle,
-                showMenuButtons: true,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }]);
+            if (result.sectionId) {
+                setOpenSectionId(result.sectionId);
+            }
+
+            setMessages(prev => {
+                const updated = prev.map(m => ({ ...m, showAccordion: false }));
+                return [...updated, {
+                    sender: 'bot',
+                    text: result.answer,
+                    image: result.image,
+                    imageTitle: result.imageTitle,
+                    showAccordion: true, // El cuestionario se despliega abajo, despues de la respuesta
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }];
+            });
             setIsTyping(false);
         }, 180);
     };
@@ -561,40 +574,41 @@ export default function HySHelpAssistant() {
 
         const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        setMessages(prev => [...prev, {
-            sender: 'user',
-            text: text,
-            timestamp: timeStr
-        }]);
+        setMessages(prev => {
+            const updated = prev.map(m => ({ ...m, showAccordion: false }));
+            return [...updated, {
+                sender: 'user',
+                text: text,
+                timestamp: timeStr
+            }];
+        });
 
         setInputText('');
         setIsTyping(true);
 
         setTimeout(() => {
             const result = findAnswer(text);
-            setMessages(prev => [...prev, {
-                sender: 'bot',
-                text: result.answer,
-                image: result.image,
-                imageTitle: result.imageTitle,
-                showMenuButtons: true,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }]);
+            if (result.sectionId) {
+                setOpenSectionId(result.sectionId);
+            }
+
+            setMessages(prev => {
+                const updated = prev.map(m => ({ ...m, showAccordion: false }));
+                return [...updated, {
+                    sender: 'bot',
+                    text: result.answer,
+                    image: result.image,
+                    imageTitle: result.imageTitle,
+                    showAccordion: true, // El cuestionario se despliega abajo
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }];
+            });
             setIsTyping(false);
         }, 220);
     };
 
-    const handleShowAccordion = () => {
-        setMessages(prev => [...prev, {
-            sender: 'bot',
-            text: 'Selecciona una sección para desplegar sus preguntas:',
-            showAccordion: true,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }]);
-    };
-
     const handleResetChat = () => {
-        setOpenSectionId(null);
+        setOpenSectionId('manual');
         setSelectedImage(null);
         setMessages([
             {
@@ -755,70 +769,62 @@ export default function HySHelpAssistant() {
                                         </div>
                                     )}
 
-                                    {/* Menú de Secciones Desplegables (Acordeón con desglose) */}
+                                    {/* Cuestionario de preguntas desplegable ABAJO (después de la respuesta) */}
                                     {msg.showAccordion && (
-                                        <div className="mt-3 p-1.5 bg-slate-100/90 border border-slate-200/90 rounded-2xl w-full space-y-1.5 shadow-inner">
-                                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 pt-1 pb-0.5 flex items-center justify-between">
-                                                <span>Secciones temáticas:</span>
-                                                <span className="text-[9px] text-slate-400">Toca para desplegar</span>
+                                        <div className="mt-3.5 pt-2.5 border-t border-slate-200/90">
+                                            <div className="text-[11px] font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                                                <span>Cuestionario de preguntas:</span>
+                                                <span className="text-[9px] text-slate-400 font-normal">Toca para desplegar</span>
                                             </div>
 
-                                            {SECTIONS.map((sec) => {
-                                                const isOpen = openSectionId === sec.id;
-                                                return (
-                                                    <div 
-                                                        key={sec.id} 
-                                                        className="rounded-xl overflow-hidden border border-slate-200/90 bg-white shadow-xs transition"
-                                                    >
-                                                        {/* Fila de sección (tipo: Manual web ➔) */}
-                                                        <button
-                                                            onClick={() => toggleSection(sec.id)}
-                                                            className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between transition cursor-pointer ${
-                                                                isOpen 
-                                                                    ? 'bg-blue-50 text-blue-800 font-bold border-b border-blue-100' 
-                                                                    : 'hover:bg-slate-50 text-slate-800 font-semibold text-xs'
-                                                            }`}
+                                            <div className="p-1.5 bg-slate-100/90 border border-slate-200/90 rounded-2xl w-full space-y-1.5 shadow-inner">
+                                                {SECTIONS.map((sec) => {
+                                                    const isOpen = openSectionId === sec.id;
+                                                    return (
+                                                        <div 
+                                                            key={sec.id} 
+                                                            className="rounded-xl overflow-hidden border border-slate-200/90 bg-white shadow-xs transition"
                                                         >
-                                                            <span className="text-xs">{sec.title}</span>
-                                                            <span className={`text-xs transition-transform duration-200 ${
-                                                                isOpen ? 'text-blue-600 font-bold' : 'text-slate-400 font-normal'
-                                                            }`}>
-                                                                {isOpen ? '▼' : '➔'}
-                                                            </span>
-                                                        </button>
+                                                            {/* Fila de sección (tipo: Manual web ➔) */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleSection(sec.id)}
+                                                                className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between transition cursor-pointer ${
+                                                                    isOpen 
+                                                                        ? 'bg-blue-50 text-blue-800 font-bold border-b border-blue-100' 
+                                                                        : 'hover:bg-slate-50 text-slate-800 font-semibold text-xs'
+                                                                }`}
+                                                            >
+                                                                <span className="text-xs">{sec.title}</span>
+                                                                <span className={`text-xs transition-transform duration-200 ${
+                                                                    isOpen ? 'text-blue-600 font-bold' : 'text-slate-400 font-normal'
+                                                                }`}>
+                                                                    {isOpen ? '▼' : '➔'}
+                                                                </span>
+                                                            </button>
 
-                                                        {/* Desglose de preguntas al hacer clic */}
-                                                        {isOpen && (
-                                                            <div className="p-1.5 bg-slate-50/80 space-y-1 border-t border-slate-100 animate-in fade-in duration-150">
-                                                                {sec.questions.map((q) => (
-                                                                    <button
-                                                                        key={q.id}
-                                                                        onClick={() => handleSelectQuestion(q.id, q.title, sec.id)}
-                                                                        className="w-full text-left px-3 py-2 bg-white hover:bg-blue-50 border border-slate-200/70 hover:border-blue-300 rounded-lg text-slate-700 hover:text-blue-700 text-xs transition flex items-center justify-between group cursor-pointer"
-                                                                    >
-                                                                        <span className="leading-tight pr-2">{q.title}</span>
-                                                                        <span className="text-slate-300 group-hover:text-blue-600 font-bold text-xs shrink-0">
-                                                                            ➔
-                                                                        </span>
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-
-                                    {/* Botón para volver a desplegar el menú de secciones */}
-                                    {msg.showMenuButtons && (
-                                        <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center gap-1.5">
-                                            <button
-                                                onClick={handleShowAccordion}
-                                                className="inline-flex items-center px-3 py-1.5 bg-slate-100 hover:bg-blue-50 text-blue-700 border border-slate-200 hover:border-blue-300 rounded-lg text-[11px] font-semibold transition cursor-pointer"
-                                            >
-                                                Ver secciones y preguntas
-                                            </button>
+                                                            {/* Desglose de preguntas al hacer clic */}
+                                                            {isOpen && (
+                                                                <div className="p-1.5 bg-slate-50/80 space-y-1 border-t border-slate-100 animate-in fade-in duration-150">
+                                                                    {sec.questions.map((q) => (
+                                                                        <button
+                                                                            key={q.id}
+                                                                            type="button"
+                                                                            onClick={() => handleSelectQuestion(q.id, q.title, sec.id)}
+                                                                            className="w-full text-left px-3 py-2 bg-white hover:bg-blue-50 border border-slate-200/70 hover:border-blue-300 rounded-lg text-slate-700 hover:text-blue-700 text-xs transition flex items-center justify-between group cursor-pointer"
+                                                                        >
+                                                                            <span className="leading-tight pr-2">{q.title}</span>
+                                                                            <span className="text-slate-300 group-hover:text-blue-600 font-bold text-xs shrink-0">
+                                                                                ➔
+                                                                            </span>
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
