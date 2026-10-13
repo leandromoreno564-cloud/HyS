@@ -1,33 +1,34 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CompanyChecklistController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CorrectiveMeasureController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PortalController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-// Redirección inicial
-Route::get('/', function () {
-    return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
-});
+// Portada pública (lo primero que se ve). El login sigue en /login.
+Route::get('/', [PortalController::class, 'index'])->name('portal');
 
-// Autenticación pública
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Registro público de Licenciados (queda inactivo hasta que el admin lo apruebe)
+
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
-// Rutas protegidas (Usuario autenticado y activo)
+
 Route::middleware(['auth', 'active'])->group(function () {
-    // Panel de control
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
 
     // Perfil de usuario
     Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
@@ -37,6 +38,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+
+    // Calendario de actividades (ver y marcar como completadas: todos; asignar: solo admin, más abajo)
+    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
+    Route::patch('/calendar/{event}/status', [CalendarController::class, 'toggleStatus'])->name('calendar.status');
 
     // Gestión de Empresas
     Route::post('/companies/extract-pdf', [CompanyController::class, 'extractPdf'])->name('companies.extract-pdf');
@@ -53,7 +58,6 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::patch('/checklist-items/{item}', [CompanyChecklistController::class, 'updateItem'])->name('checklist-items.update');
     Route::post('/checklist-items/{item}/photo', [CompanyChecklistController::class, 'uploadPhoto'])->name('checklist-items.photo.upload');
     Route::delete('/checklist-items/{item}/photo', [CompanyChecklistController::class, 'deletePhoto'])->name('checklist-items.photo.delete');
-    Route::post('/companies/{company}/checklist/chat', [CompanyChecklistController::class, 'chat'])->name('companies.checklist.chat');
 
     // Medidas Correctivas
     Route::get('/corrective-measures', [CorrectiveMeasureController::class, 'index'])->name('corrective-measures.index');
@@ -69,5 +73,17 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::post('/companies/{id}/restore', [CompanyController::class, 'restore'])->name('companies.restore');
         Route::post('/companies/{company}/assign', [CompanyController::class, 'assignInspectors'])->name('companies.assign');
+        Route::post('/calendar', [CalendarController::class, 'store'])->name('calendar.store');
+        Route::put('/calendar/{event}', [CalendarController::class, 'update'])->name('calendar.update');
+        Route::delete('/calendar/{event}', [CalendarController::class, 'destroy'])->name('calendar.destroy');
+
+        // Edición de la portada (solo admin)
+        Route::post('/portal/settings', [PortalController::class, 'updateSettings'])->name('portal.settings');
+        Route::post('/portal/sections/order', [PortalController::class, 'reorderSections'])->name('portal.sections.order');
+        Route::post('/portal/items', [PortalController::class, 'storeItem'])->name('portal.items.store');
+        Route::post('/portal/items/{item}', [PortalController::class, 'updateItem'])->name('portal.items.update');
+        Route::post('/portal/items/{item}/toggle', [PortalController::class, 'toggleItem'])->name('portal.items.toggle');
+        Route::post('/portal/items/{item}/move', [PortalController::class, 'moveItem'])->name('portal.items.move');
+        Route::delete('/portal/items/{item}', [PortalController::class, 'destroyItem'])->name('portal.items.destroy');
     });
 });

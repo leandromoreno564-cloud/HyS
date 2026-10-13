@@ -2,11 +2,13 @@ import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useForm, Link } from '@inertiajs/react';
 import { Building2, Save, ArrowLeft } from 'lucide-react';
+import CompanyLocationField from '@/Components/CompanyLocationField';
 
 export default function CompaniesEdit({ company, inspectors = [] }) {
     const assignedIds = company.inspectors?.map((i) => i.id) || [];
 
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, post, processing, errors } = useForm({
+        _method: 'put',
         business_name: company.business_name || '',
         tax_id: company.tax_id || '',
         industry_sector: company.industry_sector || 'Metalmecánica',
@@ -17,6 +19,12 @@ export default function CompaniesEdit({ company, inspectors = [] }) {
         website: company.website || '',
         contact_person: company.contact_person || '',
         is_active: Boolean(company.is_active),
+        latitude: company.latitude ?? '',
+        longitude: company.longitude ?? '',
+        location_accuracy: company.location_accuracy ?? '',
+        location_photo: null,
+        remove_location_photo: false,
+        sync_inspectors: true,
         inspector_ids: assignedIds,
     });
 
@@ -41,7 +49,13 @@ export default function CompaniesEdit({ company, inspectors = [] }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        put(`/companies/${company.id}`);
+        // Con foto nueva el form viaja como multipart: PHP no lee PUT con archivos, así que se
+        // envía por POST con _method=put. Sin foto nueva se usa PUT normal.
+        if (data.location_photo instanceof File) {
+            post(`/companies/${company.id}`, { forceFormData: true });
+        } else {
+            put(`/companies/${company.id}`);
+        }
     };
 
     return (
@@ -185,6 +199,43 @@ export default function CompaniesEdit({ company, inspectors = [] }) {
                                     className="mt-1.5 block w-full px-3.5 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
                                 />
                             </div>
+                        </div>
+
+                        {/* Ubicación GPS y foto del lugar */}
+                        <div className="pt-6 border-t border-slate-100">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+                                Ubicación GPS y foto del lugar
+                            </label>
+                            <p className="text-xs text-slate-500 mb-4">
+                                Actualizá la ubicación con el GPS de tu dispositivo o cambiá la foto del establecimiento.
+                            </p>
+                            <CompanyLocationField
+                                latitude={data.latitude}
+                                longitude={data.longitude}
+                                accuracy={data.location_accuracy}
+                                onLocationChange={({ latitude, longitude, accuracy }) =>
+                                    setData((d) => ({
+                                        ...d,
+                                        latitude,
+                                        longitude,
+                                        location_accuracy: accuracy ?? '',
+                                    }))
+                                }
+                                photoFile={data.location_photo}
+                                existingPhotoUrl={company.location_photo_url}
+                                photoRemoved={data.remove_location_photo}
+                                onPhotoChange={(file) =>
+                                    setData((d) => ({ ...d, location_photo: file, remove_location_photo: false }))
+                                }
+                                onPhotoRemove={() =>
+                                    setData((d) =>
+                                        d.location_photo
+                                            ? { ...d, location_photo: null } // descarta la foto recién elegida y vuelve a la guardada
+                                            : { ...d, remove_location_photo: Boolean(company.location_photo_url) }
+                                    )
+                                }
+                                errors={errors}
+                            />
                         </div>
 
                         {/* Asignación de Inspectores */}

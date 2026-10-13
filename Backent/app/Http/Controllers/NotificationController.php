@@ -11,7 +11,7 @@ class NotificationController extends Controller
 {
     public function index()
     {
-        $notifications = Auth::user()->appNotifications()->paginate(15);
+        $notifications = Auth::user()->appNotifications()->due()->paginate(15);
         return Inertia::render('Notifications/Index', compact('notifications'));
     }
 
@@ -32,7 +32,7 @@ class NotificationController extends Controller
 
     public function markAllRead()
     {
-        Auth::user()->appNotifications()->where('is_read', false)->update(['is_read' => true]);
+        Auth::user()->appNotifications()->due()->where('is_read', false)->update(['is_read' => true]);
         return back()->with('success', 'Todas las notificaciones se marcaron como leídas.');
     }
 }

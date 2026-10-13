@@ -32,7 +32,7 @@ class User extends Authenticatable
     {
         parent::boot();
 
-        // Mantiene 'name' (usado en todo el sistema) sincronizado con nombre + apellido
+
         static::saving(function (User $user) {
             if ($user->first_name || $user->last_name) {
                 $user->name = trim("{$user->first_name} {$user->last_name}");
@@ -86,6 +86,6 @@ class User extends Authenticatable
 
     public function unreadNotificationsCount(): int
     {
-        return $this->appNotifications()->where('is_read', false)->count();
+        return $this->appNotifications()->due()->where('is_read', false)->count();
     }
 }

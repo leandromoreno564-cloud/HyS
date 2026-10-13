@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
+import HelpBot from '@/Components/HelpBot';
 import { 
     ShieldCheck, 
     LayoutDashboard, 
@@ -16,11 +17,17 @@ import {
     XCircle,
     Info,
     ChevronRight,
-    Search
+    Search,
+    CalendarDays,
+    Globe,
+    LifeBuoy
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, title = '' }) {
-    const { auth, flash, unreadNotifications } = usePage().props;
+    const page = usePage();
+    const { auth, flash, unreadNotifications } = page.props;
+    // En las pantallas de checklist el asistente propio del relevamiento ya ocupa ese lugar
+    const isChecklistPage = /(^|\/)Checklist$/.test(page.component || '');
     const currentUser = auth?.user;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -47,6 +54,12 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             icon: AlertTriangle, 
             active: currentPath.startsWith('/corrective-measures') 
         },
+        { 
+            name: 'Calendario', 
+            href: '/calendar', 
+            icon: CalendarDays, 
+            active: currentPath.startsWith('/calendar') 
+        },
     ];
 
     if (currentUser?.role === 'admin') {
@@ -57,6 +70,21 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             active: currentPath.startsWith('/users') 
         });
     }
+
+    // Acceso a la portada pública (el admin entra para editarla)
+    navigation.push({
+        name: currentUser?.role === 'admin' ? 'Portada (editar)' : 'Portada',
+        href: '/',
+        icon: Globe,
+        active: false
+    });
+
+    navigation.push({
+        name: 'Ayuda',
+        href: '/#ayuda',
+        icon: LifeBuoy,
+        active: false
+    });
 
     const handleLogout = (e) => {
         e.preventDefault();
@@ -315,6 +343,8 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                     {children}
                 </main>
             </div>
+
+            <HelpBot />
         </div>
     );
 }

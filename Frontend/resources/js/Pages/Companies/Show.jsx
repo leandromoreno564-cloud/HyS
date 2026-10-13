@@ -12,12 +12,19 @@ import {
     Mail, 
     Calendar,
     CheckCircle2,
-    ClipboardList
+    ClipboardList,
+    ExternalLink
 } from 'lucide-react';
+import LeafletMap from '@/Components/LeafletMap';
 
 export default function CompaniesShow({ company, inspectors = [] }) {
     const { auth } = usePage().props;
     const isAdmin = auth?.user?.role === 'admin';
+
+    const hasLocation = company.latitude != null && company.longitude != null;
+    const mapsUrl = hasLocation
+        ? `https://www.google.com/maps?q=${company.latitude},${company.longitude}`
+        : null;
 
     const handleDelete = () => {
         if (confirm(`¿Está seguro de enviar a la papelera a ${company.business_name}?`)) {
@@ -166,6 +173,73 @@ export default function CompaniesShow({ company, inspectors = [] }) {
                             )}
                         </div>
                     </div>
+                </div>
+
+                {/* Ubicación GPS y foto del lugar */}
+                <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[10px]">
+                            Ubicación GPS y foto del lugar
+                        </h4>
+                        {mapsUrl && (
+                            <a
+                                href={mapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                            >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Abrir en Google Maps
+                            </a>
+                        )}
+                    </div>
+
+                    {hasLocation || company.location_photo_url ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                {hasLocation ? (
+                                    <>
+                                        <LeafletMap
+                                            lat={Number(company.latitude)}
+                                            lng={Number(company.longitude)}
+                                            readOnly
+                                            height="h-64"
+                                        />
+                                        <p className="text-[11px] text-slate-500 font-mono">
+                                            {Number(company.latitude).toFixed(6)}, {Number(company.longitude).toFixed(6)}
+                                            {company.location_accuracy ? ` · ±${Math.round(company.location_accuracy)} m` : ''}
+                                        </p>
+                                        {company.location_captured_at && (
+                                            <p className="text-[11px] text-slate-400">
+                                                Registrada el {new Date(company.location_captured_at).toLocaleString('es-AR')}
+                                            </p>
+                                        )}
+                                    </>
+                                ) : (
+                                    <p className="text-xs text-slate-400 italic">Sin ubicación GPS registrada.</p>
+                                )}
+                            </div>
+
+                            <div>
+                                {company.location_photo_url ? (
+                                    <a href={company.location_photo_url} target="_blank" rel="noopener noreferrer">
+                                        <img
+                                            src={company.location_photo_url}
+                                            alt={`Foto de ${company.business_name}`}
+                                            className="w-full h-64 object-cover rounded-xl border border-slate-200 shadow-xs hover:opacity-90 transition-opacity"
+                                        />
+                                    </a>
+                                ) : (
+                                    <p className="text-xs text-slate-400 italic">Sin foto del lugar.</p>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-xs text-slate-400 italic">
+                            Todavía no se registró la ubicación GPS ni una foto de este establecimiento. Podés
+                            agregarlas desde “Editar”.
+                        </p>
+                    )}
                 </div>
 
             </div>

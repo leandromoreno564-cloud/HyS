@@ -2,7 +2,24 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Link } from '@inertiajs/react';
 import axios from 'axios';
-import ChecklistChatWidget from '@/Components/ChecklistChatWidget';
+
+const isDocFile = (f) => /\.(pdf|docx|odt|txt)$/i.test(f?.name || '');
+
+// Convierte una imagen "data:" que vino del servidor en un archivo para subirlo al guardar
+const dataUrlToFile = (dataUrl, name) => {
+    if (!dataUrl) return null;
+    try {
+        const [head, b64] = dataUrl.split(',');
+        const mime = (head.match(/:(.*?);/) || [])[1] || 'image/jpeg';
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return new File([bytes], name, { type: mime });
+    } catch (e) {
+        return null;
+    }
+};
+
 import {
     ArrowLeft,
     FileUp,
@@ -118,9 +135,9 @@ export default function CompaniesChecklist({ company, items }) {
 
     const processFile = useCallback(
         async (file) => {
-            if (!file || file.type !== 'application/pdf') {
+            if (!file || !isDocFile(file)) {
                 setPdfState('error');
-                setPdfMessage('Eso no parece ser un PDF.');
+                setPdfMessage('Ese archivo no se puede leer. Subí un PDF o un documento Word (.docx).');
                 return;
             }
             setPdfFileName(file.name);
@@ -140,9 +157,13 @@ export default function CompaniesChecklist({ company, items }) {
                     category: it.category,
                     question: it.question,
                     reference: it.reference,
-                    status: null,
-                    description: '',
-                    photos: [null, null], // [{file, url}, {file, url}] — se suben al guardar
+                    status: it.status ?? null,
+                    description: it.description ?? '',
+                    // Fotos encontradas en el archivo: [{file, url}, {file, url}] — se suben al guardar
+                    photos: [0, 1].map((i) => {
+                        const f = dataUrlToFile(it.photos?.[i], `foto-${it.item_number}-${i + 1}.jpg`);
+                        return f ? { file: f, url: URL.createObjectURL(f) } : null;
+                    }),
                 }));
                 setDraftItems(parsed);
                 setStage('draft');
@@ -150,7 +171,7 @@ export default function CompaniesChecklist({ company, items }) {
                 setPageError('');
             } catch (err) {
                 setPdfState('error');
-                setPdfMessage(err.response?.data?.message || 'No se pudo procesar el PDF. Probá con otro archivo.');
+                setPdfMessage(err.response?.data?.message || 'No se pudo procesar el archivo. Probá con otro.');
             }
         },
         [company.id]
@@ -168,7 +189,7 @@ export default function CompaniesChecklist({ company, items }) {
     };
     useEffect(() => {
         const handlePaste = (e) => {
-            const file = Array.from(e.clipboardData?.files || []).find((f) => f.type === 'application/pdf');
+            const file = Array.from(e.clipboardData?.files || []).find((f) => isDocFile(f));
             if (file) {
                 e.preventDefault();
                 processFile(file);
@@ -566,10 +587,10 @@ export default function CompaniesChecklist({ company, items }) {
                         >
                             <FileUp className="w-8 h-8 text-blue-500 mx-auto mb-2" />
                             <p className="text-sm font-bold text-slate-800 mb-1">
-                                Subí el Relevamiento (PDF) para extraer el checklist
+                                Subí el Relevamiento (PDF o Word) para extraer el checklist
                             </p>
                             <p className="text-xs text-slate-500 mb-4 flex items-center justify-center gap-1.5 flex-wrap">
-                                Arrastrá el PDF acá, pegalo con{' '}
+                                Arrastrá el archivo (PDF o Word) acá, pegalo con{' '}
                                 <kbd className="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono">Ctrl+V</kbd> o elegilo
                                 del disco.
                             </p>
@@ -577,11 +598,11 @@ export default function CompaniesChecklist({ company, items }) {
                             <div className="flex items-center justify-center gap-3 flex-wrap">
                                 <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-700 cursor-pointer transition-colors shadow-xs">
                                     <FileUp className="w-3.5 h-3.5" />
-                                    Elegir PDF
+                                    Elegir archivo
                                     <input
                                         ref={fileInputRef}
                                         type="file"
-                                        accept="application/pdf"
+                                        accept=".pdf,.docx,.odt,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                                         onChange={handlePdfChange}
                                         className="hidden"
                                     />
@@ -821,7 +842,7 @@ export default function CompaniesChecklist({ company, items }) {
                                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                             >
                                 <RotateCcw className="w-3.5 h-3.5" />
-                                Reemplazar desde un nuevo PDF
+                                Reemplazar desde un nuevo archivo
                             </button>
                         </div>
                     )}
@@ -836,7 +857,6 @@ export default function CompaniesChecklist({ company, items }) {
                 />
             )}
 
-            {effectiveStage === 'saved' && <ChecklistChatWidget company={company} onItemsUpdated={applyChatUpdates} />}
         </AuthenticatedLayout>
     );
 }

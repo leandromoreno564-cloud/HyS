@@ -24,16 +24,32 @@ class Company extends Model
         'employee_count',
         'website',
         'contact_person',
+        'latitude',
+        'longitude',
+        'location_accuracy',
+        'location_captured_at',
+        'location_photo',
         'created_by',
         'is_active',
     ];
+
+    protected $appends = ['location_photo_url'];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
             'employee_count' => 'integer',
+            'latitude' => 'float',
+            'longitude' => 'float',
+            'location_accuracy' => 'float',
+            'location_captured_at' => 'datetime',
         ];
+    }
+
+    public function getLocationPhotoUrlAttribute(): ?string
+    {
+        return $this->location_photo ? '/storage/' . $this->location_photo : null;
     }
 
     public function creator(): BelongsTo

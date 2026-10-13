@@ -114,7 +114,10 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('info', 'Sesión cerrada correctamente.');
+        // Borra el historial del navegador: con "atrás" no se puede volver al sistema
+        Inertia::clearHistory();
+
+        return redirect()->route('portal')->with('success', 'Sesión cerrada correctamente.');
     }
 
     public function profile()
