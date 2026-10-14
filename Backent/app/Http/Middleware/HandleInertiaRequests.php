@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -15,6 +17,25 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    /**
+     * Cifra el historial del navegador y evita que las páginas con sesión queden en caché,
+     * así el botón "atrás" no muestra pantallas del sistema después de cerrar sesión.
+     */
+    public function handle(Request $request, Closure $next)
+    {
+        Inertia::encryptHistory();
+
+        $response = parent::handle($request, $next);
+
+        if ($request->user()) {
+            $response->headers->set('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate, private');
+            $response->headers->set('Pragma', 'no-cache');
+            $response->headers->set('Expires', '0');
+        }
+
+        return $response;
+    }
 
     /**
      * Determines the current asset version.
@@ -49,7 +70,7 @@ class HandleInertiaRequests extends Middleware
                     'avatar' => $request->user()->avatar,
                 ] : null,
             ],
-            'unreadNotifications' => fn () => $request->user() ? $request->user()->appNotifications()->where('is_read', false)->count() : 0,
+            'unreadNotifications' => fn () => $request->user() ? $request->user()->appNotifications()->due()->where('is_read', false)->count() : 0,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

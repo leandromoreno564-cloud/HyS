@@ -1,8 +1,25 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Link, router } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import axios from 'axios';
-import ChecklistChatWidget from '@/Components/ChecklistChatWidget';
+
+const isDocFile = (f) => /\.(pdf|docx|odt|txt)$/i.test(f?.name || '');
+
+// Convierte una imagen "data:" que vino del servidor en un archivo para subirlo al guardar
+const dataUrlToFile = (dataUrl, name) => {
+    if (!dataUrl) return null;
+    try {
+        const [head, b64] = dataUrl.split(',');
+        const mime = (head.match(/:(.*?);/) || [])[1] || 'image/jpeg';
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return new File([bytes], name, { type: mime });
+    } catch (e) {
+        return null;
+    }
+};
+
 import {
     ArrowLeft,
     FileUp,
@@ -64,9 +81,7 @@ function validateImage(file) {
     return null;
 }
 
-export default function CompaniesChecklist({ company, checklist, checklists = [], items }) {
-    const [activeChecklist, setActiveChecklist] = useState(checklist || null);
-    const [history, setHistory] = useState(checklists);
+export default function CompaniesChecklist({ company, items }) {
     const [stage, setStage] = useState(items && items.length > 0 ? 'saved' : 'upload'); // upload | draft | saved
     const [draftItems, setDraftItems] = useState([]);
     const [savedItems, setSavedItems] = useState(items || []);
@@ -96,9 +111,7 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
             setStage('saved');
             setDraftItems([]);
         }
-        setActiveChecklist(checklist || null);
-        setHistory(checklists);
-    }, [items, checklist, checklists]);
+    }, [items]);
 
     // Si se borraron todos los ítems guardados, volvemos a la pantalla de carga
     const effectiveStage = stage === 'saved' && savedItems.length === 0 ? 'upload' : stage;
@@ -122,9 +135,9 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
 
     const processFile = useCallback(
         async (file) => {
-            if (!file || file.type !== 'application/pdf') {
+            if (!file || !isDocFile(file)) {
                 setPdfState('error');
-                setPdfMessage('Eso no parece ser un PDF.');
+                setPdfMessage('Ese archivo no se puede leer. Subí un PDF o un documento Word (.docx).');
                 return;
             }
             setPdfFileName(file.name);
@@ -144,9 +157,13 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
                     category: it.category,
                     question: it.question,
                     reference: it.reference,
-                    status: null,
-                    description: '',
-                    photos: [null, null], // [{file, url}, {file, url}] — se suben al guardar
+                    status: it.status ?? null,
+                    description: it.description ?? '',
+                    // Fotos encontradas en el archivo: [{file, url}, {file, url}] — se suben al guardar
+                    photos: [0, 1].map((i) => {
+                        const f = dataUrlToFile(it.photos?.[i], `foto-${it.item_number}-${i + 1}.jpg`);
+                        return f ? { file: f, url: URL.createObjectURL(f) } : null;
+                    }),
                 }));
                 setDraftItems(parsed);
                 setStage('draft');
@@ -154,7 +171,7 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
                 setPageError('');
             } catch (err) {
                 setPdfState('error');
-                setPdfMessage(err.response?.data?.message || 'No se pudo procesar el PDF. Probá con otro archivo.');
+                setPdfMessage(err.response?.data?.message || 'No se pudo procesar el archivo. Probá con otro.');
             }
         },
         [company.id]
@@ -172,7 +189,7 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
     };
     useEffect(() => {
         const handlePaste = (e) => {
-            const file = Array.from(e.clipboardData?.files || []).find((f) => f.type === 'application/pdf');
+            const file = Array.from(e.clipboardData?.files || []).find((f) => isDocFile(f));
             if (file) {
                 e.preventDefault();
                 processFile(file);
@@ -194,7 +211,11 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-    const startNewChecklist = () => router.get(`/companies/${company.id}/checklist?new=1`);
+    const startReplace = () => {
+        setStage('upload');
+        setPdfFileName(null);
+        setPdfState('idle');
+    };
 
     // ---------- BORRADOR (todavía sin guardar) ----------
     const updateDraft = (key, field, value) =>
@@ -266,8 +287,6 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
 
             const res = await axios.post(`/companies/${company.id}/checklist`, { items: payload }, jsonHeaders);
             let saved = res.data.items;
-            setActiveChecklist(res.data.checklist);
-            setHistory((prev) => [res.data.checklist, ...prev]);
             const byNumber = new Map(saved.map((i) => [i.item_number, i]));
 
             const pending = [];
@@ -373,9 +392,9 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
     const addSavedItem = async (category) => {
         try {
             const res = await track(
-                    axios.post(
+                axios.post(
                     `/companies/${company.id}/checklist/items`,
-                    { checklist_id: activeChecklist.id, category: category === NO_CATEGORY ? null : category, question: 'Nuevo ítem' },
+                    { category: category === NO_CATEGORY ? null : category, question: 'Nuevo ítem' },
                     jsonHeaders
                 )
             );
@@ -413,7 +432,7 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
         } else {
             try {
                 await track(
-                    axios.patch(`/companies/${company.id}/checklist/category`, { checklist_id: activeChecklist.id, from: fromValue, to }, jsonHeaders)
+                    axios.patch(`/companies/${company.id}/checklist/category`, { from: fromValue, to }, jsonHeaders)
                 );
                 setSavedItems((prev) => prev.map((it) => (matches(it) ? { ...it, category: to } : it)));
             } catch (err) {
@@ -436,7 +455,7 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
         document.activeElement?.blur?.();
         try {
             await Promise.allSettled([...pendingSaves.current]);
-            const res = await axios.get(`/companies/${company.id}/checklist/pdf?checklist=${activeChecklist.id}`, {
+            const res = await axios.get(`/companies/${company.id}/checklist/pdf`, {
                 responseType: 'blob',
                 headers: { Accept: 'application/pdf' },
             });
@@ -520,41 +539,18 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 flex-wrap">
-                            {effectiveStage === 'saved' && (
-                                <button
-                                    type="button"
-                                    onClick={downloadPdf}
-                                    disabled={downloading}
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-60"
-                                >
-                                    {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-                                    {downloading ? 'Generando PDF...' : 'Descargar PDF'}
-                                </button>
-                            )}
-                            <button type="button" onClick={startNewChecklist} className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors">
-                                <Plus className="w-4 h-4" /> Nuevo relevamiento
-                            </button>
-                        </div>
-                    </div>
-
-                    {history.length > 0 && (
-                        <div className="mt-4 flex items-center gap-2 text-xs">
-                            <label htmlFor="checklist-history" className="font-semibold text-slate-600">Historial:</label>
-                            <select
-                                id="checklist-history"
-                                value={activeChecklist?.id || ''}
-                                onChange={(e) => router.get(`/companies/${company.id}/checklist?checklist=${e.target.value}`)}
-                                className="max-w-xs px-3 py-2 border border-slate-200 rounded-lg text-slate-700 bg-white"
+                        {effectiveStage === 'saved' && (
+                            <button
+                                type="button"
+                                onClick={downloadPdf}
+                                disabled={downloading}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-60"
                             >
-                                {history.map((entry) => (
-                                    <option key={entry.id} value={entry.id}>
-                                        {entry.name || `Relevamiento del ${entry.surveyed_at}`}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
+                                {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                                {downloading ? 'Generando PDF...' : 'Descargar PDF'}
+                            </button>
+                        )}
+                    </div>
 
                     {/* Mensajes globales */}
                     {pageError && (
@@ -578,99 +574,65 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
 
                     {/* Zona de carga de PDF */}
                     {effectiveStage === 'upload' && (
-                        <div className="mt-6 space-y-4">
-                            <div
-                                onDragOver={(e) => {
-                                    e.preventDefault();
-                                    setIsDragging(true);
-                                }}
-                                onDragLeave={() => setIsDragging(false)}
-                                onDrop={handleDrop}
-                                className={`rounded-2xl border border-dashed p-8 text-center transition-colors ${
-                                    isDragging ? 'border-blue-500 bg-blue-50/60' : 'border-slate-300 bg-slate-50/60'
-                                }`}
-                            >
-                                <FileUp className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                                <p className="text-sm font-bold text-slate-800 mb-1">
-                                    Subí el Relevamiento (PDF) para extraer el checklist
-                                </p>
-                                <p className="text-xs text-slate-500 mb-4 flex items-center justify-center gap-1.5 flex-wrap">
-                                    Arrastrá el PDF acá, pegalo con{' '}
-                                    <kbd className="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono">Ctrl+V</kbd> o elegilo
-                                    del disco.
-                                </p>
+                        <div
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                setIsDragging(true);
+                            }}
+                            onDragLeave={() => setIsDragging(false)}
+                            onDrop={handleDrop}
+                            className={`mt-6 rounded-2xl border border-dashed p-8 text-center transition-colors ${
+                                isDragging ? 'border-blue-500 bg-blue-50/60' : 'border-slate-300 bg-slate-50/60'
+                            }`}
+                        >
+                            <FileUp className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                            <p className="text-sm font-bold text-slate-800 mb-1">
+                                Subí el Relevamiento (PDF o Word) para extraer el checklist
+                            </p>
+                            <p className="text-xs text-slate-500 mb-4 flex items-center justify-center gap-1.5 flex-wrap">
+                                Arrastrá el archivo (PDF o Word) acá, pegalo con{' '}
+                                <kbd className="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono">Ctrl+V</kbd> o elegilo
+                                del disco.
+                            </p>
 
-                                <div className="flex items-center justify-center gap-3 flex-wrap">
-                                    <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-700 cursor-pointer transition-colors shadow-xs">
-                                        <FileUp className="w-3.5 h-3.5" />
-                                        Elegir PDF
-                                        <input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            accept="application/pdf"
-                                            onChange={handlePdfChange}
-                                            className="hidden"
-                                        />
-                                    </label>
-                                    <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
-                                        <ClipboardPaste className="w-3.5 h-3.5" />o pegalo en cualquier parte de esta página
-                                    </span>
-                                </div>
-
-                                {pdfState === 'loading' && (
-                                    <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                        Leyendo {pdfFileName}...
-                                    </p>
-                                )}
-                                {pdfState === 'error' && (
-                                    <p className="mt-4 flex items-center justify-center gap-1.5 text-xs font-medium text-amber-700">
-                                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                        {pdfMessage}
-                                    </p>
-                                )}
-                                {savedItems.length > 0 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setStage('saved')}
-                                        className="mt-4 text-xs font-semibold text-slate-500 hover:text-slate-700"
-                                    >
-                                        Cancelar y volver al relevamiento guardado
-                                    </button>
-                                )}
+                            <div className="flex items-center justify-center gap-3 flex-wrap">
+                                <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-700 cursor-pointer transition-colors shadow-xs">
+                                    <FileUp className="w-3.5 h-3.5" />
+                                    Elegir archivo
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept=".pdf,.docx,.odt,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                        onChange={handlePdfChange}
+                                        className="hidden"
+                                    />
+                                </label>
+                                <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
+                                    <ClipboardPaste className="w-3.5 h-3.5" />o pegalo en cualquier parte de esta página
+                                </span>
                             </div>
 
-                            <section className="rounded-2xl border border-cyan-200 bg-cyan-50/60 p-5 text-left">
-                                <div className="flex items-start gap-3">
-                                    <div className="w-10 h-10 shrink-0 rounded-xl bg-cyan-100 text-cyan-700 flex items-center justify-center">
-                                        <ClipboardList className="w-5 h-5" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <h3 className="text-sm font-bold text-slate-900">Relevamiento Agua</h3>
-                                        <p className="mt-0.5 text-xs text-slate-600">
-                                            Formularios oficiales de Provincia ART disponibles para consultar, descargar y cargar en esta sección.
-                                        </p>
-                                        <div className="mt-3 flex flex-wrap gap-2">
-                                            <a
-                                                href="/pdf/provincia_art_rgrl_formulario_b.pdf"
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs font-semibold text-cyan-800 hover:border-cyan-400 hover:text-cyan-950 transition-colors"
-                                            >
-                                                <ExternalLink className="w-3.5 h-3.5" /> Formulario B
-                                            </a>
-                                            <a
-                                                href="/pdf/provincia_art_rgrl_formulario_c.pdf"
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-200 bg-white px-3 py-2 text-xs font-semibold text-cyan-800 hover:border-cyan-400 hover:text-cyan-950 transition-colors"
-                                            >
-                                                <ExternalLink className="w-3.5 h-3.5" /> Formulario C
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
+                            {pdfState === 'loading' && (
+                                <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600">
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    Leyendo {pdfFileName}...
+                                </p>
+                            )}
+                            {pdfState === 'error' && (
+                                <p className="mt-4 flex items-center justify-center gap-1.5 text-xs font-medium text-amber-700">
+                                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                    {pdfMessage}
+                                </p>
+                            )}
+                            {savedItems.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setStage('saved')}
+                                    className="mt-4 text-xs font-semibold text-slate-500 hover:text-slate-700"
+                                >
+                                    Cancelar y volver al relevamiento guardado
+                                </button>
+                            )}
                         </div>
                     )}
 
@@ -685,7 +647,7 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
                                 <p className="text-[11px] text-amber-700 mt-0.5">
                                     Editá lo que haga falta y podés adjuntar fotos ya mismo (hasta 2 por ítem): se suben solas cuando toques
                                     "Guardar Relevamiento".
-                                    {' Al guardar se creará un nuevo registro en el historial de la empresa.'}
+                                    {savedItems.length > 0 && ' Guardar va a reemplazar el relevamiento anterior de esta empresa.'}
                                 </p>
                             </div>
                         </div>
@@ -876,11 +838,11 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
                         <div className="mt-6 flex justify-end pt-4 border-t border-slate-100">
                             <button
                                 type="button"
-                                onClick={startNewChecklist}
+                                onClick={startReplace}
                                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                             >
                                 <RotateCcw className="w-3.5 h-3.5" />
-                                Crear nuevo relevamiento desde PDF
+                                Reemplazar desde un nuevo archivo
                             </button>
                         </div>
                     )}
@@ -895,7 +857,6 @@ export default function CompaniesChecklist({ company, checklist, checklists = []
                 />
             )}
 
-            {effectiveStage === 'saved' && <ChecklistChatWidget company={company} checklistId={activeChecklist?.id} onItemsUpdated={applyChatUpdates} />}
         </AuthenticatedLayout>
     );
 }

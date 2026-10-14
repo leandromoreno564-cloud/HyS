@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { useForm, Link, usePage } from '@inertiajs/react';
+import { useForm, Link } from '@inertiajs/react';
 import axios from 'axios';
+import CompanyLocationField from '@/Components/CompanyLocationField';
+
+const isDocFile = (f) => /\.(pdf|docx|odt|txt)$/i.test(f?.name || '');
+
 import {
     Building2,
     Save,
@@ -51,8 +55,6 @@ const REQUIRED_FIELDS = [
 const emptyPdfExtra = { domicilio: '', postal_code: '', locality: '', province: '', establishment_number: '', surface_m2: '' };
 
 export default function CompaniesCreate({ inspectors = [] }) {
-    const { auth } = usePage().props;
-    const isAdmin = auth?.user?.role === 'admin';
     const { data, setData, post, processing, errors } = useForm({
         business_name: '',
         tax_id: '',
@@ -63,7 +65,10 @@ export default function CompaniesCreate({ inspectors = [] }) {
         employee_count: 10,
         website: '',
         contact_person: '',
-        is_active: true,
+        latitude: '',
+        longitude: '',
+        location_accuracy: '',
+        location_photo: null,
         inspector_ids: [],
     });
 
@@ -83,6 +88,7 @@ export default function CompaniesCreate({ inspectors = [] }) {
     const [pdfMessage, setPdfMessage] = useState('');
     const [pdfExtra, setPdfExtra] = useState(emptyPdfExtra);
     const [showPdfDetail, setShowPdfDetail] = useState(false);
+    const [pdfOther, setPdfOther] = useState({ extras: [], text: '' });
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef(null);
 
@@ -109,9 +115,9 @@ export default function CompaniesCreate({ inspectors = [] }) {
     };
 
     const processFile = useCallback(async (file) => {
-        if (!file || file.type !== 'application/pdf') {
+        if (!file || !isDocFile(file)) {
             setPdfState('error');
-            setPdfMessage('Eso no parece ser un PDF. Probá con el archivo del relevamiento.');
+            setPdfMessage('Ese archivo no se puede leer. Subí un PDF o un documento Word (.docx).');
             return;
         }
 
@@ -119,6 +125,7 @@ export default function CompaniesCreate({ inspectors = [] }) {
         setPdfState('loading');
         setPdfMessage('');
         setShowPdfDetail(false);
+        setPdfOther({ extras: [], text: '' });
 
         const formData = new FormData();
         formData.append('pdf', file);
@@ -128,11 +135,11 @@ export default function CompaniesCreate({ inspectors = [] }) {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
 
-            const { found, fields } = res.data;
+            const { found, fields, extras = [], raw_text = '', message } = res.data;
 
             if (!found) {
                 setPdfState('empty');
-                setPdfMessage('No encontramos datos reconocibles en el PDF. Completá el formulario a mano.');
+                setPdfMessage(message || 'No encontramos datos reconocibles en el PDF. Completá el formulario a mano.');
                 return;
             }
 
@@ -151,13 +158,21 @@ export default function CompaniesCreate({ inspectors = [] }) {
             setPdfExtra(nextExtra);
             recomputeAddress(nextExtra);
 
+            setPdfOther({ extras, text: raw_text });
+
+            const anyField = Object.values(fields).some(Boolean);
             setPdfState('success');
             setShowPdfDetail(true);
-            setPdfMessage('Encontramos estos datos en el PDF. Revisalos y completá lo que falte antes de guardar.');
+            setPdfMessage(
+                anyField
+                    ? 'Encontramos estos datos en el PDF. Revisalos y completá lo que falte antes de guardar.' +
+                          (extras.length ? ' También listamos otros datos que no tenían un campo propio.' : '')
+                    : 'El PDF no sigue el formulario esperado, pero escaneamos todo su contenido. Revisá los datos de abajo y completá el formulario.'
+            );
         } catch (err) {
             setPdfState('error');
             setPdfMessage(
-                err.response?.data?.message || 'No se pudo procesar el PDF. Probá con otro archivo o cargalo a mano.'
+                err.response?.data?.message || 'No se pudo procesar el archivo. Probá con otro o cargalo a mano.'
             );
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -178,7 +193,7 @@ export default function CompaniesCreate({ inspectors = [] }) {
     // Detecta cuando el usuario pega (Ctrl+V) un PDF copiado, en cualquier parte de la página
     useEffect(() => {
         const handlePaste = (e) => {
-            const file = Array.from(e.clipboardData?.files || []).find((f) => f.type === 'application/pdf');
+            const file = Array.from(e.clipboardData?.files || []).find((f) => isDocFile(f));
             if (file) {
                 e.preventDefault();
                 processFile(file);
@@ -193,6 +208,7 @@ export default function CompaniesCreate({ inspectors = [] }) {
         setPdfFileName(null);
         setPdfMessage('');
         setPdfExtra(emptyPdfExtra);
+        setPdfOther({ extras: [], text: '' });
         setShowPdfDetail(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
@@ -257,23 +273,23 @@ export default function CompaniesCreate({ inspectors = [] }) {
                             <div className="flex items-center gap-2 mb-2">
                                 <FileUp className="w-4 h-4 text-blue-600" />
                                 <p className="text-xs font-bold text-slate-800">
-                                    Autocompletar desde Relevamiento (PDF)
+                                    Autocompletar desde Relevamiento (PDF o Word)
                                 </p>
                             </div>
                             <p className="text-xs text-slate-500 mb-3 flex items-center gap-1.5 flex-wrap">
                                 <span>
-                                    Arrastrá el PDF acá, pegalo con <kbd className="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono">Ctrl+V</kbd> o elegilo del disco.
+                                    Arrastrá el archivo (PDF o Word) acá, pegalo con <kbd className="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono">Ctrl+V</kbd> o elegilo del disco.
                                 </span>
                             </p>
 
                             <div className="flex items-center gap-3 flex-wrap">
                                 <label className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-700 cursor-pointer transition-colors shadow-xs">
                                     <FileUp className="w-3.5 h-3.5" />
-                                    {pdfFileName ? 'Cambiar PDF' : 'Elegir PDF'}
+                                    {pdfFileName ? 'Cambiar archivo' : 'Elegir archivo'}
                                     <input
                                         ref={fileInputRef}
                                         type="file"
-                                        accept="application/pdf"
+                                        accept=".pdf,.docx,.odt,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                                         onChange={handlePdfChange}
                                         className="hidden"
                                     />
@@ -375,6 +391,34 @@ export default function CompaniesCreate({ inspectors = [] }) {
                                                     />
                                                 </div>
                                             ))}
+                                            {pdfOther.extras.length > 0 && (
+                                                <div className="sm:col-span-2 rounded-lg border border-slate-200 bg-white p-3">
+                                                    <p className="text-[11px] font-bold text-slate-600 mb-2">
+                                                        Otros datos encontrados en el PDF ({pdfOther.extras.length})
+                                                    </p>
+                                                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 max-h-52 overflow-y-auto">
+                                                        {pdfOther.extras.map((x, i) => (
+                                                            <div key={i} className="text-[11px]">
+                                                                <dt className="font-semibold text-slate-500">{x.label}</dt>
+                                                                <dd className="text-slate-800 break-words">{x.value}</dd>
+                                                            </div>
+                                                        ))}
+                                                    </dl>
+                                                </div>
+                                            )}
+                                            {pdfOther.text && (
+                                                <details className="sm:col-span-2 rounded-lg border border-slate-200 bg-white p-3">
+                                                    <summary className="cursor-pointer text-[11px] font-bold text-slate-600">
+                                                        Ver todo el texto del PDF
+                                                    </summary>
+                                                    <textarea
+                                                        readOnly
+                                                        rows={10}
+                                                        value={pdfOther.text}
+                                                        className="mt-2 block w-full px-3 py-2 text-[11px] bg-slate-50 border border-slate-200 rounded-lg outline-none"
+                                                    />
+                                                </details>
+                                            )}
                                             <p className="sm:col-span-2 text-[11px] text-slate-400">
                                                 Razón Social, CUIT, Sector y Cant. de Empleados están enlazados con el
                                                 formulario de abajo. Domicilio / C.P. / Localidad / Provincia arman la
@@ -515,61 +559,75 @@ export default function CompaniesCreate({ inspectors = [] }) {
                                     className="mt-1.5 block w-full px-3.5 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
                                 />
                             </div>
-
-                            <div className="sm:col-span-2 flex items-center gap-2 pt-1">
-                                <input
-                                    type="checkbox"
-                                    id="is_active"
-                                    checked={data.is_active}
-                                    onChange={(e) => setData('is_active', e.target.checked)}
-                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
-                                />
-                                <label htmlFor="is_active" className="text-xs font-semibold text-slate-700 cursor-pointer">
-                                    Empresa activa
-                                </label>
-                            </div>
                         </div>
 
-                        {isAdmin && (
-                            <div className="pt-6 border-t border-slate-100">
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
-                                    Inspectores Asignados (Permisos de Inspección)
-                                </label>
-                                <p className="text-xs text-slate-500 mb-4">
-                                    Seleccione qué inspectores o técnicos tendrán acceso para auditar esta empresa.
-                                </p>
+                        {/* Ubicación GPS y foto del lugar */}
+                        <div className="pt-6 border-t border-slate-100">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+                                Ubicación GPS y foto del lugar
+                            </label>
+                            <p className="text-xs text-slate-500 mb-4">
+                                Registrá dónde queda el establecimiento con el GPS de tu dispositivo y sacale una foto
+                                (opcional).
+                            </p>
+                            <CompanyLocationField
+                                latitude={data.latitude}
+                                longitude={data.longitude}
+                                accuracy={data.location_accuracy}
+                                onLocationChange={({ latitude, longitude, accuracy }) =>
+                                    setData((d) => ({
+                                        ...d,
+                                        latitude,
+                                        longitude,
+                                        location_accuracy: accuracy ?? '',
+                                    }))
+                                }
+                                photoFile={data.location_photo}
+                                onPhotoChange={(file) => setData('location_photo', file)}
+                                onPhotoRemove={() => setData('location_photo', null)}
+                                errors={errors}
+                            />
+                        </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                                    {inspectors.map((insp) => {
-                                        const selected = data.inspector_ids.includes(insp.id);
-                                        return (
-                                            <div
-                                                key={insp.id}
-                                                onClick={() => toggleInspector(insp.id)}
-                                                className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                                                    selected
-                                                        ? 'bg-blue-50/80 border-blue-500 shadow-xs'
-                                                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                                                }`}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selected}
-                                                    onChange={() => {}}
-                                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
-                                                />
-                                                <div>
-                                                    <p className="text-xs font-bold text-slate-900">{insp.name}</p>
-                                                    <p className="text-[11px] text-slate-500 font-mono">
-                                                        {insp.license_number ? `Mat. ${insp.license_number}` : insp.email}
-                                                    </p>
-                                                </div>
+                        {/* Asignación de Inspectores */}
+                        <div className="pt-6 border-t border-slate-100">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
+                                Inspectores Asignados (Permisos de Inspección)
+                            </label>
+                            <p className="text-xs text-slate-500 mb-4">
+                                Seleccione qué inspectores o técnicos tendrán acceso para auditar esta empresa.
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                {inspectors.map((insp) => {
+                                    const selected = data.inspector_ids.includes(insp.id);
+                                    return (
+                                        <div
+                                            key={insp.id}
+                                            onClick={() => toggleInspector(insp.id)}
+                                            className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
+                                                selected
+                                                    ? 'bg-blue-50/80 border-blue-500 shadow-xs'
+                                                    : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selected}
+                                                onChange={() => {}}
+                                                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                            />
+                                            <div>
+                                                <p className="text-xs font-bold text-slate-900">{insp.name}</p>
+                                                <p className="text-[11px] text-slate-500 font-mono">
+                                                    {insp.license_number ? `Mat. ${insp.license_number}` : insp.email}
+                                                </p>
                                             </div>
-                                        );
-                                    })}
-                                </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                        )}
+                        </div>
 
                         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                             <Link

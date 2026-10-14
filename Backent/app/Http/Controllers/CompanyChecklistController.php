@@ -61,32 +61,46 @@ class CompanyChecklistController extends Controller
         $this->authorize404($company);
 
         $request->validate([
-            'pdf' => ['required', 'file', 'mimes:pdf', 'max:20480'],
+            'pdf' => ['required', 'file', 'mimes:pdf,docx,odt,txt', 'max:20480'],
         ]);
 
         try {
-            $parser = new \Smalot\PdfParser\Parser();
-            $pdf = $parser->parseFile($request->file('pdf')->getRealPath());
-            $text = $pdf->getText();
+            $text = \App\Support\DocumentText::fromUpload($request->file('pdf'));
+        } catch (\RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'No se pudo leer el PDF. Verificá que no sea un escaneo/imagen sin texto seleccionable.',
+                'message' => 'No se pudo leer el archivo. Verificá que no sea un escaneo/imagen sin texto seleccionable.',
             ], 422);
         }
 
-        $items = $this->parseChecklistItems($text);
+        // 1) Formulario conocido (checklist numerado). 2) Si no rinde, se escanea TODO el contenido.
+        $isPdf = \App\Support\DocumentText::isPdf($request->file('pdf'));
+        $items = $isPdf ? $this->parseChecklistItems($text) : [];
+        $mode = 'formulario';
+
+        if (!$isPdf || $request->input('mode') === 'all' || count($items) < 3) {
+            $generic = $this->parseGenericItems($text);
+            if (count($generic) > count($items)) {
+                $items = $generic;
+                $mode = 'todo';
+            }
+        }
 
         if (empty($items)) {
             return response()->json([
                 'success' => false,
-                'message' => 'No encontramos ítems numerados de checklist en este PDF.',
+                'message' => trim($text) === ''
+                    ? 'El PDF no tiene texto seleccionable (parece una imagen escaneada), por eso no se pudo leer.'
+                    : 'No se encontró contenido de texto utilizable en este PDF.',
             ], 422);
         }
 
         return response()->json([
             'success' => true,
             'items' => $items,
+            'mode' => $mode,
         ]);
     }
 
@@ -412,6 +426,15 @@ class CompanyChecklistController extends Controller
             }
         }
 
+        // Historial persistente del asistente (se recupera en cualquier dispositivo)
+        if ($request->user()) {
+            $scope = 'checklist:' . $company->id;
+            \App\Models\AssistantMessage::record($request->user()->id, $scope, 'user', $data['message']);
+            \App\Models\AssistantMessage::record($request->user()->id, $scope, 'assistant', $reply, [
+                'updated_count' => $updatedItems->count(),
+            ]);
+        }
+
         return response()->json([
             'reply' => $reply,
             'updated_items' => $updatedItems->values(),
@@ -686,6 +709,150 @@ class CompanyChecklistController extends Controller
                     $flush();
                 }
             }
+        }
+        $flush();
+
+        return $items;
+    }
+
+    /**
+     * Escaneo genérico: toma TODO el texto del PDF, sin exigir numeración ni un formato fijo.
+     *  - Los títulos (en mayúsculas o terminados en ":") pasan a ser la categoría.
+     *  - Cada viñeta, número, letra o línea independiente se convierte en un ítem.
+     *  - Las líneas cortadas por el ancho de página se unen al ítem anterior.
+     *  - Se descartan encabezados/pies repetidos y marcas de página.
+     */
+    private function parseGenericItems(string $text): array
+    {
+        $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+
+        $lines = [];
+        foreach (preg_split('/\r\n|\r|\n/', $text) as $raw) {
+            // Quita los textos de ayuda de campos sin completar ("Elija un elemento.", etc.)
+            $raw = preg_replace('/\b(?:Elija un elemento|Haga clic(?: o pulse)? aqu[ií] para escribir(?: una fecha| texto)?)\.?/ui', '', $raw);
+            $line = trim(preg_replace('/\s+/u', ' ', $raw));
+            if ($line !== '') {
+                $lines[] = $line;
+            }
+        }
+
+        // Líneas cortas que se repiten 3+ veces = encabezado/pie de página
+        $counts = array_count_values($lines);
+
+        $isNoise = function (string $line): bool {
+            if (!preg_match('/\p{L}/u', $line)) {
+                return true; // sin letras: números sueltos, rayas, símbolos
+            }
+            if (preg_match('/^\W*(?:p[áa]g(?:ina)?\.?\s*)?\[?\s*\d+\s*(?:de|\/)\s*\d+\s*\]?\W*$/ui', $line)) {
+                return true; // "Página 2 de 8", "[2 de 8]", "2/8"
+            }
+            if (preg_match('/^(?:(?:SI|NO|N\/?A|NA|X)\s*)+$/u', $line)) {
+                return true; // columnas de casillas
+            }
+            return false;
+        };
+
+        $looksLikeCategory = function (string $line): bool {
+            $len = mb_strlen($line);
+            if ($len < 3 || $len > 90 || preg_match('/^[•▪●○·►■□☐✓✔\*\-–\d]/u', $line)) {
+                return false; // empieza con viñeta, casilla o número: es un ítem, no un título
+            }
+            if (preg_match('/:\s*\S/u', $line) || preg_match_all('/\d/', $line) > 4) {
+                return false; // "Etiqueta: valor" o línea con muchos números: es un dato, no un título
+            }
+            preg_match_all('/\p{L}/u', $line, $letters);
+            if (count($letters[0]) < 3) {
+                return false;
+            }
+            preg_match_all('/\p{Lu}/u', $line, $upper);
+            $ratio = count($upper[0]) / count($letters[0]);
+            return $ratio > 0.85 || ($len <= 80 && preg_match('/:\s*$/u', $line) && $ratio > 0.6 && !str_contains($line, '?'));
+        };
+
+        $bullet = '/^\(?(?:\d{1,3}\s*[\.\)\-–:]|[A-Za-z]\s*[\.\)]|[•▪●○·►■□☐✓✔\*\-–])\s+(?=\S)/u';
+        $glued = '/^\d{1,3}(?=[¿¡A-ZÁÉÍÓÚÑ])/u';
+
+        $items = [];
+        $category = null;
+        $current = null;
+        $maxChars = 700;
+
+        $flush = function () use (&$current, &$items) {
+            if ($current === null) {
+                return;
+            }
+            $raw = trim(preg_replace('/\s+/u', ' ', $current['text']));
+            $itemCategory = $current['category'] ?? null;
+            $current = null;
+            if (mb_strlen($raw) < 4 || !preg_match('/\p{L}{2,}/u', $raw)) {
+                return;
+            }
+
+            $idx = mb_strrpos($raw, '?');
+            if ($idx !== false) {
+                $question = trim(mb_substr($raw, 0, $idx + 1));
+                $reference = trim(ltrim(mb_substr($raw, $idx + 1), ' :'));
+            } elseif (preg_match('/^(.*?)\s+((?:Cap\.|Art\.|Arts\.|Anexo|Res\.|Dec\.|Dto\.|Ley)\s.*)$/u', $raw, $m)) {
+                $question = trim($m[1]);
+                $reference = trim($m[2]);
+            } else {
+                $question = $raw;
+                $reference = '';
+            }
+            $question = trim(rtrim($question, ': '));
+            if ($question === '') {
+                return;
+            }
+
+            $items[] = [
+                'item_number' => count($items) + 1,
+                'category' => $itemCategory,
+                'question' => $question,
+                'reference' => $reference !== '' ? $reference : null,
+            ];
+        };
+
+        foreach ($lines as $line) {
+            // Título detectado por el lector de Word/ODT (estilo de título o texto en negrita)
+            if (str_starts_with($line, '## ')) {
+                $flush();
+                $category = mb_substr(trim(mb_substr($line, 3), ': '), 0, 200);
+                continue;
+            }
+            if ($isNoise($line)) {
+                continue;
+            }
+            if (($counts[$line] ?? 0) >= 3 && mb_strlen($line) < 90) {
+                continue;
+            }
+            if (count($items) >= 1000) {
+                break;
+            }
+
+            if ($looksLikeCategory($line)) {
+                $flush();
+                $category = mb_substr(trim(rtrim($line, ': ')), 0, 200);
+                continue;
+            }
+
+            $startsItem = preg_match($bullet, $line, $m) || preg_match($glued, $line, $m) || str_starts_with($line, '¿');
+            if ($startsItem) {
+                $flush();
+                $body = isset($m[0]) && !str_starts_with($line, '¿') ? trim(mb_substr($line, mb_strlen($m[0]))) : $line;
+                $current = ['text' => $body, 'category' => $category];
+                continue;
+            }
+
+            // Línea de continuación (el párrafo seguía en la línea siguiente)
+            $continues = preg_match('/^[\p{Ll}\d\(\[%,;]/u', $line)
+                || preg_match('/(?:[,;\(]|\b(?:de|del|y|o|e|a|la|el|los|las|en|con|por|para|que|un|una|al|su|sus))\s*$/ui', $current['text'] ?? '');
+            if ($current !== null && $continues && !preg_match('/[\.\?\!:]$/u', $current['text']) && mb_strlen($current['text']) < $maxChars) {
+                $current['text'] .= ' ' . $line;
+                continue;
+            }
+
+            $flush();
+            $current = ['text' => $line, 'category' => $category];
         }
         $flush();
 

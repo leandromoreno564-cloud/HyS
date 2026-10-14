@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
+import HelpBot from '@/Components/HelpBot';
 import { 
     ShieldCheck, 
     LayoutDashboard, 
@@ -16,11 +17,17 @@ import {
     XCircle,
     Info,
     ChevronRight,
-    Search
+    Search,
+    CalendarDays,
+    Globe,
+    LifeBuoy
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, title = '' }) {
-    const { auth, flash, unreadNotifications } = usePage().props;
+    const page = usePage();
+    const { auth, flash, unreadNotifications } = page.props;
+    // En las pantallas de checklist el asistente propio del relevamiento ya ocupa ese lugar
+    const isChecklistPage = /(^|\/)Checklist$/.test(page.component || '');
     const currentUser = auth?.user;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -41,6 +48,18 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             icon: Building2, 
             active: currentPath.startsWith('/companies') 
         },
+        { 
+            name: 'Medidas Correctivas', 
+            href: '/corrective-measures', 
+            icon: AlertTriangle, 
+            active: currentPath.startsWith('/corrective-measures') 
+        },
+        { 
+            name: 'Calendario', 
+            href: '/calendar', 
+            icon: CalendarDays, 
+            active: currentPath.startsWith('/calendar') 
+        },
     ];
 
     if (currentUser?.role === 'admin') {
@@ -51,6 +70,21 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             active: currentPath.startsWith('/users') 
         });
     }
+
+    // Acceso a la portada pública (el admin entra para editarla)
+    navigation.push({
+        name: currentUser?.role === 'admin' ? 'Portada (editar)' : 'Portada',
+        href: '/',
+        icon: Globe,
+        active: false
+    });
+
+    navigation.push({
+        name: 'Ayuda',
+        href: '/#ayuda',
+        icon: LifeBuoy,
+        active: false
+    });
 
     const handleLogout = (e) => {
         e.preventDefault();
@@ -140,14 +174,30 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                         Exportación
                     </div>
                     <a
-                        href="/reports/export-excel"
+                        href="/reports/export-csv"
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all"
                     >
                         <FileText className="w-4 h-4 text-slate-400" />
-                        <span>Exportar a Excel</span>
+                        <span>Exportar a Excel (CSV)</span>
                     </a>
                 </nav>
 
+                <div className="p-3 border-t border-slate-800 bg-slate-950/20">
+  <div className="p-3 bg-slate-800/50 rounded-xl border border-slate-700/50 text-center">
+    <p className="text-[11px] font-semibold text-slate-200 uppercase tracking-wider mb-2">
+      INTEGRANTES
+    </p>
+    <ul className="text-[10px] text-slate-400 space-y-1 list-none p-0 m-0">
+      <li>Argañaras Bruno</li>
+      <li>Mamani Cristian</li>
+      <li>Moreno Leandro</li>
+      <li>Murquite Leandro</li>
+      <li>Subelza Jhonatan</li>
+      <li>Velazque Nicolas</li>
+    </ul>
+  </div>
+</div>
+                
             </aside>
 
             {/* Main Area */}
@@ -293,6 +343,8 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                     {children}
                 </main>
             </div>
+
+            <HelpBot />
         </div>
     );
 }
