@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\AppNotification;
 use App\Models\ChecklistCategory;
 use App\Models\Company;
-use App\Models\CorrectiveMeasure;
 use App\Models\Inspection;
 use App\Models\InspectionChecklistItem;
 use App\Models\Observation;
@@ -224,33 +223,6 @@ class DatabaseSeeder extends Seeder
             'photos' => null,
         ]);
 
-        // Medidas correctivas para inspección 1
-        CorrectiveMeasure::create([
-            'inspection_id' => $inspection1->id,
-            'observation_id' => $obs1->id,
-            'description' => 'Instalar contratapa aislante acrílica reglamentaria, colocar cerradura de seguridad y señalizar tablero TS-03 con advertencia de riesgo eléctrico.',
-            'priority' => 'Alta',
-            'recommendations' => 'Contratar electricista matriculado para el reemplazo inmediato de la protección de bornes.',
-            'deadline' => Carbon::now()->addDays(7),
-            'responsible_person' => 'Ing. Roberto Gómez / Dpto. Mantenimiento',
-            'estimated_cost' => 150000.00,
-            'status' => 'En Progreso',
-            'notes' => 'Materiales solicitados al proveedor.',
-        ]);
-
-        CorrectiveMeasure::create([
-            'inspection_id' => $inspection1->id,
-            'observation_id' => $obs2->id,
-            'description' => 'Realizar recarga y prueba hidráulica inmediata del extintor nº 14 y demarcar en el piso la zona de seguridad libre de obstáculos (1 m²).',
-            'priority' => 'Crítica',
-            'recommendations' => 'Reemplazar provisoriamente con extintor de reserva del pañol y despejar pasillo.',
-            'deadline' => Carbon::now()->addDays(2),
-            'responsible_person' => 'Sr. Jorge Valenzuela (Seguridad Patrimonial)',
-            'estimated_cost' => 45000.00,
-            'status' => 'Pendiente',
-            'notes' => 'Urgente para cumplir Dec. 351/79 Art. 176.',
-        ]);
-
         // 5. Inspección 2: EN PROGRESO (Para interactuar en la demo)
         $inspection2 = Inspection::create([
             'company_id' => $empresa2->id,
@@ -288,8 +260,8 @@ class DatabaseSeeder extends Seeder
         // 6. Notificaciones iniciales
         AppNotification::create([
             'user_id' => $inspector1->id,
-            'title' => 'Medida correctiva de alta urgencia',
-            'message' => 'La medida correctiva para el extintor de Siderúrgica del Plata tiene vencimiento en 2 días.',
+            'title' => 'Alerta de seguridad de alta urgencia',
+            'message' => 'El extintor de Siderúrgica del Plata requiere atención dentro de los próximos 2 días.',
             'type' => 'danger',
             'link' => '/inspections/' . $inspection1->id,
             'is_read' => false,

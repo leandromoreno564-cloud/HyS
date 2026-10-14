@@ -49,12 +49,6 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             active: currentPath.startsWith('/companies') 
         },
         { 
-            name: 'Medidas Correctivas', 
-            href: '/corrective-measures', 
-            icon: AlertTriangle, 
-            active: currentPath.startsWith('/corrective-measures') 
-        },
-        { 
             name: 'Calendario', 
             href: '/calendar', 
             icon: CalendarDays, 

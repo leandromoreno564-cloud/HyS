@@ -16,7 +16,6 @@ return new class extends Migration
             'Registrar y editar empresas' => 'empresa-alta.svg',
             'Relevamiento (checklist) de una empresa' => 'relevamiento.svg',
             'Descargar el relevamiento en PDF' => 'pdf-descarga.svg',
-            'Medidas correctivas' => 'medidas.svg',
             'Calendario de actividades' => 'calendario.svg',
             'Notificaciones' => 'notificaciones.svg',
             'Asistente virtual' => 'asistente.svg',
@@ -50,7 +49,7 @@ return new class extends Migration
                 'sort_order' => $next,
                 'is_active' => true,
                 'title' => $title,
-                'text' => "Descargá el manual de usuario completo (26 páginas, con imágenes) con el botón de esta sección, o pedíselo al Asistente HyS.\n\nExplica cada pantalla paso a paso: ingreso, panel, empresas, relevamientos, seguimiento de los ítems en \"No\", PDF, medidas correctivas, calendario, notificaciones, perfil, administración y una guía rápida de seguridad e higiene.",
+                'text' => "Descargá el manual de usuario completo con el botón de esta sección, o pedíselo al Asistente HyS.\n\nExplica cada pantalla paso a paso: ingreso, panel, empresas, relevamientos, seguimiento de los ítems en \"No\", PDF, calendario, notificaciones, perfil, administración y una guía rápida de seguridad e higiene.",
                 'icon' => null, 'image' => null, 'video' => null,
                 'created_at' => $now, 'updated_at' => $now,
             ]);

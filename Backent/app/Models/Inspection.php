@@ -72,11 +72,6 @@ class Inspection extends Model
         return $this->hasMany(Observation::class);
     }
 
-    public function correctiveMeasures(): HasMany
-    {
-        return $this->hasMany(CorrectiveMeasure::class);
-    }
-
     public function calculateProgress(): int
     {
         $total = $this->checklistItems()->count();

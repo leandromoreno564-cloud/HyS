@@ -17,15 +17,14 @@
 
 ## 📌 Descripción del Proyecto
 
-En el ámbito profesional de la Seguridad y la Higiene Laboral, el relevamiento tradicional mediante formularios impresos en papel y planillas estáticas ocasiona pérdida de datos, retrasos significativos en la redacción de informes y dificultades para el seguimiento de medidas correctivas. 
+En el ámbito profesional de la Seguridad y la Higiene Laboral, el relevamiento tradicional mediante formularios impresos en papel y planillas estáticas ocasiona pérdida de datos y retrasos significativos en la redacción de informes.
 
 **HyS Control** es una solución web de nivel empresarial y diseño responsive mobile-first que automatiza el ciclo integral de inspecciones:
 1. **Control de Empresas y Establecimientos**: Padrón clasificado por sector industrial con asignación de inspectores matriculados y borrado lógico (*Soft Deletes*).
 2. **Motor de Checklists Normativos**: Generación automática de listas de cotejo técnicas según la normativa vigente (Ley Nacional 19.587, Dec. 351/79 y Dec. 911/96) con cálculo dinámico de avance al 100%.
 3. **Evidencias Fotográficas & Hallazgos**: Documentación gráfica con nivel de severidad (*Menor, Moderada, Mayor, Crítica*) y visor Lightbox interactivo.
-4. **Matriz de Medidas Correctivas**: Planes de mitigación técnica con fechas límite, responsables asignados, estados y estimación de costos.
-5. **Firma Digital Manuscrita en Pantalla (Fase II)**: Canvas interactivo táctil para firma del inspector y representante de la empresa en el celular o tablet.
-6. **Geolocalización GPS y Mapas (Fase II)**: Captura satelital de coordenadas y trazado en OpenStreetMap interactivo con Leaflet.
+4. **Firma Digital Manuscrita en Pantalla (Fase II)**: Canvas interactivo táctil para firma del inspector y representante de la empresa en el celular o tablet.
+5. **Geolocalización GPS y Mapas (Fase II)**: Captura satelital de coordenadas y trazado en OpenStreetMap interactivo con Leaflet.
 7. **Informes Oficiales en PDF con Verificación QR (Fase II)**: Emisión instantánea con DomPDF y validación pública inalterable en `/verify/{token}`.
 
 ---

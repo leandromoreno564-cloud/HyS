@@ -33,7 +33,7 @@ return new class extends Migration
             [null, 'Nuestros valores',
                 "Responsabilidad: cada integrante del equipo es parte activa de la seguridad.\n\nPrevención: actuamos antes de que ocurra el daño.\n\nTransparencia: registramos y comunicamos los hallazgos con claridad.\n\nMejora continua: aprendemos de cada inspección y de cada incidente.\n\nRespeto por las personas: la vida y la salud siempre son lo primero."],
             [null, 'Qué ofrece la plataforma',
-                "Gestión de empresas y establecimientos, relevamientos con checklist y fotos, medidas correctivas con estado y vencimientos, calendario de actividades, notificaciones, asistente virtual y exportación de los datos a Excel.\n\nTodo en un solo lugar, con roles diferenciados para administradores y licenciados, para que cada uno vea y haga lo que le corresponde."],
+                "Gestión de empresas y establecimientos, relevamientos con checklist y fotos, calendario de actividades, notificaciones, asistente virtual y exportación de los datos a Excel.\n\nTodo en un solo lugar, con roles diferenciados para administradores y licenciados, para que cada uno vea y haga lo que le corresponde."],
         ]);
 
         $append('recursos', [
@@ -79,7 +79,7 @@ return new class extends Migration
         ]);
 
         $append('faq', [
-            [null, '¿Qué es una inspección de seguridad?', 'Es una visita planificada a un establecimiento para observar sus instalaciones, equipos y formas de trabajo, comparándolos con la normativa y las buenas prácticas. Se documenta con un relevamiento y, si hay desvíos, se definen medidas correctivas.'],
+            [null, '¿Qué es una inspección de seguridad?', 'Es una visita planificada a un establecimiento para observar sus instalaciones, equipos y formas de trabajo, comparándolos con la normativa y las buenas prácticas. Se documenta mediante un relevamiento.'],
             [null, '¿Qué diferencia hay entre peligro y riesgo?', 'El peligro es lo que puede causar daño, por ejemplo un cable pelado. El riesgo es la probabilidad de que ese daño ocurra y su gravedad. Se puede reducir el riesgo eliminando el peligro o protegiéndose de él.'],
             [null, '¿Qué es un casi accidente?', 'Es un hecho que pudo haber causado daño pero no lo hizo, por azar. Es una señal de alerta muy valiosa: informarlo permite corregir la causa antes de que ocurra un accidente real.'],
             [null, '¿Cuáles son mis derechos y obligaciones como trabajador?', 'Tenés derecho a trabajar en condiciones seguras, a recibir capacitación y elementos de protección sin costo, y a informar situaciones de riesgo. Y tenés la obligación de cumplir las normas de seguridad, usar los elementos entregados y colaborar con la prevención.'],

@@ -47,10 +47,9 @@ flowchart LR
     C --> D["4. Inicio de Inspección"]
     D --> E["5. Checklist Técnico"]
     E --> F["6. Fotos & Observaciones"]
-    F --> G["7. Medidas Correctivas"]
-    G --> H["8. Firma Digital en Canvas"]
-    H --> I["9. Generación de PDF Oficial"]
-    I --> J["10. Validación Pública QR"]
+    F --> G["7. Firma Digital en Canvas"]
+    G --> H["8. Generación de PDF Oficial"]
+    H --> I["9. Validación Pública QR"]
 ```
 
 ---
@@ -72,8 +71,7 @@ flowchart LR
 Al ingresar, el sistema identificará su rol y cargará el panel correspondiente:
 
 ##### Si ingresa como Administrador:
-- **Tarjetas KPI**: Cantidad de empresas registradas, total de inspecciones finalizadas, medidas correctivas pendientes y número de inspectores activos.
-- **Alerta de Medidas Vencidas**: Si existen medidas de seguridad que han superado su fecha límite sin resolverse, se desplegará un banner rojo de advertencia prioritaria con acceso directo al listado.
+- **Tarjetas KPI**: Cantidad de empresas registradas, total de inspecciones finalizadas y número de inspectores activos.
 - **Gráfico Mensual de Inspecciones**: Muestra en barras interactivas el volumen de auditorías realizadas en los últimos 6 meses.
 - **Desglose de Estados**: Indicador porcentual de inspecciones en estado *Completada*, *En Progreso*, *Borrador* o *Cancelada*.
 
@@ -105,7 +103,7 @@ Al ingresar, el sistema identificará su rol y cargará el panel correspondiente
 3. Configure la **Fecha de Auditoría** y el **Tipo de Inspección**:
    - **General:** Relevamiento integral de las instalaciones.
    - **Específica:** Focalizada en un riesgo particular (ej. riesgo eléctrico, trabajo en altura o máquinas).
-   - **Seguimiento:** Verificación de medidas correctivas implementadas.
+   - **Seguimiento:** Verificación de las condiciones relevadas.
 4. Indique los horarios de inicio y cierre previstos y un alcance preliminar.
 5. Presione **"Crear e Iniciar Evaluación"**.
 6. *Automatización del Sistema:* El motor generará automáticamente todos los ítems normativos clasificados en los ejes técnicos aplicables (Seguridad edilicia, Instalaciones eléctricas, Protección contra incendios, EPP, Ergonomía, Orden y limpieza, etc.).
@@ -119,7 +117,7 @@ Al abrir la inspección, observará la cabecera con el porcentaje de avance (0% 
 ##### Pestaña 1: Checklist Técnico
 - Cada punto de la normativa presenta **4 botones táctiles grandes**, diseñados especialmente para no equivocarse al manipular la pantalla en campo:
   - **`[ ✓ Cumple ]` (Verde Esmeralda):** La condición observada se ajusta a la ley y a las normas IRAM.
-  - **`[ ✕ No Cumple ]` (Rojo Carmesí):** Se detectó una no conformidad o condición subestándar. *Al seleccionarlo, se desplegará una alerta rápida que le permite cargar la foto y generar la medida correctiva con un solo clic.*
+  - **`[ ✕ No Cumple ]` (Rojo Carmesí):** Se detectó una no conformidad o condición subestándar. Puede documentarla con una foto y una observación técnica.
   - **`[ — No Aplica ]` (Gris Neutro):** El riesgo evaluado no existe en ese sector o puesto.
   - **`[ ⏳ Pendiente ]` (Ámbar):** El ítem aún no fue verificado.
 - **Nivel de Riesgo**: Puede clasificar cada desvío como riesgo **Bajo**, **Medio** o **Alto**.
@@ -133,25 +131,13 @@ Al abrir la inspección, observará la cabecera con el porcentaje de avance (0% 
 - Escriba la descripción técnica del peligro o incumplimiento.
 - **Carga de Fotos Múltiple**: Adjunte las fotos tomadas en el lugar.
 - **Visor Lightbox**: Al hacer clic sobre cualquier miniatura en la galería, la foto se ampliará a pantalla completa en alta resolución para una inspección visual detallada.
-- **Función Medida Directa**: Puede marcar la casilla *"Generar Medida Correctiva Inmediata"* para establecer la solución técnica en el mismo formulario.
-
-##### Pestaña 3: Medidas Correctivas
-- Consolida el plan de acción preventivo y correctivo de la empresa.
-- Cada medida detalla:
-  - Acción requerida para subsanar el peligro.
-  - Nivel de prioridad (*Crítica, Alta, Media, Baja*).
-  - Responsable asignado en la empresa.
-  - Fecha límite de implementación (el sistema alertará si vence).
-  - Costo estimado en pesos argentinos.
-  - **Selector de Estado en Vivo**: Cambie el estado a *Pendiente*, *En Progreso* o *Completada*.
-
-##### Pestaña 4: Firma Digital y Cierre del Acta
+##### Pestaña 3: Firma Digital y Cierre del Acta
 - Permite formalizar el acta con validez legal antes de retirarse de la empresa.
 - **Canvas Táctil del Inspector**: El profesional dibuja su firma directamente sobre la pantalla con el dedo o el mouse.
 - **Canvas Táctil de la Empresa**: El responsable del establecimiento (ej. Gerente de Planta o Jefe de Seguridad) ingresa su nombre y estampa su firma manuscrita de conformidad.
 - Presione **"Guardar y Estampar Firmas en Informe"**. Las firmas se almacenan de manera segura y se insertarán en el informe PDF.
 
-##### Pestaña 5: Geolocalización GPS y Mapa Satelital
+##### Pestaña 4: Geolocalización GPS y Mapa Satelital
 - Permite verificar la localización física de la auditoría.
 - Presione el botón **"Usar mi GPS actual"**. El navegador capturará las coordenadas de latitud y longitud en tiempo real.
 - Podrá interactuar con el mapa de OpenStreetMap, acercar el zoom o arrastrar el marcador al punto exacto de la nave o predio auditado.
@@ -167,7 +153,6 @@ Al abrir la inspección, observará la cabecera con el porcentaje de avance (0% 
    - Resumen ejecutivo con gráficos circulares y métricas de cumplimiento legal.
    - Tabla completa y pormenorizada de todos los ítems evaluados del checklist.
    - Registro de observaciones técnicas con las fotografías de evidencia integradas.
-   - Matriz de medidas correctivas con sus fechas de vencimiento y responsables.
    - Espacio formal con las **firmas digitales manuscritas estampadas**.
    - **Código QR dinámico de autenticidad inalterable**.
 
@@ -196,7 +181,6 @@ Para tareas de auditoría administrativa o presentación de informes masivos:
 #### 3.9. Centro de Notificaciones y Alertas
 
 En la esquina superior derecha, junto a su nombre de usuario, encontrará el icono de campana con el contador de notificaciones pendientes:
-- Alertas de medidas correctivas con fecha límite próxima a vencer (menos de 72 horas).
 - Notificaciones de no conformidades críticas registradas.
 - Alertas de nuevas empresas e inspecciones asignadas.
 - Posibilidad de marcar avisos como leídos individualmente o con el botón **"Marcar todas como leídas"**.

@@ -38,7 +38,6 @@
 - **Gestión de Empresas:** Padrón con búsqueda en vivo, filtro por sector, soft delete, restauración y asignación de técnicos por tabla pivote (`company_user`).
 - **Checklists Técnicos Normativos:** Generación automática de listas de cotejo según sector (Ley 19.587 y Dec. 351/79) con cálculo automático de avance al 100%.
 - **Evidencias Fotográficas:** Clasificación de desvíos con severidad (*Menor, Moderada, Mayor, Crítica*) y subida de imágenes múltiples.
-- **Planes de Acción:** Matriz de medidas correctivas con asignación de responsables, costos estimados y semáforo de vencimiento.
 - **Informes Ejecutivos:** Generación en alta calidad de actas técnicas oficiales en PDF mediante DomPDF.
 
 #### Diapositiva 5: Alcance Funcional Fase II (Módulos de Evolución Técnica)
@@ -69,12 +68,11 @@ Este guion está cronometrado para guiar la presentación práctica ante los pro
 ---
 
 #### Momento 2: Dashboard General y Monitoreo Estratégico (2 minutos)
-1. **Métricas Clave:** Mostrar las tarjetas superiores de KPI (Empresas registradas, Total de inspecciones, Medidas pendientes e Inspectores activos).
-2. **Alerta Crítica de Seguridad:** Señalar el banner de medidas vencidas: *"Si un extintor venció o un tablero eléctrico no se arregló en plazo, el sistema lo detecta automáticamente y lo destaca en rojo para los auditores"*.
-3. **Gráficos Interactivos:**
+1. **Métricas Clave:** Mostrar las tarjetas superiores de KPI (Empresas registradas, Total de inspecciones e Inspectores activos).
+2. **Gráficos Interactivos:**
    - Mostrar el gráfico de barras con la **evolución de inspecciones de los últimos 6 meses**.
    - Mostrar el desglose porcentual de estados (*Completadas, En Progreso, Borradores*).
-4. **Módulo de Usuarios (Exclusivo Admin):** Ir a **"Usuarios & Técnicos"** y mostrar:
+3. **Módulo de Usuarios (Exclusivo Admin):** Ir a **"Usuarios & Técnicos"** y mostrar:
    - Los números de matrícula profesional de los inspectores (`LIC-HYS-8492`).
    - El botón de activación/desactivación instantánea de cuenta para seguridad operativa.
 
@@ -104,11 +102,9 @@ Este guion está cronometrado para guiar la presentación práctica ante los pro
 3. **Pestaña 2 - Observaciones con Evidencia Fotográfica:**
    - Ir a la pestaña **"Observaciones & Fotos"** y hacer clic en **"Nueva Observación"**.
    - Indicar severidad: **Mayor**, Ubicación: *Nave 2 - Taller de Maquinado*, y descripción técnica del defecto eléctrico.
-   - Adjuntar fotos de prueba y marcar la casilla *"Generar Medida Correctiva Inmediata"*.
+    - Adjuntar fotos de prueba.
    - Mostrar la galería visual generada y hacer clic en una foto para demostrar el **visor Lightbox modal** ampliado.
-4. **Pestaña 3 - Medidas Correctivas:**
-   - Mostrar cómo la medida correctiva quedó vinculada con responsable, fecha de vencimiento y estado *Pendiente*.
-5. **Pestaña 4 - Firma Digital Manuscrita en Pantalla (Fase II):**
+4. **Pestaña 3 - Firma Digital Manuscrita en Pantalla (Fase II):**
    - Ir a la pestaña **"Firma Digital & Cierre"**.
    - **Dibujar la firma con el mouse o con el dedo en la pantalla táctil** en el recuadro del Inspector.
    - Escribir el nombre del representante de planta (*Ing. Roberto Gómez*) y estampar su firma en el segundo canvas.

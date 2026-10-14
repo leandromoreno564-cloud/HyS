@@ -297,34 +297,6 @@ INSERT INTO `observations` (`id`, `inspection_id`, `inspection_checklist_item_id
 INSERT INTO `observations` (`id`, `inspection_id`, `inspection_checklist_item_id`, `type`, `severity`, `location`, `description`, `photos`, `created_at`, `updated_at`) VALUES ('3', '1', NULL, 'Buena práctica', 'Menor', 'Línea de Ensamble Final', 'Excelente señalización horizontal y uso consistente de cascos y protectores auditivos de copa por todo el personal de línea.', NULL, '2026-09-03 19:56:32', '2026-09-03 19:56:32');
 
 -- --------------------------------------------------------
--- Estructura para la tabla `corrective_measures`
--- --------------------------------------------------------
-DROP TABLE IF EXISTS `corrective_measures`;
-CREATE TABLE `corrective_measures` (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `inspection_id` bigint(20) UNSIGNED NOT NULL,
-  `observation_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `description` text NOT NULL,
-  `priority` varchar(50) NOT NULL DEFAULT 'Media',
-  `recommendations` text DEFAULT NULL,
-  `deadline` date DEFAULT NULL,
-  `responsible_person` varchar(255) DEFAULT NULL,
-  `estimated_cost` decimal(12,2) DEFAULT NULL,
-  `status` varchar(50) NOT NULL DEFAULT 'Pendiente',
-  `verification_date` date DEFAULT NULL,
-  `notes` text DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `corrective_measures_inspection_id_foreign` (`inspection_id`),
-  CONSTRAINT `corrective_measures_inspection_id_foreign` FOREIGN KEY (`inspection_id`) REFERENCES `inspections` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Volcado de datos para la tabla `corrective_measures`
-INSERT INTO `corrective_measures` (`id`, `inspection_id`, `observation_id`, `description`, `priority`, `recommendations`, `deadline`, `responsible_person`, `estimated_cost`, `status`, `verification_date`, `notes`, `created_at`, `updated_at`) VALUES ('1', '1', '1', 'Instalar contratapa aislante acrílica reglamentaria, colocar cerradura de seguridad y señalizar tablero TS-03 con advertencia de riesgo eléctrico.', 'Alta', 'Contratar electricista matriculado para el reemplazo inmediato de la protección de bornes.', '2026-09-10 19:56:32', 'Ing. Roberto Gómez / Dpto. Mantenimiento', '150000', 'En Progreso', NULL, 'Materiales solicitados al proveedor.', '2026-09-03 19:56:32', '2026-09-03 19:56:32');
-INSERT INTO `corrective_measures` (`id`, `inspection_id`, `observation_id`, `description`, `priority`, `recommendations`, `deadline`, `responsible_person`, `estimated_cost`, `status`, `verification_date`, `notes`, `created_at`, `updated_at`) VALUES ('2', '1', '2', 'Realizar recarga y prueba hidráulica inmediata del extintor nº 14 y demarcar en el piso la zona de seguridad libre de obstáculos (1 m²).', 'Crítica', 'Reemplazar provisoriamente con extintor de reserva del pañol y despejar pasillo.', '2026-09-05 19:56:32', 'Sr. Jorge Valenzuela (Seguridad Patrimonial)', '45000', 'Pendiente', NULL, 'Urgente para cumplir Dec. 351/79 Art. 176.', '2026-09-03 19:56:32', '2026-09-03 19:56:32');
-
--- --------------------------------------------------------
 -- Estructura para la tabla `app_notifications`
 -- --------------------------------------------------------
 DROP TABLE IF EXISTS `app_notifications`;
@@ -344,7 +316,7 @@ CREATE TABLE `app_notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Volcado de datos para la tabla `app_notifications`
-INSERT INTO `app_notifications` (`id`, `user_id`, `title`, `message`, `type`, `link`, `is_read`, `created_at`, `updated_at`) VALUES ('1', '2', 'Medida correctiva de alta urgencia', 'La medida correctiva para el extintor de Siderúrgica del Plata tiene vencimiento en 2 días.', 'danger', '/inspections/1', '0', '2026-09-03 19:56:32', '2026-09-03 19:56:32');
+INSERT INTO `app_notifications` (`id`, `user_id`, `title`, `message`, `type`, `link`, `is_read`, `created_at`, `updated_at`) VALUES ('1', '2', 'Alerta de seguridad de alta urgencia', 'El extintor de Siderúrgica del Plata requiere atención dentro de los próximos 2 días.', 'danger', '/inspections/1', '0', '2026-09-03 19:56:32', '2026-09-03 19:56:32');
 INSERT INTO `app_notifications` (`id`, `user_id`, `title`, `message`, `type`, `link`, `is_read`, `created_at`, `updated_at`) VALUES ('2', '1', 'Nueva empresa registrada', 'El Lic. Carlos Rossi registró la empresa \"Constructora Horizontes S.R.L.\"', 'info', '/companies/2', '0', '2026-09-03 19:56:32', '2026-09-03 19:56:32');
 
 SET FOREIGN_KEY_CHECKS = 1;

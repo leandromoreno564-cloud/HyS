@@ -71,7 +71,7 @@ class PortalSetting extends Model
         'faq_text' => 'Respuestas rápidas a las consultas más comunes sobre prevención y sobre el uso de la plataforma.',
 
         'cta_title' => 'Sumate a una cultura de prevención',
-        'cta_text' => 'Ingresá a la plataforma para gestionar inspecciones, relevamientos, medidas correctivas y el calendario de actividades de tu equipo, todo en un solo lugar.',
+        'cta_text' => 'Ingresá a la plataforma para gestionar inspecciones, relevamientos y el calendario de actividades de tu equipo, todo en un solo lugar.',
 
         'footer_left' => '© 2026 Higiene y Seguridad',
         'footer_right' => 'Prevención · Protección · Bienestar',

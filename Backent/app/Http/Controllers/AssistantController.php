@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\AppNotification;
 use App\Models\AssistantMessage;
 use App\Models\Company;
-use App\Models\CorrectiveMeasure;
 use App\Models\Inspection;
 use App\Models\User;
 use Carbon\Carbon;
@@ -24,7 +23,7 @@ use Illuminate\Support\Facades\Log;
  *  - Contexto de la pantalla: si el usuario está dentro de una empresa, n8n recibe su detalle.
  *  - Streaming: si n8n responde en modo streaming se reenvía en vivo; si responde un JSON normal,
  *    se entrega completo y el navegador lo muestra con efecto de escritura.
- *  - Acciones con confirmación: n8n PROPONE (crear medida correctiva / recordatorio); Laravel valida y
+ *  - Acciones con confirmación: n8n PROPONE recordatorios; Laravel los valida y
  *    guarda la propuesta, y recién se ejecuta cuando el usuario toca "Confirmar".
  *
  * Variables de entorno: N8N_ASSISTANT_WEBHOOK_URL (o, si falta, N8N_CHECKLIST_CHAT_WEBHOOK_URL),
@@ -34,20 +33,14 @@ use Illuminate\Support\Facades\Log;
  *   {
  *     "reply": "texto",
  *     "links":   [ { "label": "Ver empresa", "url": "/companies/3" } ],
- *     "actions": [ { "type": "create_corrective_measure", "company_id": 3, "description": "...",
- *                    "priority": "Alta", "deadline": "2026-11-01", "responsible_person": "...",
- *                    "recommendations": "..." },
- *                  { "type": "create_reminder", "title": "...", "message": "...",
- *                    "remind_at": "2026-10-12 09:00", "company_id": 3 },
- *                  { "type": "update_measure_status", "measure_id": 12, "status": "Completada" } ]
+ *     "actions": [ { "type": "create_reminder", "title": "...", "message": "...",
+ *                    "remind_at": "2026-10-12 09:00", "company_id": 3 } ]
  *   }
  * Modo streaming de n8n (líneas JSON begin / item / end): se reenvía el texto en vivo, pero en ese
  * modo no hay links ni acciones (solo texto).
  */
 class AssistantController extends Controller
 {
-    private const PRIORITIES = ['Baja', 'Media', 'Alta', 'Crítica'];
-
     /** El servidor está en UTC; las fechas y horas que dicen las personas son de Argentina. */
     private const TZ = 'America/Argentina/Buenos_Aires';
 
@@ -138,16 +131,8 @@ class AssistantController extends Controller
             // Acciones que n8n puede PROPONER (el usuario las confirma en pantalla)
             'allowed_actions' => [
                 [
-                    'type' => 'create_corrective_measure',
-                    'params' => ['company_id', 'description', 'priority(Baja|Media|Alta|Crítica)', 'deadline(YYYY-MM-DD)', 'responsible_person', 'recommendations'],
-                ],
-                [
                     'type' => 'create_reminder',
                     'params' => ['title', 'message', 'remind_at(YYYY-MM-DD HH:MM, hora de Argentina)', 'company_id(opcional)'],
-                ],
-                [
-                    'type' => 'update_measure_status',
-                    'params' => ['measure_id', 'status(En Progreso|Completada|Cancelada)'],
                 ],
             ],
         ];
@@ -371,34 +356,6 @@ class AssistantController extends Controller
     {
         $p = $action['params'] ?? [];
 
-        if (($action['type'] ?? null) === 'create_corrective_measure') {
-            $company = Company::accessibleBy($user)->find($p['company_id'] ?? 0);
-            if (!$company) {
-                throw new \DomainException('No tenés acceso a esa empresa.');
-            }
-
-            $inspection = Inspection::where('company_id', $company->id)
-                ->orderByDesc('inspection_date')
-                ->orderByDesc('id')
-                ->first();
-
-            if (!$inspection) {
-                throw new \DomainException("«{$company->business_name}» todavía no tiene inspecciones. Registrá una inspección antes de crear medidas correctivas.");
-            }
-
-            CorrectiveMeasure::create([
-                'inspection_id' => $inspection->id,
-                'description' => $p['description'],
-                'priority' => $p['priority'] ?? 'Media',
-                'recommendations' => $p['recommendations'] ?? null,
-                'deadline' => $p['deadline'] ?? null,
-                'responsible_person' => $p['responsible_person'] ?? null,
-                'status' => 'Pendiente',
-            ]);
-
-            return ["Medida correctiva creada para {$company->business_name}.", '/corrective-measures'];
-        }
-
         if (($action['type'] ?? null) === 'create_reminder') {
             $link = null;
             if (!empty($p['company_id'])) {
@@ -424,21 +381,6 @@ class AssistantController extends Controller
                     : 'Recordatorio creado. Lo ves en Notificaciones.',
                 '/notifications',
             ];
-        }
-
-        if (($action['type'] ?? null) === 'update_measure_status') {
-            $measure = $this->accessibleMeasures($user)->find($p['measure_id'] ?? 0);
-            if (!$measure) {
-                throw new \DomainException('No encontré esa medida correctiva o no tenés acceso.');
-            }
-
-            $measure->status = $p['status'];
-            if ($p['status'] === 'Completada') {
-                $measure->verification_date = Carbon::today();
-            }
-            $measure->save();
-
-            return ["Medida #{$measure->id} marcada como {$p['status']}.", '/corrective-measures'];
         }
 
         throw new \DomainException('Tipo de acción no soportado.');
@@ -533,63 +475,7 @@ class AssistantController extends Controller
 
             $type = $a['type'] ?? null;
 
-            if ($type === 'create_corrective_measure') {
-                $companyId = $a['company_id'] ?? null;
-                $description = is_string($a['description'] ?? null) ? trim($a['description']) : '';
-
-                if (!is_numeric($companyId) || !in_array((int) $companyId, $companyIds, true) || mb_strlen($description) < 5) {
-                    continue;
-                }
-
-                $priority = in_array($a['priority'] ?? null, self::PRIORITIES, true) ? $a['priority'] : 'Media';
-                $deadline = $this->parseDate($a['deadline'] ?? null);
-                $responsible = is_string($a['responsible_person'] ?? null) ? mb_substr(trim($a['responsible_person']), 0, 255) : null;
-                $recommendations = is_string($a['recommendations'] ?? null) ? mb_substr(trim($a['recommendations']), 0, 1000) : null;
-
-                $clean[] = [
-                    'type' => $type,
-                    'label' => sprintf(
-                        'Crear medida correctiva (%s) en %s: %s%s',
-                        $priority,
-                        $names[(int) $companyId] ?? 'la empresa',
-                        mb_strimwidth($description, 0, 140, '…'),
-                        $deadline ? ' · plazo ' . Carbon::parse($deadline)->format('d/m/Y') : ''
-                    ),
-                    'params' => [
-                        'company_id' => (int) $companyId,
-                        'description' => mb_substr($description, 0, 1000),
-                        'priority' => $priority,
-                        'deadline' => $deadline,
-                        'responsible_person' => $responsible ?: null,
-                        'recommendations' => $recommendations ?: null,
-                    ],
-                    'status' => 'pending',
-                    'result' => null,
-                ];
-            } elseif ($type === 'update_measure_status') {
-                $status = $a['status'] ?? null;
-                if (!is_numeric($a['measure_id'] ?? null) || !in_array($status, ['En Progreso', 'Completada', 'Cancelada'], true)) {
-                    continue;
-                }
-
-                $measure = $this->accessibleMeasures($user)->find((int) $a['measure_id']);
-                if (!$measure) {
-                    continue;
-                }
-
-                $clean[] = [
-                    'type' => $type,
-                    'label' => sprintf(
-                        'Marcar la medida #%d («%s») como %s',
-                        $measure->id,
-                        mb_strimwidth((string) $measure->description, 0, 90, '…'),
-                        $status
-                    ),
-                    'params' => ['measure_id' => $measure->id, 'status' => $status],
-                    'status' => 'pending',
-                    'result' => null,
-                ];
-            } elseif ($type === 'create_reminder') {
+            if ($type === 'create_reminder') {
                 $title = is_string($a['title'] ?? null) ? mb_substr(trim($a['title']), 0, 120) : '';
                 if ($title === '') {
                     continue;
@@ -634,19 +520,6 @@ class AssistantController extends Controller
         return $clean;
     }
 
-    private function parseDate(mixed $value): ?string
-    {
-        if (!is_string($value) || trim($value) === '') {
-            return null;
-        }
-
-        try {
-            return Carbon::parse($value)->toDateString();
-        } catch (\Throwable $e) {
-            return null;
-        }
-    }
-
     /** Solo rutas internas conocidas; una empresa solo se enlaza si el usuario tiene acceso. */
     private function sanitizeLinks(mixed $links, array $companyIds): array
     {
@@ -654,7 +527,7 @@ class AssistantController extends Controller
             return [];
         }
 
-        $static = ['/dashboard', '/companies', '/companies/create', '/corrective-measures', '/notifications', '/profile'];
+        $static = ['/dashboard', '/companies', '/companies/create', '/notifications', '/profile'];
         $clean = [];
 
         foreach (array_slice($links, 0, 4) as $link) {
@@ -682,17 +555,6 @@ class AssistantController extends Controller
         return array_values($clean);
     }
 
-    /** Medidas correctivas que el usuario puede ver (mismo criterio que la pantalla de Medidas). */
-    private function accessibleMeasures(User $user)
-    {
-        return CorrectiveMeasure::query()->when(!$user->isAdmin(), function ($q) use ($user) {
-            $q->whereHas('inspection', fn ($iq) => $iq->whereIn(
-                'company_id',
-                Company::accessibleBy($user)->select('companies.id')
-            ));
-        });
-    }
-
     // ------------------------------------------------------------------ Contexto para n8n
 
     /** Resumen acotado a lo que el usuario puede ver (admin: todo; inspector: sus empresas). */
@@ -711,36 +573,10 @@ class AssistantController extends Controller
 
         $companyIds = Company::accessibleBy($user)->pluck('id')->all();
 
-        $measuresQuery = CorrectiveMeasure::whereIn('status', ['Pendiente', 'En Progreso'])
-            ->when(!$user->isAdmin(), fn ($q) => $q->whereHas(
-                'inspection',
-                fn ($iq) => $iq->whereIn('company_id', $companyIds)
-            ));
-
         return [
             'company_ids' => $companyIds,
             'summary' => [
                 'companies_total' => count($companyIds),
-                'corrective_measures' => [
-                    'pending_or_in_progress' => (clone $measuresQuery)->count(),
-                    'overdue' => (clone $measuresQuery)->whereNotNull('deadline')->where('deadline', '<', Carbon::today())->count(),
-                    'critical' => (clone $measuresQuery)->where('priority', 'Crítica')->count(),
-                ],
-                // Medidas abiertas más urgentes (con id, para que n8n pueda proponer cambiarles el estado)
-                'open_measures' => (clone $measuresQuery)
-                    ->with('inspection.company:id,business_name')
-                    ->orderByRaw('deadline IS NULL')
-                    ->orderBy('deadline')
-                    ->limit(15)
-                    ->get()
-                    ->map(fn ($m) => [
-                        'id' => $m->id,
-                        'company' => optional(optional($m->inspection)->company)->business_name,
-                        'description' => mb_strimwidth((string) $m->description, 0, 140, '…'),
-                        'priority' => $m->priority,
-                        'deadline' => optional($m->deadline)->toDateString(),
-                        'status' => $m->status,
-                    ])->values(),
                 'companies' => $companies->map(fn (Company $c) => [
                     'id' => $c->id,
                     'business_name' => $c->business_name,
@@ -758,7 +594,6 @@ class AssistantController extends Controller
                 ['label' => 'Panel de control', 'url' => '/dashboard'],
                 ['label' => 'Empresas', 'url' => '/companies'],
                 ['label' => 'Registrar empresa', 'url' => '/companies/create'],
-                ['label' => 'Medidas correctivas', 'url' => '/corrective-measures'],
                 ['label' => 'Notificaciones', 'url' => '/notifications'],
             ],
         ];
@@ -778,12 +613,6 @@ class AssistantController extends Controller
             ->orderByDesc('inspection_date')
             ->limit(5)
             ->get(['id', 'inspection_date', 'type', 'status', 'progress_percentage']);
-
-        $measures = CorrectiveMeasure::whereHas('inspection', fn ($q) => $q->where('company_id', $company->id))
-            ->whereIn('status', ['Pendiente', 'En Progreso'])
-            ->orderBy('deadline')
-            ->limit(10)
-            ->get(['id', 'description', 'priority', 'deadline', 'status']);
 
         return [
             'id' => $company->id,
@@ -814,13 +643,6 @@ class AssistantController extends Controller
                 'type' => $i->type,
                 'status' => $i->status,
                 'progress' => $i->progress_percentage,
-            ])->values(),
-            'open_corrective_measures' => $measures->map(fn ($m) => [
-                'id' => $m->id,
-                'description' => mb_strimwidth((string) $m->description, 0, 160, '…'),
-                'priority' => $m->priority,
-                'deadline' => optional($m->deadline)->toDateString(),
-                'status' => $m->status,
             ])->values(),
         ];
     }

@@ -63,7 +63,7 @@ return new class extends Migration
                 [null, 'Por qué es importante',
                     "Un accidente laboral o una enfermedad profesional no solo afecta a quien la sufre: impacta en su familia, en el equipo y en la continuidad de la empresa. Prevenir es siempre más humano, más barato y más eficaz que reparar.\n\nLos ambientes seguros mejoran el clima laboral, reducen el ausentismo y aumentan la productividad."],
                 [null, 'Cómo trabajamos',
-                    "Esta plataforma permite que los Licenciados en Seguridad e Higiene registren inspecciones por empresa, completen relevamientos con fotos, asignen medidas correctivas y den seguimiento hasta su cierre.\n\nLos administradores coordinan al equipo mediante un calendario de actividades y reciben notificaciones de cada avance."],
+                    "Esta plataforma permite que los Licenciados en Seguridad e Higiene registren inspecciones por empresa y completen relevamientos con fotos.\n\nLos administradores coordinan al equipo mediante un calendario de actividades y reciben notificaciones de cada avance."],
             ],
             'normativa' => [
                 ['scale', 'Ley 19.587', 'Ley de Higiene y Seguridad en el Trabajo. Establece las condiciones generales que deben cumplirse en los establecimientos del país para proteger la vida y la integridad psicofísica de los trabajadores.'],
@@ -84,7 +84,6 @@ return new class extends Migration
             'faq' => [
                 [null, '¿Qué es un EPP y quién debe proveerlo?', 'Un elemento de protección personal es todo equipo destinado a proteger al trabajador de uno o varios riesgos. La empresa debe entregarlo sin costo, en buen estado y adecuado a la tarea, y el trabajador debe usarlo correctamente.'],
                 [null, '¿Qué hago si detecto una condición insegura?', 'Detené la tarea si hay peligro inmediato, avisá a tu supervisor y registrá lo observado. Informar a tiempo permite corregir el problema antes de que ocurra un accidente.'],
-                [null, '¿Qué es una medida correctiva?', 'Es una acción que se define para eliminar o reducir un riesgo detectado en una inspección. Tiene un responsable, un plazo y un estado de avance hasta quedar cerrada.'],
                 [null, '¿Cada cuánto se realizan las inspecciones?', 'Depende del tipo de actividad y del nivel de riesgo de cada empresa. En el calendario de la plataforma se programan las revisiones y los seguimientos que asigna el administrador.'],
                 [null, '¿Cómo me registro en la plataforma?', 'Los Licenciados en Seguridad e Higiene pueden crear su cuenta desde la pantalla de ingreso. Un administrador debe aprobarla antes de que puedas iniciar sesión.'],
                 [null, '¿Qué hago ante un accidente?', 'Priorizá la atención de la persona afectada y llamá al servicio de emergencias (911). Luego avisá a tu superior y a la ART, y registrá el hecho para analizar sus causas y evitar que se repita.'],

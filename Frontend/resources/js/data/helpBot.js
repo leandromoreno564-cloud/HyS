@@ -23,7 +23,6 @@ export const NODES = {
         label: 'Primeros pasos',
         keywords: ['primeros pasos', 'empezar', 'comenzar', 'menu', 'inicio', 'modulos', 'por donde empiezo'],
         text: 'Para empezar: ingresás con tus credenciales, llegás al panel principal y desde el menú lateral accedés a cada módulo:',
-        image: IMG + 'menu-lateral.svg',
         caption: 'Menú lateral del sistema',
         next: ['ingreso', 'panel', 'empresas', 'cuenta'],
         go: [{ label: 'Ir al panel', href: '/dashboard' }],
@@ -39,10 +38,9 @@ export const NODES = {
     panel: {
         label: 'El panel principal',
         keywords: ['panel', 'dashboard', 'tarjetas', 'graficos', 'grafico', 'resumen', 'pantalla principal'],
-        text: 'El panel muestra un resumen: empresas registradas, total de inspecciones, medidas pendientes (con cuántas están vencidas) y el cuerpo técnico. Abajo hay gráficos con la evolución mensual de inspecciones y su estado.',
-        image: IMG + 'panel.svg',
+        text: 'El panel muestra un resumen de las empresas registradas, el total de inspecciones y el cuerpo técnico. Abajo hay gráficos con la evolución mensual de inspecciones y su estado.',
         caption: 'Panel de Control General',
-        next: ['empresas', 'medidas'],
+        next: ['empresas', 'calendario'],
         go: [{ label: 'Ir al panel', href: '/dashboard' }],
     },
     empresas: {
@@ -75,7 +73,7 @@ export const NODES = {
         label: 'Sí / No / No aplica',
         keywords: ['estado', 'estados', 'si no', 'no aplica', 'n/a', 'na', 'respuesta', 'respuestas', 'marcar'],
         text: 'Estados de cada ítem:\n• Sí: se cumple.\n• No: no se cumple; se pide la recomendación del técnico y las fechas de recomendación y de regulación.\n• No aplica: no corresponde a este establecimiento.',
-        next: ['medidas', 'relevamiento'],
+        next: ['seguimiento', 'relevamiento'],
     },
     seguimiento: {
         label: 'Ítems en "No": recomendación y fechas',
@@ -101,15 +99,6 @@ export const NODES = {
         caption: 'Del archivo al borrador del relevamiento',
         next: ['relevamiento', 'empresas'],
     },
-    medidas: {
-        label: 'Medidas correctivas',
-        keywords: ['medida', 'medidas', 'correctiva', 'correctivas', 'vencida', 'vencidas', 'vencimiento', 'pendiente', 'pendientes', 'accion', 'acciones'],
-        text: 'Las medidas correctivas son las acciones para resolver los desvíos que detectás. En el módulo ves el listado con el estado de cada una y lo actualizás a medida que avanzan.\n\nMirá los vencimientos: las medidas vencidas se destacan en el panel principal.',
-        image: IMG + 'medidas.svg',
-        caption: 'Listado de medidas correctivas',
-        next: ['estados', 'calendario'],
-        go: [{ label: 'Ir a Medidas Correctivas', href: '/corrective-measures' }],
-    },
     calendario: {
         label: 'Calendario',
         keywords: ['calendario', 'actividad', 'actividades', 'agenda', 'programar', 'visita', 'visitas', 'seguimiento', 'recordatorio'],
@@ -122,7 +111,6 @@ export const NODES = {
         label: 'Notificaciones',
         keywords: ['notificacion', 'notificaciones', 'campana', 'aviso', 'avisos'],
         text: 'La campana de la parte superior te avisa cuando hay novedades, por ejemplo una actividad asignada. Tocala para ver el listado y marcá una o todas como leídas.',
-        image: IMG + 'notificaciones.svg',
         caption: 'Notificaciones',
         go: [{ label: 'Ver notificaciones', href: '/notifications' }],
     },
@@ -138,7 +126,6 @@ export const NODES = {
         label: 'Exportar a Excel',
         keywords: ['exportar', 'excel', 'csv', 'descargar datos', 'reporte', 'reportes', 'planilla', 'exportacion'],
         text: 'En el menú lateral, sección Exportación, el botón "Exportar a Excel (CSV)" descarga un archivo con la información del sistema para analizarla en Excel o en cualquier planilla de cálculo.',
-        image: IMG + 'exportar.svg',
         caption: 'Exportación a Excel',
     },
     usuarios: {
@@ -189,7 +176,7 @@ export const NODES = {
         label: 'Guía: registrar una empresa',
         keywords: ['registrar una empresa', 'dar de alta una empresa', 'agregar empresa', 'cargar una empresa', 'nueva empresa'],
         guide: [
-            { text: 'Entrá a Empresas desde el menú lateral.', image: IMG + 'menu-lateral.svg', go: [{ label: 'Ir a Empresas', href: '/companies' }] },
+            { text: 'Entrá a Empresas desde el menú lateral.', go: [{ label: 'Ir a Empresas', href: '/companies' }] },
             { text: 'Tocá "Registrar Empresa" (arriba a la derecha).', go: [{ label: 'Abrir el formulario', href: '/companies/create' }] },
             { text: 'Si tenés un PDF o un Word con los datos, arrastralo al recuadro azul: el sistema completa lo que reconoce. Revisá siempre los datos detectados.', image: IMG + 'empresa-alta.svg' },
             { text: 'Completá o corregí los datos y tocá "Guardar". Después, desde la empresa, entrás a su relevamiento.' },
@@ -331,7 +318,7 @@ export const NODES = {
 };
 
 /** Temas del menú principal (en este orden) */
-export const MENU = ['empezar', 'guias', 'manual', 'empresas', 'relevamiento', 'importar', 'medidas', 'calendario', 'cuenta', 'seguridad', 'exportar', 'problemas'];
+export const MENU = ['empezar', 'guias', 'manual', 'empresas', 'relevamiento', 'importar', 'calendario', 'cuenta', 'seguridad', 'exportar', 'problemas'];
 export const ADMIN_MENU = ['usuarios', 'portada'];
 
 /** Sugerencias según la pantalla en la que está la persona */
@@ -340,10 +327,9 @@ export const CONTEXT = [
     [/Companies\/Create$/, ['guia_empresa', 'guia_importar']],
     [/Companies\//, ['empresas', 'relevamiento']],
     [/Calendar/, ['calendario']],
-    [/CorrectiveMeasures/, ['medidas', 'estados']],
     [/Users/, ['usuarios']],
     [/Notifications/, ['notificaciones']],
-    [/Dashboard/, ['empezar', 'empresas', 'medidas']],
+    [/Dashboard/, ['empezar', 'empresas', 'calendario']],
 ];
 
 export const normalize = (s) =>

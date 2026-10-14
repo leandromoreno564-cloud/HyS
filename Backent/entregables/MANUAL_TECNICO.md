@@ -42,7 +42,6 @@ sistema-inspecciones-hys/
 │   │   │   ├── AuthController.php
 │   │   │   ├── ChecklistController.php
 │   │   │   ├── CompanyController.php
-│   │   │   ├── CorrectiveMeasureController.php
 │   │   │   ├── DashboardController.php
 │   │   │   ├── InspectionController.php
 │   │   │   ├── NotificationController.php
@@ -64,7 +63,6 @@ sistema-inspecciones-hys/
 │   │   │   ├── Companies/        # Index.jsx, Show.jsx, Create.jsx, Edit.jsx
 │   │   │   ├── Dashboard/        # Admin.jsx, Inspector.jsx
 │   │   │   ├── Inspections/      # Index.jsx, Show.jsx (5 pestañas operativas), Create.jsx, Edit.jsx
-│   │   │   ├── CorrectiveMeasures/# Index.jsx
 │   │   │   ├── Users/            # Index.jsx, Create.jsx, Edit.jsx
 │   │   │   ├── Notifications/    # Index.jsx
 │   │   │   └── Reports/          # Verify.jsx (Certificado público QR)
@@ -147,7 +145,7 @@ php artisan migrate:fresh --seed
 - Los usuarios administradores e inspectores matriculados.
 - Las categorías y los 30 ítems normativos estándar de checklists de higiene y seguridad (Ley 19.587, Dec. 351/79).
 - Empresas de prueba (*Siderúrgica del Plata, Constructora Horizontes, Laboratorios BioQuim, Logística Austral*).
-- Inspecciones de ejemplo en estado "Completada" y "En Progreso" con observaciones, fotos y medidas correctivas.
+- Inspecciones de ejemplo en estado "Completada" y "En Progreso" con observaciones y fotos.
 
 *Opción Alternativa Manual:* Se puede importar directamente el archivo `entregables/base_de_datos.sql` en phpMyAdmin o MySQL Workbench.
 
@@ -191,8 +189,6 @@ erDiagram
     CHECKLIST_CATEGORIES ||--o{ CHECKLIST_ITEMS : "clasifica"
     CHECKLIST_ITEMS ||--o{ INSPECTION_CHECKLIST_ITEMS : "instancia"
     INSPECTIONS ||--o{ OBSERVATIONS : "registra"
-    OBSERVATIONS ||--o{ CORRECTIVE_MEASURES : "origina"
-    INSPECTIONS ||--o{ CORRECTIVE_MEASURES : "contiene"
     USERS ||--o{ APP_NOTIFICATIONS : "recibe"
 ```
 
@@ -203,11 +199,9 @@ erDiagram
 5. **`inspections`**: Cabecera de auditorías con fecha, tipo, estado (*Borrador, En Progreso, Completada, Cancelada*), porcentaje de avance calculado, firmas electrónicas manuscritas en base64 y token UUID único para QR.
 6. **`inspection_checklist_items`**: Ítems evaluados con estados `Cumple`, `No Cumple`, `No Aplica`, `Pendiente`, nivel de riesgo (*Bajo, Medio, Alto*) y notas.
 7. **`observations`**: Registro de desvíos, actos inseguros o buenas prácticas, con severidad (*Menor, Moderado, Mayor, Crítico*), ubicación física y array JSON de fotos de evidencia.
-8. **`corrective_measures`**: Planes de mitigación técnica con prioridad, fecha límite de cumplimiento, responsable asignado, costo estimado y seguimiento de estado (*Pendiente, En Progreso, Completada, Vencida*).
-
 ---
 
-### 7. Medidas de Seguridad Web Implementadas
+### 7. Seguridad Web Implementada
 
 1. **Control de Acceso Basado en Roles (RBAC)**: Middleware `role:admin` que restringe el módulo de usuarios y funciones críticas exclusivamente a cuentas de administración.
 2. **Control de Inactividad y Estado de Cuenta**: Middleware `active` que verifica que la cuenta del usuario no haya sido deshabilitada antes de conceder acceso a las rutas protegidas.

@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Observation extends Model
 {
@@ -35,8 +34,4 @@ class Observation extends Model
         return $this->belongsTo(InspectionChecklistItem::class, 'inspection_checklist_item_id');
     }
 
-    public function correctiveMeasures(): HasMany
-    {
-        return $this->hasMany(CorrectiveMeasure::class);
-    }
 }
