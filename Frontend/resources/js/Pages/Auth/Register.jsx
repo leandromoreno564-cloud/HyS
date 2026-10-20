@@ -181,7 +181,7 @@ export default function Register() {
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
-                                    Legajo
+                                    Legajo (opcional)
                                 </label>
                                 <div className="mt-1.5 relative rounded-xl shadow-xs">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -192,7 +192,6 @@ export default function Register() {
                                         value={data.legajo}
                                         onChange={(e) => setData('legajo', e.target.value)}
                                         placeholder="LEG-0000"
-                                        required
                                         className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
                                     />
                                 </div>
@@ -224,7 +223,7 @@ export default function Register() {
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
-                                    Matrícula
+                                    Matrícula (opcional)
                                 </label>
                                 <div className="mt-1.5 relative rounded-xl shadow-xs">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">

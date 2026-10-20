@@ -58,7 +58,7 @@ export default function CompaniesCreate({ inspectors = [] }) {
     const { data, setData, post, processing, errors } = useForm({
         business_name: '',
         tax_id: '',
-        industry_sector: 'Metalmecánica',
+        industry_sector: 'Industria y Comercio',
         address: '',
         phone: '',
         email: '',
@@ -73,14 +73,9 @@ export default function CompaniesCreate({ inspectors = [] }) {
     });
 
     const sectors = [
-        'Metalmecánica',
-        'Construcción y Obra Civil',
-        'Agroindustria & Alimentos',
-        'Química & Farmacéutica',
-        'Minería & Extracción',
-        'Logística y Transporte',
-        'Servicios de Salud',
-        'Comercio y Servicios',
+        'Industria y Comercio',
+        'Minería',
+        'Construcción Agropecuaria',
     ];
 
     const [pdfState, setPdfState] = useState('idle'); // idle | loading | success | empty | error

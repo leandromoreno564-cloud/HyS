@@ -37,7 +37,7 @@ class AuthController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'dni' => ['required', 'string', 'max:20', 'regex:/^\d+$/', 'unique:users'],
-            'legajo' => ['required', 'string', 'max:50', 'unique:users'],
+            'legajo' => ['nullable', 'string', 'max:50', 'unique:users'],
             'password' => ['required', 'confirmed', Password::min(8)],
             'phone' => ['nullable', 'string', 'max:50', 'regex:/^\d+$/'],
             'license_number' => ['nullable', 'string', 'max:100'],

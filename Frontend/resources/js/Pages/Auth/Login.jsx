@@ -15,10 +15,6 @@ export default function Login() {
         post('/login');
     };
 
-    const fillCredentials = (email, pass) => {
-        setData({ ...data, email, password: pass });
-    };
-
     return (
         <div className="min-h-screen flex bg-[#0b1322]">
             {/* Panel izquierdo: foto + branding (solo desktop) */}
@@ -136,28 +132,6 @@ export default function Login() {
                             </span>
                         </div>
 
-                        {/* Demo credentials helper */}
-                        <div className="mt-4 pt-3 border-t border-white/10">
-                            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block mb-2 text-center">
-                                Acceso Rápido de Prueba (Demo)
-                            </span>
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => fillCredentials('admin@hys.com', 'admin123')}
-                                    className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-center transition-colors border border-white/10"
-                                >
-                                    Como Admin
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => fillCredentials('inspector@hys.com', 'inspector123')}
-                                    className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-center transition-colors border border-white/10"
-                                >
-                                    Como Inspector
-                                </button>
-                            </div>
-                        </div>
                     </div>
 
                     <p className="mt-3 text-center text-[11px] text-slate-500">
