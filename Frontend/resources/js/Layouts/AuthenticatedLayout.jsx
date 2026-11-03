@@ -64,12 +64,6 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             icon: Users, 
             active: currentPath.startsWith('/users') 
         });
-        navigation.push({
-            name: 'Portada (editar)',
-            href: '/',
-            icon: Globe,
-            active: false
-        });
     }
 
     const handleLogout = (e) => {
@@ -182,17 +176,15 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                         <span>Ayuda (Manual de la plataforma)</span>
                     </a>
 
-                    {/* Para el rol de técnico, la portada abajo al último de las opciones */}
-                    {!isAdmin && (
-                        <Link
-                            href="/"
-                            onClick={() => setSidebarOpen(false)}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all"
-                        >
-                            <Globe className="w-4 h-4 text-slate-400" />
-                            <span>Portada</span>
-                        </Link>
-                    )}
+                    {/* Portada abajo al último de las opciones para todos los usuarios */}
+                    <Link
+                        href="/"
+                        onClick={() => setSidebarOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all"
+                    >
+                        <Globe className="w-4 h-4 text-slate-400" />
+                        <span>{isAdmin ? 'Portada (editar)' : 'Portada'}</span>
+                    </Link>
                 </nav>
 
             </aside>

@@ -5,7 +5,8 @@ import {
     ArrowRight,
     Check,
     CheckCircle2,
-    Download,
+    ChevronLeft,
+    ChevronRight,
     FileText,
     Film,
     LayoutDashboard,
@@ -42,14 +43,14 @@ const LEGACY_TEXTS = {
 
 const TECHNICAL_DEFAULTS = {
     brand_name: 'HyS Control',
-    hero_kicker: 'GESTIÓN TÉCNICA · LEY 19.587 / DEC. 351/79',
+    hero_kicker: 'GESTIÓN TÉCNICA · LEY 19.587 / DEC. 351/79 · DEC. 249/07',
     hero_title: 'Control de relevamientos e inspecciones',
     hero_highlight: 'de Higiene y Seguridad.',
     hero_text:
         'Registro de establecimientos, actas de verificación por categoría normativa, seguimiento de desvíos con fechas de regulación y emisión de informes técnicos en PDF.',
     hero_cta: 'Ingresar al sistema',
     footer_left: '© 2026 HyS Control — Sistema de Higiene y Seguridad Laboral',
-    footer_right: 'Ley 19.587 · Decreto 351/79',
+    footer_right: 'Ley 19.587 · Dec. 351/79 · Dec. 249/07 · Dec. 911/96',
 };
 
 function resolveSetting(settings, key) {
@@ -74,37 +75,186 @@ const PORTAL_FIELDS = [
     ['footer_right', 'Pie de página (derecha)'],
 ];
 
-const SAMPLE_CHECKLIST = [
+/* ------------------------------------------------------------------ */
+/* Ejemplos de Relevamientos y Formularios (Industria, Minería, Obra)  */
+/* ------------------------------------------------------------------ */
+
+const SAMPLE_FORMS = [
     {
-        code: '01.04',
-        category: 'Instalaciones Eléctricas',
-        item: 'Protección diferencial y puesta a tierra con protocolo vigente',
-        status: 'ok',
-        statusLabel: 'SÍ · CUMPLE',
+        id: 'form-18',
+        title: 'Formulario 18 · Relevamiento General (RGRL)',
+        badge: 'DECRETO 351/79 · RES. 463/09',
+        company: 'Metalúrgica del Sur S.A.',
+        cuit: '30-71429810-4',
+        sector: 'Industria · Nave de Mecanizado',
+        summaryStatus: '1 ítem en seguimiento',
+        summaryTone: 'amber',
+        footerNote: 'Evidencia fotográfica y firma digital · Hoja 1 de 4',
+        items: [
+            {
+                code: '01.04',
+                category: 'Instalaciones Eléctricas',
+                item: 'Protección diferencial (≤ 30 mA) y puesta a tierra con protocolo vigente',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+            {
+                code: '03.02',
+                category: 'Protección contra Incendios',
+                item: 'Dotación y control de carga de extintores manuales según carga de fuego',
+                status: 'no',
+                statusLabel: 'NO · REGULARIZAR',
+                note: 'Recarga pendiente de 2 unidades ABC 5 kg en sector depósito.',
+                dueDate: 'Regulación: 18/11/2026',
+                agreed: true,
+            },
+            {
+                code: '04.01',
+                category: 'Medios de Escape y Evacuación',
+                item: 'Señalización reglamentaria y salidas de emergencia libres de obstrucción',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+            {
+                code: '06.03',
+                category: 'Elementos de Protección Personal (Res. 299/11)',
+                item: 'Constancia firmada de entrega de calzado de seguridad y protección auditiva',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+        ],
     },
     {
-        code: '03.02',
-        category: 'Protección contra Incendios',
-        item: 'Dotación y control de carga de extintores manuales según riesgo',
-        status: 'no',
-        statusLabel: 'NO · REGULARIZAR',
-        note: 'Recarga pendiente de 2 unidades ABC 5 kg en sector depósito.',
-        dueDate: 'Regulación: 18/11/2026',
-        agreed: true,
+        id: 'mineria-249',
+        title: 'Acta de Seguridad Minera · Labores y Planta',
+        badge: 'DECRETO 249/07 · MINERÍA',
+        company: 'Minera Andina del Oeste S.A.',
+        cuit: '30-68914022-9',
+        sector: 'Yacimiento · Trituración Primaria',
+        summaryStatus: '1 desvío crítico en plazo',
+        summaryTone: 'amber',
+        footerNote: 'Monitoreo de gases, fortificación y polvos · Hoja 2 de 4',
+        items: [
+            {
+                code: '02.01',
+                category: 'Ventilación y Gases en Labor',
+                item: 'Caudal de aire mínimo y monitoreo continuo de O₂, CO y NO₂ en frente activo',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+            {
+                code: '05.04',
+                category: 'Control de Polvo y Riego',
+                item: 'Operatividad de aspersores y supresión húmeda en descarga de chancadora',
+                status: 'no',
+                statusLabel: 'NO · REGULARIZAR',
+                note: 'Bomba de nebulización N° 2 con baja presión en tolva de recepción.',
+                dueDate: 'Regulación: 08/11/2026',
+                agreed: true,
+            },
+            {
+                code: '07.02',
+                category: 'Fortificación y Estabilidad de Taludes',
+                item: 'Inspección geotécnica de bancos, mallas de contención y bermas de seguridad',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+            {
+                code: '09.01',
+                category: 'Polvorines y Transporte de Explosivos',
+                item: 'Autorización ANMaC vigente, descarga estática y registro diario de consumo',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+        ],
     },
     {
-        code: '04.01',
-        category: 'Medios de Escape y Evacuación',
-        item: 'Señalización reglamentaria y salidas de emergencia libres de obstrucción',
-        status: 'ok',
-        statusLabel: 'SÍ · CUMPLE',
+        id: 'iper-loto',
+        title: 'Matriz IPER y Permiso de Trabajo Seguro (PET)',
+        badge: 'BLOQUEO LOTO · RES. 81/19',
+        company: 'Cía. Minera Cerro Blanco S.R.L.',
+        cuit: '30-70993418-1',
+        sector: 'Planta de Molienda · Molino SAG',
+        summaryStatus: '1 observación preventiva',
+        summaryTone: 'amber',
+        footerNote: 'Control de energías peligrosas y trabajo en altura · Hoja 3 de 4',
+        items: [
+            {
+                code: '01.01',
+                category: 'Aislamiento y Bloqueo (LOTO)',
+                item: 'Candados personales, pinzas multiplicadoras y prueba de energía cero en CCM',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+            {
+                code: '02.03',
+                category: 'Trabajo en Altura y Espacios Confinados',
+                item: 'Permiso PET firmado, línea de vida certificada y vigía permanente en acceso',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+            {
+                code: '04.02',
+                category: 'Vialidad Interna y Equipos Pesados',
+                item: 'Pértiga luminosa, baliza estroboscópica, alarma de retroceso y cuñas de bloqueo',
+                status: 'no',
+                statusLabel: 'NO · REGULARIZAR',
+                note: 'Reemplazar pértiga fracturada en camioneta de apoyo interno Int. #14.',
+                dueDate: 'Regulación: 05/11/2026',
+                agreed: true,
+            },
+            {
+                code: '08.05',
+                category: 'Vigilancia de Agentes de Riesgo (SVCC)',
+                item: 'Dosimetría de ruido y relevamiento de sílice libre cristalina semestral',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+        ],
     },
     {
-        code: '06.03',
-        category: 'Elementos de Protección Personal',
-        item: 'Constancia firmada de entrega de calzado de seguridad y protección auditiva',
-        status: 'ok',
-        statusLabel: 'SÍ · CUMPLE',
+        id: 'obra-911',
+        title: 'Formulario B · Relevamiento de Obras y Montaje',
+        badge: 'DECRETO 911/96 · RES. 51/97',
+        company: 'Constructora Vial Cuyana S.A.',
+        cuit: '30-71104892-6',
+        sector: 'Obra Civil · Subestación y Excavación',
+        summaryStatus: '1 ítem en seguimiento',
+        summaryTone: 'amber',
+        footerNote: 'Programa de Seguridad aprobado por ART · Hoja 4 de 4',
+        items: [
+            {
+                code: '01.02',
+                category: 'Legajo Técnico y Programa de Seguridad',
+                item: 'Aviso de obra vigente y Programa de Seguridad aprobado por la ART',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+            {
+                code: '03.05',
+                category: 'Andamios, Silletas y Plataformas',
+                item: 'Superficie completa antideslizante, rodapiés y barandas a 0,50 m y 1,00 m',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+            {
+                code: '05.01',
+                category: 'Excavaciones y Submuraciones',
+                item: 'Entibamiento reglamentario, escalera de acceso y vallado perimetral rígido',
+                status: 'no',
+                statusLabel: 'NO · REGULARIZAR',
+                note: 'Reforzar vallado rígido y cartel de advertencia en zanja sector norte.',
+                dueDate: 'Regulación: 10/11/2026',
+                agreed: true,
+            },
+            {
+                code: '06.04',
+                category: 'Tableros Eléctricos de Obra',
+                item: 'Gabinete estanco IP65 con disyuntor diferencial, llave térmica y parada de emergencia',
+                status: 'ok',
+                statusLabel: 'SÍ · CUMPLE',
+            },
+        ],
     },
 ];
 
@@ -279,8 +429,17 @@ export default function Index({ settings: s = {}, canEdit = false }) {
 
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [toast, setToast] = useState(null);
+    const [activeSlide, setActiveSlide] = useState(0);
 
     const closeSettings = useCallback(() => setSettingsOpen(false), []);
+
+    const prevSlide = useCallback(() => {
+        setActiveSlide((prev) => (prev === 0 ? SAMPLE_FORMS.length - 1 : prev - 1));
+    }, []);
+
+    const nextSlide = useCallback(() => {
+        setActiveSlide((prev) => (prev === SAMPLE_FORMS.length - 1 ? 0 : prev + 1));
+    }, []);
 
     useEffect(() => {
         const msg = flash?.success || flash?.error;
@@ -302,14 +461,14 @@ export default function Index({ settings: s = {}, canEdit = false }) {
     const customMedia = s.hero_media ? mediaUrl(s.hero_media) : null;
     const heroIsVideo = customMedia ? s.hero_media_type === 'video' || isVideoUrl(s.hero_media) : false;
 
+    const currentForm = SAMPLE_FORMS[activeSlide] || SAMPLE_FORMS[0];
+
     return (
         <div className="relative w-full min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col justify-between overflow-x-hidden font-sans selection:bg-blue-600 selection:text-white">
             <Head title="Higiene y Seguridad" />
 
-            {/* Línea institucional superior de 4px */}
-            <div className="w-full h-1 bg-slate-900 flex">
-                <div className="w-48 h-full bg-blue-600" />
-            </div>
+            {/* Línea institucional superior de 4px en un solo color negro */}
+            <div className="w-full h-1 bg-slate-900" />
 
             {/* Medio de fondo opcional si el admin subió uno */}
             {customMedia && (
@@ -390,10 +549,10 @@ export default function Index({ settings: s = {}, canEdit = false }) {
                             </div>
                         </div>
 
-                        {/* Título sólido sin degradados artificiales */}
+                        {/* Título sólido en un solo color negro */}
                         <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-bold text-slate-900 leading-[1.15] tracking-tight">
                             {heroTitle}{' '}
-                            <span className="text-blue-700">
+                            <span>
                                 {heroHighlight}
                             </span>
                         </h1>
@@ -404,7 +563,7 @@ export default function Index({ settings: s = {}, canEdit = false }) {
                             </p>
                         )}
 
-                        {/* Acciones principales */}
+                        {/* Acción principal (sin botón de Manual de usuario) */}
                         <div className="mt-7 flex flex-wrap items-center gap-3">
                             <Link
                                 href={user ? '/dashboard' : '/login'}
@@ -413,20 +572,9 @@ export default function Index({ settings: s = {}, canEdit = false }) {
                                 {user ? 'Ir al panel de control' : heroCta}
                                 <ArrowRight className="w-4 h-4" />
                             </Link>
-
-                            <a
-                                id="ayuda"
-                                href="/manual/Manual-de-usuario-HyS.pdf"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-medium border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 transition"
-                            >
-                                <Download className="w-4 h-4 text-slate-500" />
-                                Manual de usuario (PDF)
-                            </a>
                         </div>
 
-                        {/* Especificaciones operativas en texto limpio (sin tarjetas repetitivas) */}
+                        {/* Especificaciones operativas en texto limpio */}
                         <dl className="mt-9 pt-6 border-t border-slate-200 grid sm:grid-cols-3 gap-5 text-xs">
                             <div>
                                 <dt className="font-bold text-slate-900">Importación documental</dt>
@@ -449,110 +597,159 @@ export default function Index({ settings: s = {}, canEdit = false }) {
                         </dl>
                     </div>
 
-                    {/* Columna Derecha: Vista previa de una Planilla / Acta de Relevamiento real */}
+                    {/* Columna Derecha: Carrusel de Planillas / Actas de Relevamiento con flechas a la mitad */}
                     <div className="lg:col-span-6">
-                        <div className="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
-                            {/* Encabezado técnico de planilla */}
-                            <div className="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                    <FileText className="w-4 h-4 text-blue-400 shrink-0" />
-                                    <span className="text-xs font-bold uppercase tracking-wider truncate">
-                                        Planilla de Relevamiento General
-                                    </span>
-                                </div>
-                                <span className="font-mono text-[11px] text-slate-300 bg-slate-800 px-2.5 py-0.5 rounded border border-slate-700 shrink-0">
-                                    DECRETO 351/79
-                                </span>
-                            </div>
+                        <div className="relative px-4 sm:px-6">
+                            {/* Flecha Izquierda a la mitad del relevamiento */}
+                            <button
+                                type="button"
+                                onClick={prevSlide}
+                                aria-label="Relevamiento anterior"
+                                title="Ver relevamiento anterior"
+                                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-slate-900 text-white hover:bg-blue-700 border-2 border-white shadow-lg flex items-center justify-center transition cursor-pointer"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
 
-                            {/* Datos del establecimiento de muestra */}
-                            <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 grid grid-cols-3 gap-3 text-xs">
-                                <div>
-                                    <span className="text-[10px] font-semibold uppercase text-slate-400 block">
-                                        Establecimiento
-                                    </span>
-                                    <span className="font-semibold text-slate-800 truncate block">
-                                        Metalúrgica del Sur S.A.
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-semibold uppercase text-slate-400 block">
-                                        CUIT
-                                    </span>
-                                    <span className="font-mono text-slate-700 block">
-                                        30-71429810-4
-                                    </span>
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-semibold uppercase text-slate-400 block">
-                                        Estado general
-                                    </span>
-                                    <span className="font-semibold text-amber-700 block">
-                                        1 ítem en seguimiento
-                                    </span>
-                                </div>
-                            </div>
+                            {/* Flecha Derecha a la mitad del relevamiento */}
+                            <button
+                                type="button"
+                                onClick={nextSlide}
+                                aria-label="Siguiente relevamiento"
+                                title="Ver siguiente relevamiento"
+                                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-slate-900 text-white hover:bg-blue-700 border-2 border-white shadow-lg flex items-center justify-center transition cursor-pointer"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
 
-                            {/* Filas reales del checklist */}
-                            <div className="divide-y divide-slate-200">
-                                {SAMPLE_CHECKLIST.map((row) => (
-                                    <div key={row.code} className="px-5 py-3 text-xs">
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-mono text-[11px] font-semibold text-slate-400">
-                                                        #{row.code}
-                                                    </span>
-                                                    <span className="text-[11px] font-semibold text-slate-500">
-                                                        {row.category}
-                                                    </span>
+                            {/* Hoja de Relevamiento */}
+                            <div className="rounded-xl bg-white border border-slate-300 shadow-sm overflow-hidden">
+                                {/* Encabezado técnico de planilla */}
+                                <div className="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <FileText className="w-4 h-4 text-blue-400 shrink-0" />
+                                        <span className="text-xs font-bold uppercase tracking-wider truncate">
+                                            {currentForm.title}
+                                        </span>
+                                    </div>
+                                    <span className="font-mono text-[10px] sm:text-[11px] text-slate-200 bg-slate-800 px-2.5 py-0.5 rounded border border-slate-700 shrink-0">
+                                        {currentForm.badge}
+                                    </span>
+                                </div>
+
+                                {/* Selector rápido superior de ejemplos */}
+                                <div className="px-5 py-2 bg-slate-100 border-b border-slate-200 flex items-center justify-between gap-2 text-[11px]">
+                                    <span className="font-medium text-slate-600 truncate">
+                                        Sector: <strong className="text-slate-800">{currentForm.sector}</strong>
+                                    </span>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        {SAMPLE_FORMS.map((form, idx) => (
+                                            <button
+                                                key={form.id}
+                                                type="button"
+                                                onClick={() => setActiveSlide(idx)}
+                                                className={`px-2 py-0.5 rounded font-mono text-[10px] font-semibold transition cursor-pointer ${
+                                                    idx === activeSlide
+                                                        ? 'bg-slate-900 text-white'
+                                                        : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-200'
+                                                }`}
+                                                title={form.title}
+                                            >
+                                                {idx + 1}/{SAMPLE_FORMS.length}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Datos del establecimiento de muestra */}
+                                <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 grid grid-cols-3 gap-3 text-xs">
+                                    <div>
+                                        <span className="text-[10px] font-semibold uppercase text-slate-400 block">
+                                            Establecimiento
+                                        </span>
+                                        <span className="font-semibold text-slate-800 truncate block">
+                                            {currentForm.company}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-semibold uppercase text-slate-400 block">
+                                            CUIT
+                                        </span>
+                                        <span className="font-mono text-slate-700 block">
+                                            {currentForm.cuit}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-semibold uppercase text-slate-400 block">
+                                            Estado general
+                                        </span>
+                                        <span className="font-semibold text-amber-700 block">
+                                            {currentForm.summaryStatus}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Filas reales del checklist */}
+                                <div className="divide-y divide-slate-200">
+                                    {currentForm.items.map((row) => (
+                                        <div key={`${currentForm.id}-${row.code}`} className="px-5 py-3 text-xs">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-mono text-[11px] font-semibold text-slate-400">
+                                                            #{row.code}
+                                                        </span>
+                                                        <span className="text-[11px] font-semibold text-slate-500">
+                                                            {row.category}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-0.5 font-medium text-slate-900">
+                                                        {row.item}
+                                                    </p>
                                                 </div>
-                                                <p className="mt-0.5 font-medium text-slate-900">
-                                                    {row.item}
-                                                </p>
+
+                                                {row.status === 'ok' ? (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                                                        <CheckCircle2 className="w-3 h-3" />
+                                                        {row.statusLabel}
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-300 shrink-0">
+                                                        <AlertCircle className="w-3 h-3" />
+                                                        {row.statusLabel}
+                                                    </span>
+                                                )}
                                             </div>
 
-                                            {row.status === 'ok' ? (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
-                                                    <CheckCircle2 className="w-3 h-3" />
-                                                    {row.statusLabel}
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-300 shrink-0">
-                                                    <AlertCircle className="w-3 h-3" />
-                                                    {row.statusLabel}
-                                                </span>
+                                            {row.note && (
+                                                <div className="mt-2 pl-3 border-l-2 border-amber-400 bg-amber-50/50 py-1.5 px-2.5 rounded-r text-[11px] text-slate-700">
+                                                    <div className="font-medium text-slate-800">
+                                                        Recomendación: {row.note}
+                                                    </div>
+                                                    <div className="mt-0.5 flex flex-wrap items-center gap-3 text-slate-500 font-mono text-[10px]">
+                                                        <span>{row.dueDate}</span>
+                                                        {row.agreed && <span>· Acordado con titular</span>}
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
+                                    ))}
+                                </div>
 
-                                        {row.note && (
-                                            <div className="mt-2 pl-3 border-l-2 border-amber-400 bg-amber-50/50 py-1.5 px-2.5 rounded-r text-[11px] text-slate-700">
-                                                <div className="font-medium text-slate-800">
-                                                    Recomendación: {row.note}
-                                                </div>
-                                                <div className="mt-0.5 flex flex-wrap items-center gap-3 text-slate-500 font-mono text-[10px]">
-                                                    <span>{row.dueDate}</span>
-                                                    {row.agreed && <span>· Acordado con titular</span>}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Pie de planilla */}
-                            <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs">
-                                <span className="inline-flex items-center gap-1.5 text-slate-500">
-                                    <Paperclip className="w-3.5 h-3.5 text-slate-400" />
-                                    Evidencia fotográfica y firma digital
-                                </span>
-                                <Link
-                                    href={user ? '/dashboard' : '/login'}
-                                    className="font-semibold text-blue-700 hover:text-blue-800 inline-flex items-center gap-1"
-                                >
-                                    {user ? 'Abrir panel' : 'Acceder al sistema'}
-                                    <ArrowRight className="w-3.5 h-3.5" />
-                                </Link>
+                                {/* Pie de planilla */}
+                                <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs">
+                                    <span className="inline-flex items-center gap-1.5 text-slate-500 truncate">
+                                        <Paperclip className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                        <span className="truncate">{currentForm.footerNote}</span>
+                                    </span>
+                                    <Link
+                                        href={user ? '/dashboard' : '/login'}
+                                        className="font-semibold text-blue-700 hover:text-blue-800 inline-flex items-center gap-1 shrink-0"
+                                    >
+                                        {user ? 'Abrir panel' : 'Acceder al sistema'}
+                                        <ArrowRight className="w-3.5 h-3.5" />
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </div>
