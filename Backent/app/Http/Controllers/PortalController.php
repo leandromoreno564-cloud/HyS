@@ -22,25 +22,10 @@ class PortalController extends Controller
     public function index()
     {
         $isAdmin = Auth::check() && Auth::user()->isAdmin();
-
-        $query = PortalItem::orderBy('sort_order')->orderBy('id');
-        if (!$isAdmin) {
-            $query->where('is_active', true);
-        }
-        $all = $query->get()->groupBy('section');
-
-        $items = [];
-        foreach (PortalItem::SECTIONS as $section) {
-            $items[$section] = ($all[$section] ?? collect())->values();
-        }
-
-        // Diseño libre de la portada (posiciones de texto, fotos y fondo), guardado como JSON
         $settings = PortalSetting::allWithDefaults();
-        $settings['layout'] = PortalSetting::read('layout') ?? '';
 
         return Inertia::render('Portal/Index', [
             'settings' => $settings,
-            'items' => $items,
             'canEdit' => $isAdmin,
         ]);
     }

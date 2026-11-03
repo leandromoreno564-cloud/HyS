@@ -29,6 +29,7 @@ export default function AuthenticatedLayout({ children, title = '' }) {
     // En las pantallas de checklist el asistente propio del relevamiento ya ocupa ese lugar
     const isChecklistPage = /(^|\/)Checklist$/.test(page.component || '');
     const currentUser = auth?.user;
+    const isAdmin = currentUser?.role === 'admin';
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [dismissFlash, setDismissFlash] = useState(false);
@@ -56,29 +57,20 @@ export default function AuthenticatedLayout({ children, title = '' }) {
         },
     ];
 
-    if (currentUser?.role === 'admin') {
+    if (isAdmin) {
         navigation.push({ 
             name: 'Usuarios & Técnicos', 
             href: '/users', 
             icon: Users, 
             active: currentPath.startsWith('/users') 
         });
+        navigation.push({
+            name: 'Portada (editar)',
+            href: '/',
+            icon: Globe,
+            active: false
+        });
     }
-
-    // Acceso a la portada pública (el admin entra para editarla)
-    navigation.push({
-        name: currentUser?.role === 'admin' ? 'Portada (editar)' : 'Portada',
-        href: '/',
-        icon: Globe,
-        active: false
-    });
-
-    navigation.push({
-        name: 'Ayuda',
-        href: '/#ayuda',
-        icon: LifeBuoy,
-        active: false
-    });
 
     const handleLogout = (e) => {
         e.preventDefault();
@@ -128,9 +120,9 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                 {/* Role badge */}
                 <div className="px-5 py-3 border-b border-slate-800/80 bg-slate-900/50">
                     <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${currentUser?.role === 'admin' ? 'bg-indigo-400' : 'bg-emerald-400'}`} />
+                        <div className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-indigo-400' : 'bg-emerald-400'}`} />
                         <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                            {currentUser?.role === 'admin' ? 'Administrador' : 'Inspector Técnico'}
+                            {isAdmin ? 'Administrador' : 'Inspector Técnico'}
                         </span>
                     </div>
                     {currentUser?.license_number && (
@@ -174,6 +166,33 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                         <FileText className="w-4 h-4 text-slate-400" />
                         <span>Exportar a Excel (CSV)</span>
                     </a>
+
+                    <div className="pt-4 px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        Soporte & Enlaces
+                    </div>
+
+                    {/* En Ayuda está el manual de la plataforma */}
+                    <a
+                        href="/manual/Manual-de-usuario-HyS.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all"
+                    >
+                        <LifeBuoy className="w-4 h-4 text-slate-400" />
+                        <span>Ayuda (Manual de la plataforma)</span>
+                    </a>
+
+                    {/* Para el rol de técnico, la portada abajo al último de las opciones */}
+                    {!isAdmin && (
+                        <Link
+                            href="/"
+                            onClick={() => setSidebarOpen(false)}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all"
+                        >
+                            <Globe className="w-4 h-4 text-slate-400" />
+                            <span>Portada</span>
+                        </Link>
+                    )}
                 </nav>
 
             </aside>

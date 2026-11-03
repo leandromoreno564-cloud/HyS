@@ -162,7 +162,7 @@ export const NODES = {
         next: ['ingreso', 'panel', 'empresas', 'relevamiento', 'seguimiento', 'pdf', 'medidas', 'calendario', 'notificaciones', 'cuenta', 'exportar', 'usuarios', 'portada', 'seguridad', 'problemas'],
         go: [
             { label: 'Descargar el manual (PDF)', href: '/manual/Manual-de-usuario-HyS.pdf', external: true },
-            { label: 'Verlo en la portada', href: '/#ayuda' },
+            { label: 'Ir a la portada', href: '/' },
         ],
     },
 
@@ -277,7 +277,7 @@ export const NODES = {
         keywords: ['riesgos', 'peligros', 'peligro', 'fisicos', 'quimicos', 'biologicos', 'ergonomicos', 'psicosociales', 'mecanicos', 'electricos', 'caidas'],
         text: 'Los grupos de riesgos más comunes:\n• Físicos: ruido, vibraciones, temperaturas extremas, iluminación.\n• Químicos: gases, vapores, polvos y líquidos peligrosos.\n• Biológicos: virus, bacterias y hongos.\n• Ergonómicos: posturas forzadas, movimientos repetitivos, cargas.\n• Psicosociales: estrés, sobrecarga y violencia laboral.\n• Mecánicos: máquinas y herramientas.\n• Eléctricos: contactos y cables dañados.\n• Incendio y explosión.\n• Caídas de altura y a nivel.\n\nEn la portada, sección Riesgos, está el detalle de cada uno.',
         next: ['ciclo', 'epp'],
-        go: [{ label: 'Ver Riesgos en la portada', href: '/#riesgos' }],
+        go: [{ label: 'Ir a la portada', href: '/' }],
     },
 
     problemas: {
@@ -290,7 +290,7 @@ export const NODES = {
         label: 'Hablar con una persona',
         keywords: ['contacto', 'ayuda humana', 'administrador', 'soporte', 'hablar con alguien', 'ayuda'],
         text: 'Si no pude resolver tu duda, consultá con un administrador de la plataforma. También tenés el manual de usuario completo en la portada.',
-        go: [{ label: 'Abrir el manual de ayuda', href: '/#ayuda' }],
+        go: [{ label: 'Descargar el manual (PDF)', href: '/manual/Manual-de-usuario-HyS.pdf', external: true }],
     },
 
     saludo: {

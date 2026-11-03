@@ -19,14 +19,14 @@ class PortalSetting extends Model
     ];
 
     public const DEFAULTS = [
-        'brand_name' => 'HIGIENE Y SEGURIDAD',
+        'brand_name' => 'HyS Control',
         'section_order' => '',
 
-        'hero_kicker' => 'Prevención · Protección · Concientización',
-        'hero_title' => 'Seguridad que',
-        'hero_highlight' => 'empieza con vos.',
-        'hero_text' => "Información, recursos y buenas prácticas para construir ambientes de trabajo más seguros, saludables y responsables.\n\nPrevenir los riesgos, cuidar a las personas y cumplir con la normativa es una tarea de todos los días, y empieza por cada uno de nosotros.",
-        'hero_cta' => 'Descubrí nuestros recursos',
+        'hero_kicker' => 'GESTIÓN TÉCNICA · LEY 19.587 / DEC. 351/79',
+        'hero_title' => 'Control de relevamientos e inspecciones',
+        'hero_highlight' => 'de Higiene y Seguridad.',
+        'hero_text' => 'Registro de establecimientos, actas de verificación por categoría normativa, seguimiento de desvíos con fechas de regulación y emisión de informes técnicos en PDF.',
+        'hero_cta' => 'Ingresar al sistema',
         'hero_media' => '',
         'hero_media_type' => '',
 
@@ -73,8 +73,8 @@ class PortalSetting extends Model
         'cta_title' => 'Sumate a una cultura de prevención',
         'cta_text' => 'Ingresá a la plataforma para gestionar inspecciones, relevamientos y el calendario de actividades de tu equipo, todo en un solo lugar.',
 
-        'footer_left' => '© 2026 Higiene y Seguridad',
-        'footer_right' => 'Prevención · Protección · Bienestar',
+        'footer_left' => '© 2026 HyS Control — Sistema de Higiene y Seguridad Laboral',
+        'footer_right' => 'Ley 19.587 · Decreto 351/79',
     ];
 
     /** Claves de texto editables desde el formulario (excluye el medio del hero). */

@@ -1,0 +1,24 @@
+# Base de datos MySQL aislada solo para desarrollo local.
+# No toca compose.yaml (compartido). Uso:
+#   docker compose -f compose.local.yaml up -d
+services:
+  mysql-local:
+    image: mysql:8.4
+    container_name: hys_mysql_local
+    environment:
+      MYSQL_ROOT_PASSWORD: ${LOCAL_DB_ROOT_PASSWORD:-root_local}
+      MYSQL_DATABASE: ${LOCAL_DB_NAME:-hys_local}
+      MYSQL_USER: ${LOCAL_DB_USER:-hys}
+      MYSQL_PASSWORD: ${LOCAL_DB_PASSWORD:-hys_local}
+    ports:
+      - "127.0.0.1:3307:3306" # 3307 evita choques con un MySQL nativo en 3306
+    volumes:
+      - hys_mysql_local_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  hys_mysql_local_data:
