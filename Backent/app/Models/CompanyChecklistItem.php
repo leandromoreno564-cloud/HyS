@@ -19,6 +19,9 @@ class CompanyChecklistItem extends Model
         'reference',
         'status',
         'description',
+        'regulation_date',
+        'correction_notes',
+        'review_status',
         'photo_1',
         'photo_2',
     ];
@@ -27,6 +30,7 @@ class CompanyChecklistItem extends Model
     {
         return [
             'item_number' => 'integer',
+            'regulation_date' => 'date',
         ];
     }
 

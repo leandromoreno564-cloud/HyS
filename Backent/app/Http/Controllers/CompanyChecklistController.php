@@ -121,6 +121,9 @@ class CompanyChecklistController extends Controller
             'items.*.reference' => ['nullable', 'string'],
             'items.*.status' => ['nullable', 'in:SI,NO,NO_APLICA'],
             'items.*.description' => ['nullable', 'string'],
+            'items.*.regulation_date' => ['nullable', 'date'],
+            'items.*.correction_notes' => ['nullable', 'string'],
+            'items.*.review_status' => ['nullable', 'string', 'in:en_revision,revisado'],
         ]);
 
         $checklist = DB::transaction(function () use ($company, $data) {
@@ -139,6 +142,9 @@ class CompanyChecklistController extends Controller
                     'reference' => $item['reference'] ?? null,
                     'status' => $item['status'] ?? null,
                     'description' => $item['description'] ?? null,
+                    'regulation_date' => !empty($item['regulation_date']) ? substr($item['regulation_date'], 0, 10) : null,
+                    'correction_notes' => $item['correction_notes'] ?? null,
+                    'review_status' => $item['review_status'] ?? null,
                 ]);
             }
 
@@ -166,7 +172,14 @@ class CompanyChecklistController extends Controller
             'reference' => ['sometimes', 'nullable', 'string'],
             'status' => ['sometimes', 'nullable', 'in:SI,NO,NO_APLICA'],
             'description' => ['sometimes', 'nullable', 'string'],
+            'regulation_date' => ['sometimes', 'nullable', 'date'],
+            'correction_notes' => ['sometimes', 'nullable', 'string'],
+            'review_status' => ['sometimes', 'nullable', 'string', 'in:en_revision,revisado'],
         ]);
+
+        if (array_key_exists('regulation_date', $data) && !empty($data['regulation_date'])) {
+            $data['regulation_date'] = substr($data['regulation_date'], 0, 10);
+        }
 
         $item->update($data);
 
@@ -467,6 +480,9 @@ class CompanyChecklistController extends Controller
             'reference' => $it->reference,
             'status' => $it->status,
             'description' => $it->description,
+            'regulation_date' => $it->regulation_date ? $it->regulation_date->format('d/m/Y') : null,
+            'correction_notes' => $it->correction_notes,
+            'review_status' => $it->review_status,
             'photos' => array_values(array_filter([
                 $this->imageDataUri($it->photo_1),
                 $this->imageDataUri($it->photo_2),

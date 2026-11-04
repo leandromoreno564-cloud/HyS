@@ -35,6 +35,24 @@
         .photos img { border: 1px solid #94a3b8; }
         .photo-cap { font-size: 7px; color: #64748b; }
 
+        .regulation-box {
+            margin-top: 4px;
+            padding: 4px 6px;
+            background: #fffbeb;
+            border-left: 3px solid #f59e0b;
+            font-size: 8px;
+        }
+        .badge-rev {
+            display: inline-block;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 7px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-revision { background: #fed7aa; color: #9a3412; }
+        .badge-revisado { background: #bbf7d0; color: #166534; }
+
         .footer { position: fixed; bottom: -32px; left: 0; right: 0; text-align: center; font-size: 7.5px; color: #64748b; }
         .pagenum:before { content: counter(page); }
     </style>
@@ -96,13 +114,31 @@
                             <td class="mark {{ $it['status'] === 'NO_APLICA' ? 'on-na' : '' }}">{{ $it['status'] === 'NO_APLICA' ? 'X' : '' }}</td>
                             <td class="ref">{{ $it['reference'] }}</td>
                         </tr>
-                        @if (!empty($it['description']) || count($it['photos']) > 0)
+                        @if (!empty($it['description']) || !empty($it['regulation_date']) || !empty($it['correction_notes']) || count($it['photos']) > 0)
                             <tr>
                                 <td></td>
                                 <td class="obs" colspan="5">
                                     @if (!empty($it['description']))
                                         <div><span class="obs-label">Observación:</span> {!! nl2br(e($it['description'])) !!}</div>
                                     @endif
+
+                                    @if (!empty($it['regulation_date']) || !empty($it['correction_notes']) || !empty($it['review_status']))
+                                        <div class="regulation-box">
+                                            <div style="margin-bottom: 2px;">
+                                                <strong style="color: #92400e;">Fecha de Regulación:</strong> {{ $it['regulation_date'] ?? 'No especificada' }}
+                                                @if (!empty($it['review_status']))
+                                                    &nbsp;|&nbsp;
+                                                    <span class="badge-rev {{ $it['review_status'] === 'revisado' ? 'badge-revisado' : 'badge-revision' }}">
+                                                        {{ $it['review_status'] === 'revisado' ? 'Revisado' : 'En Revisión' }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            @if (!empty($it['correction_notes']))
+                                                <div><strong style="color: #92400e;">A corregir:</strong> {!! nl2br(e($it['correction_notes'])) !!}</div>
+                                            @endif
+                                        </div>
+                                    @endif
+
                                     @if (count($it['photos']) > 0)
                                         <table class="photos">
                                             <tr>
