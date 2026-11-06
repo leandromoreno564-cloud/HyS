@@ -12,19 +12,26 @@ import {
     Mail, 
     Calendar,
     CheckCircle2,
-    ClipboardList,
-    ExternalLink
+    ClipboardList
 } from 'lucide-react';
-import LeafletMap from '@/Components/LeafletMap';
 
 export default function CompaniesShow({ company, inspectors = [] }) {
     const { auth } = usePage().props;
     const isAdmin = auth?.user?.role === 'admin';
+    const checklists = company.checklists || [];
 
-    const hasLocation = company.latitude != null && company.longitude != null;
-    const mapsUrl = hasLocation
-        ? `https://www.google.com/maps?q=${company.latitude},${company.longitude}`
-        : null;
+    const formatSurveyDate = (date) => {
+        if (!date) return 'Sin fecha';
+        const normalizedDate = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+            ? `${date}T00:00:00`
+            : date;
+        const parsedDate = new Date(normalizedDate);
+        if (Number.isNaN(parsedDate.getTime())) return 'Sin fecha';
+
+        return new Intl.DateTimeFormat('es-AR', {
+            dateStyle: 'long',
+        }).format(parsedDate);
+    };
 
     const handleDelete = () => {
         if (confirm(`¿Está seguro de enviar a la papelera a ${company.business_name}?`)) {
@@ -47,11 +54,11 @@ export default function CompaniesShow({ company, inspectors = [] }) {
 
                     <div className="flex items-center gap-2">
                         <Link
-                            href={`/companies/${company.id}/checklist`}
+                            href={`/companies/${company.id}/checklist?new=1`}
                             className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors"
                         >
                             <ClipboardList className="w-3.5 h-3.5" />
-                            Relevamiento
+                            Nuevo Relevamiento
                         </Link>
                         <Link
                             href={`/companies/${company.id}/edit`}
@@ -175,70 +182,56 @@ export default function CompaniesShow({ company, inspectors = [] }) {
                     </div>
                 </div>
 
-                {/* Ubicación GPS y foto del lugar */}
-                <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[10px]">
-                            Ubicación GPS y foto del lugar
-                        </h4>
-                        {mapsUrl && (
-                            <a
-                                href={mapsUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700"
-                            >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                                Abrir en Google Maps
-                            </a>
-                        )}
+                {/* Historial de relevamientos */}
+                <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-900">Historial de relevamientos</h3>
+                            <p className="mt-0.5 text-xs text-slate-500">
+                                Consultá los relevamientos guardados para esta empresa.
+                            </p>
+                        </div>
+                        <Link
+                            href={`/companies/${company.id}/checklist?new=1`}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
+                        >
+                            <ClipboardList className="w-3.5 h-3.5" />
+                            Nuevo relevamiento
+                        </Link>
                     </div>
 
-                    {hasLocation || company.location_photo_url ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                {hasLocation ? (
-                                    <>
-                                        <LeafletMap
-                                            lat={Number(company.latitude)}
-                                            lng={Number(company.longitude)}
-                                            readOnly
-                                            height="h-64"
-                                        />
-                                        <p className="text-[11px] text-slate-500 font-mono">
-                                            {Number(company.latitude).toFixed(6)}, {Number(company.longitude).toFixed(6)}
-                                            {company.location_accuracy ? ` · ±${Math.round(company.location_accuracy)} m` : ''}
-                                        </p>
-                                        {company.location_captured_at && (
-                                            <p className="text-[11px] text-slate-400">
-                                                Registrada el {new Date(company.location_captured_at).toLocaleString('es-AR')}
+                    {checklists.length > 0 ? (
+                        <div className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden">
+                            {checklists.map((checklist) => (
+                                <Link
+                                    key={checklist.id}
+                                    href={`/companies/${company.id}/checklist?checklist_id=${checklist.id}`}
+                                    className="flex items-center justify-between gap-4 p-4 hover:bg-slate-50 transition-colors"
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-9 h-9 shrink-0 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                                            <Calendar className="w-4 h-4" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-bold text-slate-800 truncate">{checklist.name}</p>
+                                            <p className="mt-0.5 text-[11px] text-slate-500">
+                                                {formatSurveyDate(checklist.surveyed_at)} · {checklist.items_count || 0} ítems
                                             </p>
-                                        )}
-                                    </>
-                                ) : (
-                                    <p className="text-xs text-slate-400 italic">Sin ubicación GPS registrada.</p>
-                                )}
-                            </div>
-
-                            <div>
-                                {company.location_photo_url ? (
-                                    <a href={company.location_photo_url} target="_blank" rel="noopener noreferrer">
-                                        <img
-                                            src={company.location_photo_url}
-                                            alt={`Foto de ${company.business_name}`}
-                                            className="w-full h-64 object-cover rounded-xl border border-slate-200 shadow-xs hover:opacity-90 transition-opacity"
-                                        />
-                                    </a>
-                                ) : (
-                                    <p className="text-xs text-slate-400 italic">Sin foto del lugar.</p>
-                                )}
-                            </div>
+                                        </div>
+                                    </div>
+                                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-600 whitespace-nowrap">
+                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                        Ver
+                                    </span>
+                                </Link>
+                            ))}
                         </div>
                     ) : (
-                        <p className="text-xs text-slate-400 italic">
-                            Todavía no se registró la ubicación GPS ni una foto de este establecimiento. Podés
-                            agregarlas desde “Editar”.
-                        </p>
+                        <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-8 text-center">
+                            <ClipboardList className="w-6 h-6 mx-auto text-slate-300 mb-2" />
+                            <p className="text-xs font-semibold text-slate-600">Todavía no hay relevamientos guardados.</p>
+                            <p className="mt-1 text-[11px] text-slate-400">Creá el primero para que quede registrado en este historial.</p>
+                        </div>
                     )}
                 </div>
 

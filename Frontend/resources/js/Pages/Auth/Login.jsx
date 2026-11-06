@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useForm } from '@inertiajs/react';
-import { ShieldCheck, Lock, User, ArrowRight, CircleUserRound } from 'lucide-react';
-import loginBg from '../../../images/login-bg.jpg';
+import { Lock, User, ArrowRight } from 'lucide-react';
+import loginBg from '../../../images/login-bg-no-shield.png';
+import hysCatLogo from '../../../images/hys-cat-logo-white.png';
 
 export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
@@ -27,31 +28,22 @@ export default function Login() {
             </div>
 
             {/* Panel derecho: login real */}
-            <div className="flex-1 flex flex-col justify-center items-center px-6 py-6 relative overflow-hidden">
+            <div className="flex-1 flex flex-col justify-center items-center px-4 py-6 md:px-6 relative overflow-hidden">
                 {/* Acento diagonal amarillo, abajo a la derecha, como en el diseño */}
                 <div className="hidden lg:block absolute -bottom-10 -right-10 w-40 h-72 rotate-12 overflow-hidden pointer-events-none">
                     <div className="absolute inset-0 bg-slate-800/60" />
                     <div className="absolute left-8 top-0 w-5 h-full bg-amber-400/90" />
                 </div>
 
-                {/* Encabezado compacto (solo mobile, reemplaza al panel de foto) */}
-                <div className="lg:hidden mb-8 text-center">
-                    <div className="flex justify-center mb-3">
-                        <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/30">
-                            <ShieldCheck className="w-8 h-8" />
-                        </div>
-                    </div>
-                    <h2 className="text-2xl font-bold tracking-tight text-white">HyS Control</h2>
-                    <p className="mt-1 text-xs text-slate-400">
-                        Plataforma Integral de Inspecciones de Seguridad e Higiene Laboral
-                    </p>
-                </div>
-
-                <div className="w-full max-w-sm relative z-10">
-                    <div className="bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-3xl p-5 shadow-2xl">
-                        <div className="flex flex-col items-center mb-4">
-                            <CircleUserRound className="w-8 h-8 text-white mb-1.5" strokeWidth={1.5} />
-                            <h1 className="text-lg font-bold text-white">Iniciar Sesión</h1>
+                <div className="w-full md:max-w-sm relative z-10">
+                    <div className="bg-slate-900/70 backdrop-blur-xl border border-white/10 md:rounded-3xl p-5 shadow-2xl">
+                        <div className="flex flex-col items-center mb-6">
+                            <img
+                                src={hysCatLogo}
+                                alt="Logo H y S"
+                                className="w-16 sm:w-20 h-auto drop-shadow-[0_6px_12px_rgba(0,0,0,0.35)]"
+                            />
+                            <h1 className="-mt-1 text-lg font-bold text-white">Iniciar Sesión</h1>
                             <p className="mt-0.5 text-xs text-slate-400 text-center">
                                 Accedé al sistema de Higiene y Seguridad
                             </p>
@@ -60,19 +52,19 @@ export default function Login() {
                         <form className="space-y-3" onSubmit={handleSubmit}>
                             {/* Usuario */}
                             <div>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                                        <User className="w-4 h-4" />
-                                    </div>
-                                    <input
-                                        type="email"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        placeholder="Usuario"
-                                        required
-                                        className="block w-full pl-11 pr-3 py-2.5 text-sm bg-slate-800/50 border border-slate-600/60 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition-all"
-                                    />
-                                </div>
+                                <label htmlFor="email" className="mb-1.5 flex items-center gap-2 text-xs font-medium text-slate-300">
+                                    <User className="w-4 h-4 text-amber-400" />
+                                    Usuario
+                                </label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    value={data.email}
+                                    onChange={(e) => setData('email', e.target.value)}
+                                    placeholder="Ingresá tu correo electrónico"
+                                    required
+                                    className="block w-full px-3 py-2.5 text-sm bg-slate-800/50 border border-slate-600/60 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition-all"
+                                />
                                 {errors.email && (
                                     <p className="mt-1.5 text-xs text-rose-400 font-medium">{errors.email}</p>
                                 )}
@@ -80,19 +72,19 @@ export default function Login() {
 
                             {/* Contraseña */}
                             <div>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                                        <Lock className="w-4 h-4" />
-                                    </div>
-                                    <input
-                                        type="password"
-                                        value={data.password}
-                                        onChange={(e) => setData('password', e.target.value)}
-                                        placeholder="Contraseña"
-                                        required
-                                        className="block w-full pl-11 pr-3 py-2.5 text-sm bg-slate-800/50 border border-slate-600/60 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition-all"
-                                    />
-                                </div>
+                                <label htmlFor="password" className="mb-1.5 flex items-center gap-2 text-xs font-medium text-slate-300">
+                                    <Lock className="w-4 h-4 text-amber-400" />
+                                    Contraseña
+                                </label>
+                                <input
+                                    id="password"
+                                    type="password"
+                                    value={data.password}
+                                    onChange={(e) => setData('password', e.target.value)}
+                                    placeholder="Ingresá tu contraseña"
+                                    required
+                                    className="block w-full px-3 py-2.5 text-sm bg-slate-800/50 border border-slate-600/60 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition-all"
+                                />
                                 {errors.password && (
                                     <p className="mt-1.5 text-xs text-rose-400 font-medium">{errors.password}</p>
                                 )}
@@ -133,10 +125,6 @@ export default function Login() {
                         </div>
 
                     </div>
-
-                    <p className="mt-3 text-center text-[11px] text-slate-500">
-                        IES "Nuevo Horizonte" • Tecnicatura en Desarrollo de Software
-                    </p>
                 </div>
             </div>
         </div>

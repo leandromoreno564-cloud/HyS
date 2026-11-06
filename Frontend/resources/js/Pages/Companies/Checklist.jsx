@@ -81,10 +81,11 @@ function validateImage(file) {
     return null;
 }
 
-export default function CompaniesChecklist({ company, items }) {
+export default function CompaniesChecklist({ company, checklist, items }) {
     const [stage, setStage] = useState(items && items.length > 0 ? 'saved' : 'upload'); // upload | draft | saved
     const [draftItems, setDraftItems] = useState([]);
     const [savedItems, setSavedItems] = useState(items || []);
+    const [activeChecklist, setActiveChecklist] = useState(checklist || null);
     const [saving, setSaving] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(null); // { done, total }
     const [pageError, setPageError] = useState('');
@@ -287,6 +288,7 @@ export default function CompaniesChecklist({ company, items }) {
 
             const res = await axios.post(`/companies/${company.id}/checklist`, { items: payload }, jsonHeaders);
             let saved = res.data.items;
+            setActiveChecklist(res.data.checklist);
             const byNumber = new Map(saved.map((i) => [i.item_number, i]));
 
             const pending = [];
@@ -390,11 +392,20 @@ export default function CompaniesChecklist({ company, items }) {
     };
 
     const addSavedItem = async (category) => {
+        if (!activeChecklist?.id) {
+            setPageError('Primero guardá el relevamiento antes de agregar ítems nuevos.');
+            return;
+        }
+
         try {
             const res = await track(
                 axios.post(
                     `/companies/${company.id}/checklist/items`,
-                    { category: category === NO_CATEGORY ? null : category, question: 'Nuevo ítem' },
+                    {
+                        checklist_id: activeChecklist.id,
+                        category: category === NO_CATEGORY ? null : category,
+                        question: 'Nuevo ítem',
+                    },
                     jsonHeaders
                 )
             );
@@ -430,9 +441,18 @@ export default function CompaniesChecklist({ company, items }) {
         if (effectiveStage === 'draft') {
             setDraftItems((prev) => prev.map((it) => (matches(it) ? { ...it, category: to } : it)));
         } else {
+            if (!activeChecklist?.id) {
+                setPageError('No se encontró el relevamiento que querés editar. Recargá la página e intentá de nuevo.');
+                return;
+            }
+
             try {
                 await track(
-                    axios.patch(`/companies/${company.id}/checklist/category`, { from: fromValue, to }, jsonHeaders)
+                    axios.patch(
+                        `/companies/${company.id}/checklist/category`,
+                        { checklist_id: activeChecklist.id, from: fromValue, to },
+                        jsonHeaders
+                    )
                 );
                 setSavedItems((prev) => prev.map((it) => (matches(it) ? { ...it, category: to } : it)));
             } catch (err) {
@@ -455,7 +475,8 @@ export default function CompaniesChecklist({ company, items }) {
         document.activeElement?.blur?.();
         try {
             await Promise.allSettled([...pendingSaves.current]);
-            const res = await axios.get(`/companies/${company.id}/checklist/pdf`, {
+            const checklistQuery = activeChecklist?.id ? `?checklist_id=${activeChecklist.id}` : '';
+            const res = await axios.get(`/companies/${company.id}/checklist/pdf${checklistQuery}`, {
                 responseType: 'blob',
                 headers: { Accept: 'application/pdf' },
             });

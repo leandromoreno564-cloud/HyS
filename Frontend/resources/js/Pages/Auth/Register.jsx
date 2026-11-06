@@ -5,15 +5,13 @@ import {
     Mail,
     User,
     Phone,
-    BadgeCheck,
     ArrowRight,
     Eye,
     EyeOff,
     IdCard,
-    FileDigit,
-    Camera,
 } from 'lucide-react';
-import loginBg from '../../../images/login-bg.jpg';
+import loginBg from '../../../images/login-bg-no-shield.png';
+import hysCatLogo from '../../../images/hys-cat-logo-white.png';
 
 export default function Register() {
     const { data, setData, post, processing, errors } = useForm({
@@ -21,27 +19,17 @@ export default function Register() {
         last_name: '',
         email: '',
         dni: '',
-        legajo: '',
         phone: '',
-        license_number: '',
         password: '',
         password_confirmation: '',
-        avatar: null,
     });
 
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
-    const [avatarPreview, setAvatarPreview] = useState(null);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/register', { forceFormData: true });
-    };
-
-    const handleAvatarChange = (e) => {
-        const file = e.target.files?.[0] || null;
-        setData('avatar', file);
-        setAvatarPreview(file ? URL.createObjectURL(file) : null);
+        post('/register');
     };
 
     return (
@@ -54,45 +42,27 @@ export default function Register() {
                 <div className="absolute top-0 left-0 w-24 h-full bg-linear-to-br from-slate-900/70 to-transparent" />
             </div>
 
-            <div className="flex-1 flex flex-col justify-center items-center px-4 py-8 sm:px-6 relative overflow-hidden">
+            <div className="flex-1 flex flex-col justify-start lg:justify-center items-center px-4 py-8 md:px-6 relative overflow-hidden">
                 <div className="hidden lg:block absolute -bottom-10 -right-10 w-40 h-72 rotate-12 overflow-hidden pointer-events-none">
                     <div className="absolute inset-0 bg-slate-800/60" />
                     <div className="absolute left-8 top-0 w-5 h-full bg-amber-400/90" />
                 </div>
 
-                <div className="w-full max-w-xl lg:max-w-md relative z-10">
-                <div className="bg-slate-900/70 backdrop-blur-xl py-6 px-5 shadow-2xl rounded-3xl sm:px-8 lg:py-4 lg:px-6 border border-white/10 [&_input]:bg-slate-800/50 [&_input]:border-slate-600/60 [&_input]:text-white [&_input]:placeholder:text-slate-400 [&_input:focus]:ring-amber-400 [&_input:focus]:border-amber-400 [&_input]:shadow-none lg:[&_input]:py-2">
+                <div className="w-full md:max-w-md relative z-10">
+                <div className="bg-slate-900/70 backdrop-blur-xl py-6 px-5 shadow-2xl md:rounded-3xl sm:px-8 lg:py-4 lg:px-6 border border-white/10 [&_input]:bg-slate-800/50 [&_input]:border-slate-600/60 [&_input]:text-white [&_input]:placeholder:text-slate-400 [&_input:focus]:ring-amber-400 [&_input:focus]:border-amber-400 [&_input]:shadow-none lg:[&_input]:py-2">
                     <div className="flex flex-col items-center mb-5 lg:mb-3">
-                        <BadgeCheck className="w-8 h-8 text-white mb-1.5" strokeWidth={1.5} />
-                        <h1 className="text-lg font-bold text-white">Registro de Licenciado</h1>
+                        <img
+                            src={hysCatLogo}
+                            alt="Logo HyS"
+                            className="w-16 sm:w-20 h-auto drop-shadow-[0_6px_12px_rgba(0,0,0,0.35)]"
+                        />
+                        <h1 className="-mt-1 text-lg font-bold text-white">Registro de Licenciado</h1>
+                        <p className="mt-0.5 text-xs text-slate-400 text-center">
+                            Creá tu cuenta para acceder al sistema
+                        </p>
                     </div>
 
                     <form className="space-y-4 lg:space-y-3" onSubmit={handleSubmit}>
-                        {/* Foto de perfil */}
-                        <div className="flex justify-center">
-                            <label className="cursor-pointer group">
-                                <div className="w-20 h-20 lg:w-16 lg:h-16 rounded-2xl bg-slate-800/60 border-2 border-dashed border-slate-600 flex items-center justify-center overflow-hidden group-hover:border-amber-400 transition-colors">
-                                    {avatarPreview ? (
-                                        <img src={avatarPreview} alt="Vista previa" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <Camera className="w-6 h-6 text-slate-400" />
-                                    )}
-                                </div>
-                                <input
-                                    type="file"
-                                    accept="image/png,image/jpeg,image/webp"
-                                    onChange={handleAvatarChange}
-                                    className="hidden"
-                                />
-                                <p className="mt-1.5 text-[11px] text-center text-slate-400 font-semibold">
-                                    Foto de perfil
-                                </p>
-                            </label>
-                        </div>
-                        {errors.avatar && (
-                            <p className="text-xs text-rose-400 font-medium text-center">{errors.avatar}</p>
-                        )}
-
                         {/* Nombre y Apellido */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
@@ -156,8 +126,8 @@ export default function Register() {
                             {errors.email && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.email}</p>}
                         </div>
 
-                        {/* DNI y Legajo */}
-                        <div className="grid grid-cols-2 gap-3">
+                        {/* DNI */}
+                        <div>
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                                     DNI
@@ -179,28 +149,10 @@ export default function Register() {
                                 </div>
                                 {errors.dni && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.dni}</p>}
                             </div>
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
-                                    Legajo (opcional)
-                                </label>
-                                <div className="mt-1.5 relative rounded-xl shadow-xs">
-                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                                        <FileDigit className="w-4 h-4" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={data.legajo}
-                                        onChange={(e) => setData('legajo', e.target.value)}
-                                        placeholder="LEG-0000"
-                                        className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
-                                    />
-                                </div>
-                                {errors.legajo && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.legajo}</p>}
-                            </div>
                         </div>
 
-                        {/* Teléfono y Matrícula */}
-                        <div className="grid grid-cols-2 gap-3">
+                        {/* Teléfono */}
+                        <div>
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                                     Teléfono
@@ -220,26 +172,6 @@ export default function Register() {
                                     />
                                 </div>
                                 {errors.phone && <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.phone}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
-                                    Matrícula (opcional)
-                                </label>
-                                <div className="mt-1.5 relative rounded-xl shadow-xs">
-                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                                        <BadgeCheck className="w-4 h-4" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={data.license_number}
-                                        onChange={(e) => setData('license_number', e.target.value)}
-                                        placeholder="LIC-HYS-0000"
-                                        className="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
-                                    />
-                                </div>
-                                {errors.license_number && (
-                                    <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.license_number}</p>
-                                )}
                             </div>
                         </div>
 
@@ -325,7 +257,6 @@ export default function Register() {
                         </Link>
                     </div>
                 </div>
-                <p className="mt-3 text-center text-[11px] text-slate-500">IES "Nuevo Horizonte" • Tecnicatura en Desarrollo de Software</p>
             </div>
         </div>
         </div>
