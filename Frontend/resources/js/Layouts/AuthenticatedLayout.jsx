@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import HelpBot from '@/Components/HelpBot';
+import Toast from '@/Components/Toast';
+import hysCatLogo from '../../images/hys-cat-logo-white.png';
 import { 
-    ShieldCheck, 
     LayoutDashboard, 
     Building2, 
-    AlertTriangle, 
     FileText, 
     Users, 
     Bell, 
@@ -13,9 +13,6 @@ import {
     User, 
     Menu, 
     X,
-    CheckCircle2,
-    XCircle,
-    Info,
     ChevronRight,
     Search,
     CalendarDays,
@@ -29,10 +26,19 @@ export default function AuthenticatedLayout({ children, title = '' }) {
     // En las pantallas de checklist el asistente propio del relevamiento ya ocupa ese lugar
     const isChecklistPage = /(^|\/)Checklist$/.test(page.component || '');
     const currentUser = auth?.user;
-    const isAdmin = currentUser?.role === 'admin';
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [dismissFlash, setDismissFlash] = useState(false);
+    const flashMessage = flash?.success || flash?.error || flash?.warning || flash?.info;
+    const flashType = flash?.success ? 'success' : flash?.error ? 'error' : flash?.warning ? 'warning' : 'info';
+
+    useEffect(() => {
+        if (!flashMessage) return undefined;
+
+        setDismissFlash(false);
+        const timeout = window.setTimeout(() => setDismissFlash(true), 4200);
+        return () => window.clearTimeout(timeout);
+    }, [flashMessage]);
 
     const currentPath = window.location.pathname;
 
@@ -57,7 +63,7 @@ export default function AuthenticatedLayout({ children, title = '' }) {
         },
     ];
 
-    if (isAdmin) {
+    if (currentUser?.role === 'admin') {
         navigation.push({ 
             name: 'Usuarios & Técnicos', 
             href: '/users', 
@@ -65,6 +71,21 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             active: currentPath.startsWith('/users') 
         });
     }
+
+    // Acceso a la portada pública (el admin entra para editarla)
+    navigation.push({
+        name: currentUser?.role === 'admin' ? 'Portada (editar)' : 'Portada',
+        href: '/',
+        icon: Globe,
+        active: false
+    });
+
+    navigation.push({
+        name: 'Ayuda',
+        href: '/#ayuda',
+        icon: LifeBuoy,
+        active: false
+    });
 
     const handleLogout = (e) => {
         e.preventDefault();
@@ -83,24 +104,19 @@ export default function AuthenticatedLayout({ children, title = '' }) {
 
             {/* Sidebar */}
             <aside 
-                className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:inset-auto ${
+                className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-300 ease-in-out md:translate-x-0 ${
                     sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
             >
                 {/* Brand */}
                 <div className="h-16 flex items-center justify-between px-5 border-b border-slate-800 bg-slate-950/40">
-                    <Link href="/dashboard" className="flex items-center gap-3 group">
-                        <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                            <ShieldCheck className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <span className="font-bold text-white text-base tracking-tight block">
-                                HyS Control
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-medium tracking-wide uppercase">
-                                Seguridad Laboral
-                            </span>
-                        </div>
+                    <Link href="/dashboard" className="flex items-center gap-2.5 group" aria-label="Ir al dashboard">
+                        <img
+                            src={hysCatLogo}
+                            alt="Logo HyS"
+                            className="w-12 h-auto drop-shadow-[0_3px_8px_rgba(0,0,0,0.4)] transition-transform group-hover:scale-105"
+                        />
+                        <span className="text-base font-bold tracking-tight text-white">HyS Control</span>
                     </Link>
                     <button 
                         type="button" 
@@ -109,21 +125,6 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                     >
                         <X className="w-5 h-5" />
                     </button>
-                </div>
-
-                {/* Role badge */}
-                <div className="px-5 py-3 border-b border-slate-800/80 bg-slate-900/50">
-                    <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-indigo-400' : 'bg-emerald-400'}`} />
-                        <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                            {isAdmin ? 'Administrador' : 'Inspector Técnico'}
-                        </span>
-                    </div>
-                    {currentUser?.license_number && (
-                        <span className="text-[11px] text-slate-400 block mt-0.5 font-mono">
-                            Mat. {currentUser.license_number}
-                        </span>
-                    )}
                 </div>
 
                 {/* Navigation Links */}
@@ -160,37 +161,12 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                         <FileText className="w-4 h-4 text-slate-400" />
                         <span>Exportar a Excel (CSV)</span>
                     </a>
-
-                    <div className="pt-4 px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                        Soporte & Enlaces
-                    </div>
-
-                    {/* En Ayuda está el manual de la plataforma */}
-                    <a
-                        href="/manual/Manual-de-usuario-HyS.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all"
-                    >
-                        <LifeBuoy className="w-4 h-4 text-slate-400" />
-                        <span>Ayuda (Manual de la plataforma)</span>
-                    </a>
-
-                    {/* Portada abajo al último de las opciones para todos los usuarios */}
-                    <Link
-                        href="/"
-                        onClick={() => setSidebarOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all"
-                    >
-                        <Globe className="w-4 h-4 text-slate-400" />
-                        <span>{isAdmin ? 'Portada (editar)' : 'Portada'}</span>
-                    </Link>
                 </nav>
 
             </aside>
 
             {/* Main Area */}
-            <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex-1 flex flex-col min-w-0 md:ml-64">
                 {/* Header */}
                 <header className="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6">
                     <div className="flex items-center gap-3">
@@ -288,43 +264,9 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                     </div>
                 </header>
 
-                {/* Flash Messages */}
-                {!dismissFlash && (flash?.success || flash?.error || flash?.warning || flash?.info) && (
-                    <div className="px-4 sm:px-6 pt-4">
-                        {flash?.success && (
-                            <div className="flex items-center justify-between p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-medium animate-in fade-in duration-200">
-                                <div className="flex items-center gap-2.5">
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                                    <span>{flash.success}</span>
-                                </div>
-                                <button type="button" onClick={() => setDismissFlash(true)} className="text-emerald-500 hover:text-emerald-700">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        )}
-                        {flash?.error && (
-                            <div className="flex items-center justify-between p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-medium animate-in fade-in duration-200">
-                                <div className="flex items-center gap-2.5">
-                                    <XCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-                                    <span>{flash.error}</span>
-                                </div>
-                                <button type="button" onClick={() => setDismissFlash(true)} className="text-rose-500 hover:text-rose-700">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        )}
-                        {flash?.warning && (
-                            <div className="flex items-center justify-between p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-medium animate-in fade-in duration-200">
-                                <div className="flex items-center gap-2.5">
-                                    <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                                    <span>{flash.warning}</span>
-                                </div>
-                                <button type="button" onClick={() => setDismissFlash(true)} className="text-amber-500 hover:text-amber-700">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                {/* Toast notifications */}
+                {!dismissFlash && flashMessage && (
+                    <Toast message={flashMessage} type={flashType} onClose={() => setDismissFlash(true)} />
                 )}
 
                 {/* Main Content Area */}

@@ -32,6 +32,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Perfil de usuario
     Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
     Route::post('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/profile/avatar', [AuthController::class, 'updateAvatar'])->name('profile.avatar.update');
 
     // Notificaciones
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

@@ -48,9 +48,11 @@ class CompanyController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $sectors = Company::select('industry_sector')
-            ->distinct()
-            ->pluck('industry_sector');
+        $sectors = [
+            'Industria y Comercio',
+            'Minería',
+            'Construcción Agropecuaria',
+        ];
 
         return Inertia::render('Companies/Index', compact('companies', 'sectors'));
     }

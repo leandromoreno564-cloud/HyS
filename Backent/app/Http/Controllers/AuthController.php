@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 use Inertia\Inertia;
@@ -49,7 +50,7 @@ class AuthController extends Controller
             'last_name' => $data['last_name'],
             'email' => $data['email'],
             'dni' => $data['dni'],
-            'legajo' => $data['legajo'],
+            'legajo' => $data['legajo'] ?? null,
             'password' => Hash::make($data['password']),
             'phone' => $data['phone'] ?? null,
             'license_number' => $data['license_number'] ?? null,
@@ -133,14 +134,20 @@ class AuthController extends Controller
         $user = Auth::user();
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:50'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'dni' => ['required', 'string', 'max:20', 'regex:/^\d+$/', Rule::unique('users')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:50', 'regex:/^\d+$/'],
             'license_number' => ['nullable', 'string', 'max:100'],
             'password' => ['nullable', 'confirmed', Password::min(6)],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ]);
 
-        $user->name = $data['name'];
+        $user->first_name = $data['first_name'];
+        $user->last_name = $data['last_name'];
+        $user->email = $data['email'];
+        $user->dni = $data['dni'];
         $user->phone = $data['phone'] ?? null;
         $user->license_number = $data['license_number'] ?? null;
 
@@ -158,5 +165,24 @@ class AuthController extends Controller
         $user->save();
 
         return back()->with('success', 'Perfil actualizado exitosamente.');
+    }
+
+    public function updateAvatar(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $request->validate([
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+        ]);
+
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        $user->avatar = $request->file('avatar')->store('avatars', 'public');
+        $user->save();
+
+        return back()->with('success', 'Foto de perfil actualizada exitosamente.');
     }
 }
