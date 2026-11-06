@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import HelpBot from '@/Components/HelpBot';
+import Toast from '@/Components/Toast';
 import hysCatLogo from '../../images/hys-cat-logo-white.png';
 import { 
     LayoutDashboard, 
     Building2, 
-    AlertTriangle, 
     FileText, 
     Users, 
     Bell, 
@@ -13,9 +13,6 @@ import {
     User, 
     Menu, 
     X,
-    CheckCircle2,
-    XCircle,
-    Info,
     ChevronRight,
     Search,
     CalendarDays,
@@ -32,6 +29,16 @@ export default function AuthenticatedLayout({ children, title = '' }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [dismissFlash, setDismissFlash] = useState(false);
+    const flashMessage = flash?.success || flash?.error || flash?.warning || flash?.info;
+    const flashType = flash?.success ? 'success' : flash?.error ? 'error' : flash?.warning ? 'warning' : 'info';
+
+    useEffect(() => {
+        if (!flashMessage) return undefined;
+
+        setDismissFlash(false);
+        const timeout = window.setTimeout(() => setDismissFlash(true), 4200);
+        return () => window.clearTimeout(timeout);
+    }, [flashMessage]);
 
     const currentPath = window.location.pathname;
 
@@ -257,43 +264,9 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                     </div>
                 </header>
 
-                {/* Flash Messages */}
-                {!dismissFlash && (flash?.success || flash?.error || flash?.warning || flash?.info) && (
-                    <div className="px-4 sm:px-6 pt-4">
-                        {flash?.success && (
-                            <div className="flex items-center justify-between p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-medium animate-in fade-in duration-200">
-                                <div className="flex items-center gap-2.5">
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                                    <span>{flash.success}</span>
-                                </div>
-                                <button type="button" onClick={() => setDismissFlash(true)} className="text-emerald-500 hover:text-emerald-700">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        )}
-                        {flash?.error && (
-                            <div className="flex items-center justify-between p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-medium animate-in fade-in duration-200">
-                                <div className="flex items-center gap-2.5">
-                                    <XCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-                                    <span>{flash.error}</span>
-                                </div>
-                                <button type="button" onClick={() => setDismissFlash(true)} className="text-rose-500 hover:text-rose-700">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        )}
-                        {flash?.warning && (
-                            <div className="flex items-center justify-between p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-medium animate-in fade-in duration-200">
-                                <div className="flex items-center gap-2.5">
-                                    <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                                    <span>{flash.warning}</span>
-                                </div>
-                                <button type="button" onClick={() => setDismissFlash(true)} className="text-amber-500 hover:text-amber-700">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                {/* Toast notifications */}
+                {!dismissFlash && flashMessage && (
+                    <Toast message={flashMessage} type={flashType} onClose={() => setDismissFlash(true)} />
                 )}
 
                 {/* Main Content Area */}
