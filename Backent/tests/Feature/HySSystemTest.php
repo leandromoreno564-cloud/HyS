@@ -89,10 +89,15 @@ class HySSystemTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Companies/Show')
                 ->where('company.id', $unassignedCompany->id)
+                ->where('canManageCompany', false)
             );
 
         $this->actingAs($inspector)
             ->get("/companies/{$unassignedCompany->id}/edit")
+            ->assertForbidden();
+
+        $this->actingAs($inspector)
+            ->get("/companies/{$unassignedCompany->id}/checklist?new=1")
             ->assertForbidden();
     }
 
@@ -166,6 +171,26 @@ class HySSystemTest extends TestCase
             ->assertSessionHas('info', 'La solicitud ya fue enviada a los administradores.');
 
         $this->assertSame($notificationCount + $adminCount, AppNotification::count());
+    }
+
+    public function test_inspector_is_notified_when_assigned_to_a_company(): void
+    {
+        $admin = User::where('role', 'admin')->firstOrFail();
+        $inspector = User::where('email', 'inspector@seguridad.local')->firstOrFail();
+        $company = Company::where('business_name', 'Laboratorios BioQuim S.A.')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->post("/companies/{$company->id}/assign", ['inspector_ids' => [$inspector->id]])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('app_notifications', [
+            'user_id' => $inspector->id,
+            'title' => 'Nueva empresa asignada',
+            'message' => "Fuiste asignado a {$company->business_name}. Ya podés realizar relevamientos.",
+            'type' => 'success',
+            'link' => route('companies.show', $company),
+            'is_read' => false,
+        ]);
     }
 
     public function test_inspection_creation_generates_checklist_automatically(): void

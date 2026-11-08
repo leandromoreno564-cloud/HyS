@@ -105,8 +105,8 @@ class AuthController extends Controller
             if (!$user->is_active) {
                 Auth::logout();
                 return back()->withErrors([
-                    'email' => 'Su usuario se encuentra inactivo. Comuníquese con el administrador.',
-                ])->onlyInput('email');
+                    'email' => 'Tu cuenta está registrada y espera la aprobación de un administrador. Te avisaremos por correo cuando quede habilitada.',
+                ])->with('account_pending', true)->onlyInput('email');
             }
 
             $request->session()->regenerate();

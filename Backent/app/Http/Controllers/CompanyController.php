@@ -98,7 +98,7 @@ class CompanyController extends Controller
         if ($user->isInspector()) {
             $company->inspectors()->attach($user->id);
         } elseif ($user->isAdmin() && !empty($data['inspector_ids'])) {
-            $company->inspectors()->sync($data['inspector_ids']);
+            $this->syncInspectorsAndNotify($company, $data['inspector_ids']);
         }
 
         return redirect()->route('companies.show', $company)
@@ -313,7 +313,13 @@ class CompanyController extends Controller
         ]);
         $inspectors = User::where('role', 'inspector')->where('is_active', true)->get();
 
-        return Inertia::render('Companies/Show', compact('company', 'inspectors'));
+        return Inertia::render('Companies/Show', [
+            'company' => $company,
+            'inspectors' => $inspectors,
+            // Un inspector puede consultar todo el padrón, pero solo administra
+            // empresas propias o aquellas a las que fue asignado.
+            'canManageCompany' => $company->isAccessibleBy($user),
+        ]);
     }
 
     public function edit(Company $company)
@@ -366,7 +372,7 @@ class CompanyController extends Controller
         // Si es admin, puede actualizar asignaciones
         // (sync_inspectors permite vaciar la lista cuando el form viaja como multipart y el array vacío no se envía)
         if ($user->isAdmin() && ($request->has('inspector_ids') || $request->boolean('sync_inspectors'))) {
-            $company->inspectors()->sync($data['inspector_ids'] ?? []);
+            $this->syncInspectorsAndNotify($company, $data['inspector_ids'] ?? []);
         }
 
         return redirect()->route('companies.show', $company)
@@ -387,9 +393,35 @@ class CompanyController extends Controller
             'inspector_ids.*' => ['exists:users,id'],
         ]);
 
-        $company->inspectors()->sync($data['inspector_ids'] ?? []);
+        $this->syncInspectorsAndNotify($company, $data['inspector_ids'] ?? []);
 
         return back()->with('success', 'Inspectores asignados correctamente a la empresa.');
+    }
+
+    /**
+     * Actualiza las asignaciones y avisa únicamente a los inspectores que se
+     * incorporaron recién. Así no se generan avisos repetidos al editar datos.
+     */
+    private function syncInspectorsAndNotify(Company $company, array $inspectorIds): void
+    {
+        $changes = $company->inspectors()->sync($inspectorIds);
+        $newInspectorIds = $changes['attached'] ?? [];
+
+        if (empty($newInspectorIds)) {
+            return;
+        }
+
+        User::query()
+            ->whereIn('id', $newInspectorIds)
+            ->where('role', 'inspector')
+            ->where('is_active', true)
+            ->each(fn (User $inspector) => AppNotification::create([
+                'user_id' => $inspector->id,
+                'title' => 'Nueva empresa asignada',
+                'message' => "Fuiste asignado a {$company->business_name}. Ya podés realizar relevamientos.",
+                'type' => 'success',
+                'link' => route('companies.show', $company),
+            ]));
     }
 
     public function requestInspectorAssignment(Company $company)

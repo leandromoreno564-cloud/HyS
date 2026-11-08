@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { Lock, User, ArrowRight, CircleCheck, Clock3 } from 'lucide-react';
 import Toast from '@/Components/Toast';
@@ -8,6 +8,7 @@ import hysCatLogo from '../../../images/hys-cat-logo-white.png';
 export default function Login() {
     const { flash } = usePage().props;
     const [registrationToast, setRegistrationToast] = useState(() => Boolean(flash?.registration_completed));
+    const [pendingAccountToast, setPendingAccountToast] = useState(() => Boolean(flash?.account_pending));
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -19,6 +20,16 @@ export default function Login() {
         post('/login');
     };
 
+    useEffect(() => {
+        if (flash?.registration_completed) {
+            setRegistrationToast(true);
+        }
+
+        if (flash?.account_pending) {
+            setPendingAccountToast(true);
+        }
+    }, [flash?.registration_completed, flash?.account_pending]);
+
     return (
         <div className="min-h-screen flex bg-[#0b1322]">
             {registrationToast && (
@@ -26,6 +37,13 @@ export default function Login() {
                     message="Tu cuenta fue creada. Esperá la aprobación de un administrador para ingresar."
                     type="success"
                     onClose={() => setRegistrationToast(false)}
+                />
+            )}
+            {pendingAccountToast && (
+                <Toast
+                    message="Cuenta pendiente de aprobación."
+                    type="warning"
+                    onClose={() => setPendingAccountToast(false)}
                 />
             )}
             {/* Panel izquierdo: foto + branding (solo desktop) */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Link, router, usePage } from '@inertiajs/react';
 import { 
@@ -12,13 +12,16 @@ import {
     Mail, 
     Calendar,
     CheckCircle2,
-    ClipboardList
+    ClipboardList,
+    UserPlus,
 } from 'lucide-react';
 
-export default function CompaniesShow({ company, inspectors = [] }) {
+export default function CompaniesShow({ company, inspectors = [], canManageCompany = false }) {
     const { auth } = usePage().props;
     const isAdmin = auth?.user?.role === 'admin';
+    const isInspector = auth?.user?.role === 'inspector';
     const checklists = company.checklists || [];
+    const [requestingAssignment, setRequestingAssignment] = useState(false);
 
     const formatSurveyDate = (date) => {
         if (!date) return 'Sin fecha';
@@ -39,6 +42,14 @@ export default function CompaniesShow({ company, inspectors = [] }) {
         }
     };
 
+    const handleRequestAssignment = () => {
+        setRequestingAssignment(true);
+        router.post(`/companies/${company.id}/request-inspector`, {}, {
+            preserveScroll: true,
+            onFinish: () => setRequestingAssignment(false),
+        });
+    };
+
     return (
         <AuthenticatedLayout title={company.business_name}>
             <div className="space-y-6">
@@ -53,20 +64,35 @@ export default function CompaniesShow({ company, inspectors = [] }) {
                     </Link>
 
                     <div className="flex items-center gap-2">
-                        <Link
-                            href={`/companies/${company.id}/checklist?new=1`}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors"
-                        >
-                            <ClipboardList className="w-3.5 h-3.5" />
-                            Nuevo Relevamiento
-                        </Link>
-                        <Link
-                            href={`/companies/${company.id}/edit`}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition-colors"
-                        >
-                            <Edit className="w-3.5 h-3.5" />
-                            Editar
-                        </Link>
+                        {canManageCompany && (
+                            <>
+                                <Link
+                                    href={`/companies/${company.id}/checklist?new=1`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors"
+                                >
+                                    <ClipboardList className="w-3.5 h-3.5" />
+                                    Nuevo Relevamiento
+                                </Link>
+                                <Link
+                                    href={`/companies/${company.id}/edit`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition-colors"
+                                >
+                                    <Edit className="w-3.5 h-3.5" />
+                                    Editar
+                                </Link>
+                            </>
+                        )}
+                        {isInspector && !canManageCompany && (
+                            <button
+                                type="button"
+                                onClick={handleRequestAssignment}
+                                disabled={requestingAssignment}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold rounded-xl transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                <UserPlus className="w-3.5 h-3.5" />
+                                {requestingAssignment ? 'Enviando...' : 'Solicitar asignación'}
+                            </button>
+                        )}
                         {isAdmin && (
                             <button
                                 type="button"
@@ -191,13 +217,15 @@ export default function CompaniesShow({ company, inspectors = [] }) {
                                 Consultá los relevamientos guardados para esta empresa.
                             </p>
                         </div>
-                        <Link
-                            href={`/companies/${company.id}/checklist?new=1`}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
-                        >
-                            <ClipboardList className="w-3.5 h-3.5" />
-                            Nuevo relevamiento
-                        </Link>
+                        {canManageCompany && (
+                            <Link
+                                href={`/companies/${company.id}/checklist?new=1`}
+                                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
+                            >
+                                <ClipboardList className="w-3.5 h-3.5" />
+                                Nuevo relevamiento
+                            </Link>
+                        )}
                     </div>
 
                     {checklists.length > 0 ? (

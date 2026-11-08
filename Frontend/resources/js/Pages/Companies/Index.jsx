@@ -150,7 +150,7 @@ export default function CompaniesIndex({ companies, sectors = [] }) {
                                             }}
                                             role={company.deleted_at ? undefined : 'link'}
                                             tabIndex={company.deleted_at ? undefined : 0}
-                                            className={`transition-colors ${company.deleted_at ? '' : 'cursor-pointer hover:bg-slate-50/80 focus:outline-none focus:bg-blue-50/60'}`}
+                                            className={`transition-colors duration-150 ${company.deleted_at ? '' : 'cursor-pointer bg-white hover:bg-blue-50/80 focus:outline-none focus-visible:bg-blue-50/80 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500'}`}
                                         >
                                             <td className="py-3.5 px-4">
                                                 <span className="font-bold text-slate-900 text-sm block">
