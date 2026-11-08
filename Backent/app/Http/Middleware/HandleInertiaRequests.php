@@ -101,6 +101,7 @@ class HandleInertiaRequests extends Middleware
                 'info' => fn () => $request->session()->get('info'),
                 'registration_completed' => fn () => $request->session()->get('registration_completed'),
                 'account_pending' => fn () => $request->session()->get('account_pending'),
+                'profile_setup' => fn () => $request->session()->get('profile_setup'),
                 // Distingue confirmaciones consecutivas con el mismo texto.
                 'toast_id' => fn () => $request->session()->get('toast_id'),
             ],

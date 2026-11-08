@@ -27,12 +27,14 @@ export default function AuthenticatedLayout({ children, title = '' }) {
     const flashMessage = flash?.success || flash?.error || flash?.warning || flash?.info;
     const flashType = flash?.success ? 'success' : flash?.error ? 'error' : flash?.warning ? 'warning' : 'info';
     const flashId = flash?.toast_id;
+    const profileSetupAction = flash?.profile_setup ? { label: 'Completar perfil', href: '/profile' } : null;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [toast, setToast] = useState(() => flashMessage ? {
         id: `${Date.now()}-${Math.random()}`,
         message: flashMessage,
         type: flashType,
+        action: profileSetupAction,
     } : null);
 
     useEffect(() => {
@@ -52,8 +54,8 @@ export default function AuthenticatedLayout({ children, title = '' }) {
 
         // Cada confirmación del servidor incorpora un identificador propio, aun cuando
         // el texto sea igual al del guardado anterior.
-        setToast({ id: `${Date.now()}-${Math.random()}`, message: flashMessage, type: flashType });
-    }, [flashId, flashMessage, flashType]);
+        setToast({ id: `${Date.now()}-${Math.random()}`, message: flashMessage, type: flashType, action: profileSetupAction });
+    }, [flashId, flashMessage, flashType, flash?.profile_setup]);
 
     const currentPath = window.location.pathname;
 
@@ -297,6 +299,7 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                         key={toast.id}
                         message={toast.message}
                         type={toast.type}
+                        action={toast.action}
                         onClose={() => setToast((current) => current?.id === toast.id ? null : current)}
                     />
                 )}

@@ -133,6 +133,19 @@ class DatabaseSeeder extends Seeder
         ]);
         $empresa4->inspectors()->attach([$inspector1->id]);
 
+        // Institución educativa: único registro inicial del sector Servicios — Educación.
+        $escuela = Company::create([
+            'business_name' => 'Instituto de Educación Superior "Nuevo Horizonte"',
+            // El CUIT real queda pendiente de confirmación; este valor permite sembrar la demo.
+            'tax_id' => '30-00000000-0',
+            'address' => 'Manuel Castellano 3323 (esquina Ildefonso María de la Paz), B° 47 Hectáreas, Alto Comedero, San Salvador de Jujuy',
+            'industry_sector' => 'Servicios — Educación',
+            'employee_count' => 1,
+            'created_by' => $admin->id,
+            'is_active' => true,
+        ]);
+        $escuela->inspectors()->attach([$inspector1->id, $inspector2->id]);
+
         // 4. Inspección 1: COMPLETADA con evaluación completa, observaciones y medidas
         $inspection1 = Inspection::create([
             'company_id' => $empresa1->id,

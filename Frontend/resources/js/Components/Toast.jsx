@@ -8,7 +8,7 @@ const styles = {
     info: { icon: Info, label: 'Información', accent: 'bg-sky-500', iconClass: 'bg-sky-50 text-sky-600' },
 };
 
-export default function Toast({ message, type = 'success', onClose }) {
+export default function Toast({ message, type = 'success', onClose, action }) {
     const { icon: Icon, label, accent, iconClass } = styles[type] || styles.success;
     const [phase, setPhase] = useState('entering');
     const closeTimer = useRef(null);
@@ -42,6 +42,15 @@ export default function Toast({ message, type = 'success', onClose }) {
                     <div className="min-w-0 flex-1">
                         <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</p>
                         <p className="mt-0.5 text-sm font-medium text-slate-800">{message}</p>
+                        {action && (
+                            <a
+                                href={action.href}
+                                onClick={closeToast}
+                                className="mt-2 inline-flex text-xs font-bold text-sky-700 transition hover:text-sky-900 hover:underline"
+                            >
+                                {action.label}
+                            </a>
+                        )}
                     </div>
                     <button type="button" onClick={closeToast} className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Cerrar notificación">
                         <X className="h-4 w-4" />

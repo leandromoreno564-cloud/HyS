@@ -110,6 +110,28 @@ class AuthController extends Controller
             }
 
             $request->session()->regenerate();
+
+            // Se muestra una única vez, al primer acceso habilitado, para orientar a la
+            // persona a completar los datos que no forman parte del registro inicial.
+            if (!$user->profile_setup_notified_at) {
+                $user->forceFill(['profile_setup_notified_at' => now()])->save();
+
+                AppNotification::create([
+                    'user_id' => $user->id,
+                    'title' => 'Completá la configuración de tu perfil',
+                    'message' => $user->isInspector()
+                        ? 'Agregá una foto, teléfono y matrícula profesional para dejar tu perfil listo.'
+                        : 'Agregá una foto y teléfono para dejar tu perfil listo.',
+                    'type' => 'info',
+                    'link' => '/profile',
+                    'is_read' => false,
+                ]);
+
+                return redirect()->intended(route('dashboard'))
+                    ->with('info', 'Completá tu perfil para dejar tu cuenta lista.')
+                    ->with('profile_setup', true);
+            }
+
             return redirect()->intended(route('dashboard'))
                 ->with('success', '¡Bienvenido al sistema, ' . $user->name . '!');
         }
