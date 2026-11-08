@@ -4,7 +4,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import {
     ChevronLeft,
     ChevronRight,
-    Plus,
     Clock,
     Building2,
     User as UserIcon,
@@ -35,23 +34,13 @@ const TYPE_STYLES = {
     seguimiento: { chip: 'bg-amber-100 text-amber-800', dot: 'bg-amber-500' },
     capacitacion: { chip: 'bg-emerald-100 text-emerald-800', dot: 'bg-emerald-500' },
     reunion: { chip: 'bg-violet-100 text-violet-800', dot: 'bg-violet-500' },
+    regulacion: { chip: 'bg-rose-100 text-rose-800', dot: 'bg-rose-500' },
     otro: { chip: 'bg-slate-200 text-slate-700', dot: 'bg-slate-500' },
 };
 const styleOf = (type) => TYPE_STYLES[type] || TYPE_STYLES.otro;
 
 const WEEKDAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const MAX_CHIPS = 3;
-
-const emptyForm = (date) => ({
-    title: '',
-    type: 'revision',
-    inspector_id: '',
-    company_id: '',
-    date,
-    start_time: '',
-    end_time: '',
-    description: '',
-});
 
 export default function CalendarIndex({
     month,
@@ -69,9 +58,9 @@ export default function CalendarIndex({
     const isAdmin = auth?.user?.role === 'admin';
 
     const [selected, setSelected] = useState(() => defaultSelectedDate(month));
-    const [modal, setModal] = useState(null); // null | { mode: 'create' | 'edit', event? }
+    const [modal, setModal] = useState(null); // null | { event }
 
-    // Si se saltó a otro mes desde "Próximas actividades", se conserva el día pedido
+    // Si se saltó a otro mes desde las próximas fechas, se conserva el día pedido
     const pendingSelect = useRef(null);
 
     useEffect(() => {
@@ -134,28 +123,18 @@ export default function CalendarIndex({
 
                     <div className="flex flex-wrap items-center gap-2">
                         {isAdmin && (
-                            <>
-                                <select
-                                    value={filters.inspector_id || ''}
-                                    onChange={(e) => goTo(month, e.target.value)}
-                                    className="text-xs px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-700 focus:ring-2 focus:ring-blue-600 outline-none"
-                                >
-                                    <option value="">Todos los inspectores</option>
-                                    {inspectors.map((i) => (
-                                        <option key={i.id} value={i.id}>
-                                            {i.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <button
-                                    type="button"
-                                    onClick={() => setModal({ mode: 'create' })}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    Nueva actividad
-                                </button>
-                            </>
+                            <select
+                                value={filters.inspector_id || ''}
+                                onChange={(e) => goTo(month, e.target.value)}
+                                className="text-xs px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-700 focus:ring-2 focus:ring-blue-600 outline-none"
+                            >
+                                <option value="">Todos los inspectores</option>
+                                {inspectors.map((i) => (
+                                    <option key={i.id} value={i.id}>
+                                        {i.name}
+                                    </option>
+                                ))}
+                            </select>
                         )}
                     </div>
                 </div>
@@ -171,13 +150,6 @@ export default function CalendarIndex({
                     <span>
                         <span className="font-bold text-emerald-600">{stats.completadas}</span> completadas
                     </span>
-                    <span className="hidden sm:inline text-slate-300">|</span>
-                    {Object.entries(types).map(([key, label]) => (
-                        <span key={key} className="inline-flex items-center gap-1.5">
-                            <span className={`w-2.5 h-2.5 rounded-full ${styleOf(key).dot}`} />
-                            {label}
-                        </span>
-                    ))}
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -251,25 +223,15 @@ export default function CalendarIndex({
                                     <p className="text-xs text-slate-500">
                                         {selectedEvents.length === 0
                                             ? 'Sin actividades'
-                                            : `${selectedEvents.length} actividad${selectedEvents.length === 1 ? '' : 'es'}`}
+                                            : `${selectedEvents.length} evento${selectedEvents.length === 1 ? '' : 's'}`}
                                     </p>
                                 </div>
-                                {isAdmin && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setModal({ mode: 'create' })}
-                                        className="p-2 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100"
-                                        title="Agregar actividad en este día"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                    </button>
-                                )}
                             </div>
 
                             {selectedEvents.length === 0 ? (
                                 <div className="text-xs text-slate-400 flex items-center gap-2">
                                     <CalendarDays className="w-4 h-4" />
-                                    {isAdmin ? 'Tocá + para asignar una actividad.' : 'No tenés actividades este día.'}
+                                    No hay fechas ni actividades este día.
                                 </div>
                             ) : (
                                 <ul className="space-y-3">
@@ -280,7 +242,7 @@ export default function CalendarIndex({
                                             types={types}
                                             isAdmin={isAdmin}
                                             onStatus={setStatus}
-                                            onEdit={() => setModal({ mode: 'edit', event: e })}
+                                            onEdit={() => setModal({ event: e })}
                                             onDelete={() => removeEvent(e)}
                                         />
                                     ))}
@@ -290,9 +252,9 @@ export default function CalendarIndex({
 
                         {/* Próximas */}
                         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5">
-                            <h3 className="text-sm font-bold text-slate-900 mb-3">Próximas actividades</h3>
+                            <h3 className="text-sm font-bold text-slate-900 mb-3">Próximas fechas y actividades</h3>
                             {upcoming.length === 0 ? (
-                                <p className="text-xs text-slate-400">No hay actividades pendientes por delante.</p>
+                                <p className="text-xs text-slate-400">No hay fechas ni actividades pendientes por delante.</p>
                             ) : (
                                 <ul className="space-y-2">
                                     {upcoming.map((e) => (
@@ -330,9 +292,7 @@ export default function CalendarIndex({
 
             {modal && (
                 <EventModal
-                    mode={modal.mode}
                     event={modal.event}
-                    date={selected}
                     types={types}
                     inspectors={inspectors}
                     companies={companies}
@@ -412,7 +372,7 @@ function EventCard({ event: e, types, isAdmin, onStatus, onEdit, onDelete }) {
                     )}
                 </div>
             )}
-            {isAdmin && !done && !cancelled && (
+            {isAdmin && e.can_edit && !done && !cancelled && (
                 <button type="button" onClick={() => onStatus(e, 'cancelada')} className="mt-2 block text-[11px] font-medium text-slate-400 hover:text-rose-600">
                     Cancelar actividad
                 </button>
@@ -421,22 +381,17 @@ function EventCard({ event: e, types, isAdmin, onStatus, onEdit, onDelete }) {
     );
 }
 
-export function EventModal({ mode, event, date, types, inspectors, companies, onClose }) {
-    const editing = mode === 'edit';
-    const form = useForm(
-        editing
-            ? {
-                  title: event.title,
-                  type: event.type,
-                  inspector_id: event.inspector ? String(event.inspector.id) : '',
-                  company_id: event.company ? String(event.company.id) : '',
-                  date: event.date,
-                  start_time: event.start_time || '',
-                  end_time: event.end_time || '',
-                  description: event.description || '',
-              }
-            : emptyForm(date)
-    );
+export function EventModal({ event, types, inspectors, companies, onClose }) {
+    const form = useForm({
+        title: event.title,
+        type: event.type,
+        inspector_id: event.inspector ? String(event.inspector.id) : '',
+        company_id: event.company ? String(event.company.id) : '',
+        date: event.date,
+        start_time: event.start_time || '',
+        end_time: event.end_time || '',
+        description: event.description || '',
+    });
     const { data, setData, errors, processing } = form;
 
     // Solo se ofrecen las empresas asignadas al inspector elegido
@@ -452,8 +407,7 @@ export function EventModal({ mode, event, date, types, inspectors, companies, on
     const submit = (e) => {
         e.preventDefault();
         const options = { preserveScroll: true, onSuccess: onClose };
-        if (editing) form.put(`/calendar/${event.id}`, options);
-        else form.post('/calendar', options);
+        form.put(`/calendar/${event.id}`, options);
     };
 
     const field = 'w-full text-sm px-3 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none';
@@ -468,7 +422,7 @@ export function EventModal({ mode, event, date, types, inspectors, companies, on
                 className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto"
             >
                 <div className="flex items-center justify-between px-6 pt-5 pb-3">
-                    <h3 className="text-base font-bold text-slate-900">{editing ? 'Editar actividad' : 'Nueva actividad'}</h3>
+                    <h3 className="text-base font-bold text-slate-900">Editar actividad</h3>
                     <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="Cerrar">
                         <X className="w-4 h-4" />
                     </button>
@@ -492,7 +446,7 @@ export function EventModal({ mode, event, date, types, inspectors, companies, on
                         <div>
                             <label className={label}>Tipo</label>
                             <select value={data.type} onChange={(e) => setData('type', e.target.value)} className={field}>
-                                {Object.entries(types).map(([key, text]) => (
+                                {Object.entries(types).filter(([key]) => key !== 'regulacion').map(([key, text]) => (
                                     <option key={key} value={key}>
                                         {text}
                                     </option>
@@ -582,7 +536,7 @@ export function EventModal({ mode, event, date, types, inspectors, companies, on
                         className="inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl disabled:opacity-60"
                     >
                         {processing && <Loader2 className="w-4 h-4 animate-spin" />}
-                        {editing ? 'Guardar cambios' : 'Asignar actividad'}
+                        Guardar cambios
                     </button>
                 </div>
             </form>

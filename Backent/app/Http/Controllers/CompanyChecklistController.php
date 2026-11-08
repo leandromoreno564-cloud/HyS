@@ -18,6 +18,32 @@ use Inertia\Inertia;
 
 class CompanyChecklistController extends Controller
 {
+    /** Lista los relevamientos creados por el usuario actual. */
+    public function mine(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $query = CompanyChecklist::query()
+            ->with('company:id,business_name,tax_id')
+            ->withCount('items')
+            ->whereHas('company', fn ($companies) => $companies->accessibleBy($user));
+
+        // Los administradores pueden consultar el historial completo; cada
+        // licenciado ve únicamente los relevamientos que registró.
+        if (!$user->isAdmin()) {
+            $query->where('created_by', $user->id);
+        }
+
+        $checklists = $query
+            ->orderByDesc('surveyed_at')
+            ->orderByDesc('id')
+            ->paginate(12)
+            ->withQueryString();
+
+        return Inertia::render('Checklists/Index', compact('checklists'));
+    }
+
     private function authorize404(Company $company): void
     {
         /** @var User $user */

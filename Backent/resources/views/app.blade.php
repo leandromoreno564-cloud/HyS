@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title inertia>Plataforma de Higiene y Seguridad Laboral</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png?v=3') }}">
 
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

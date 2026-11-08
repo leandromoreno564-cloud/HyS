@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AppNotification;
 use App\Models\CalendarEvent;
 use App\Models\Company;
+use App\Models\CompanyChecklistItem;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -62,6 +63,11 @@ class CalendarController extends Controller
             ->orderBy('start_time')
             ->get();
 
+        // Las fechas de regulación se cargan desde cada ítem del relevamiento.
+        // Son eventos informativos: se actualizan al editar el relevamiento y no
+        // se administran como una actividad manual del calendario.
+        $regulations = $this->regulationItems($user, $gridStart, $gridEnd);
+
         $upcoming = CalendarEvent::with(['company:id,business_name', 'inspector:id,name'])
             ->where('date', '>=', $today->toDateString())
             ->where('status', 'pendiente')
@@ -72,20 +78,35 @@ class CalendarController extends Controller
             ->limit(6)
             ->get();
 
-        $inMonth = $events->filter(fn ($e) => $e->date->format('Y-m') === $month);
+        $upcomingRegulations = $this->regulationItems($user, $today);
+
+        $calendarEvents = $events
+            ->map(fn ($e) => $this->present($e, $user))
+            ->concat($regulations->map(fn ($item) => $this->presentRegulation($item)))
+            ->sortBy(fn (array $event) => $event['date'] . ' ' . ($event['start_time'] ?? '99:99'))
+            ->values();
+
+        $upcomingEvents = $upcoming
+            ->map(fn ($e) => $this->present($e, $user))
+            ->concat($upcomingRegulations->map(fn ($item) => $this->presentRegulation($item)))
+            ->sortBy(fn (array $event) => $event['date'] . ' ' . ($event['start_time'] ?? '99:99'))
+            ->take(6)
+            ->values();
+
+        $inMonth = $calendarEvents->filter(fn (array $event) => str_starts_with($event['date'], $month));
 
         $payload = [
             'month' => $month,
             'gridStart' => $gridStart->toDateString(),
             'gridEnd' => $gridEnd->toDateString(),
-            'events' => $events->map(fn ($e) => $this->present($e, $user))->values(),
-            'upcoming' => $upcoming->map(fn ($e) => $this->present($e, $user))->values(),
+            'events' => $calendarEvents,
+            'upcoming' => $upcomingEvents,
             'stats' => [
                 'total' => $inMonth->count(),
                 'pendientes' => $inMonth->where('status', 'pendiente')->count(),
                 'completadas' => $inMonth->where('status', 'completada')->count(),
             ],
-            'types' => CalendarEvent::TYPES,
+            'types' => CalendarEvent::TYPES + ['regulacion' => 'Fecha de regulación'],
             'filters' => ['inspector_id' => $inspectorFilter ?: null],
             'inspectors' => [],
             'companies' => [],
@@ -109,21 +130,7 @@ class CalendarController extends Controller
         return Inertia::render('Calendar/Index', $payload);
     }
 
-    // ------------------------------------------------------------------ Altas, cambios y bajas (admin)
-
-    public function store(Request $request)
-    {
-        $data = $this->validated($request);
-
-        $event = CalendarEvent::create($data + [
-            'status' => 'pendiente',
-            'created_by' => Auth::id(),
-        ]);
-
-        $this->notify($event->inspector_id, 'Nueva actividad asignada', $this->summary($event), $event);
-
-        return back()->with('success', 'Actividad asignada al inspector.');
-    }
+    // ------------------------------------------------------------------ Cambios y bajas (admin)
 
     public function update(Request $request, CalendarEvent $event)
     {
@@ -137,7 +144,7 @@ class CalendarController extends Controller
         if ($dirty) {
             if ((int) $oldInspectorId !== (int) $event->inspector_id) {
                 $this->notify($oldInspectorId, 'Actividad reasignada', 'Ya no tenés asignada: ' . $this->summary($event), $event);
-                $this->notify($event->inspector_id, 'Nueva actividad asignada', $this->summary($event), $event);
+                $this->notify($event->inspector_id, 'Actividad reasignada', $this->summary($event), $event);
             } else {
                 $this->notify($event->inspector_id, 'Actividad modificada', $this->summary($event), $event);
             }
@@ -236,6 +243,48 @@ class CalendarController extends Controller
             'inspector' => $e->inspector ? ['id' => $e->inspector->id, 'name' => $e->inspector->name] : null,
             'can_edit' => $user->isAdmin(),
             'can_toggle' => $user->isAdmin() || (int) $e->inspector_id === (int) $user->id,
+        ];
+    }
+
+    /** @return \Illuminate\Support\Collection<int, CompanyChecklistItem> */
+    private function regulationItems(User $user, Carbon $from, ?Carbon $to = null)
+    {
+        $query = CompanyChecklistItem::with([
+            'company:id,business_name,is_active',
+            'checklist:id,name',
+        ])
+            ->whereNotNull('regulation_date')
+            ->whereDate('regulation_date', '>=', $from->toDateString())
+            ->whereHas('company', fn ($companies) => $companies->active()->accessibleBy($user));
+
+        if ($to) {
+            $query->whereDate('regulation_date', '<=', $to->toDateString());
+        }
+
+        return $query
+            ->orderBy('regulation_date')
+            ->orderBy('item_number')
+            ->get();
+    }
+
+    private function presentRegulation(CompanyChecklistItem $item): array
+    {
+        $checklistName = $item->checklist?->name ?: 'Relevamiento';
+        $detail = $item->correction_notes ?: $item->description;
+
+        return [
+            'id' => 'regulation-' . $item->id,
+            'title' => 'Regulación: ' . $item->question,
+            'type' => 'regulacion',
+            'description' => collect([$checklistName, $detail])->filter()->implode(' · '),
+            'date' => $item->regulation_date->format('Y-m-d'),
+            'start_time' => null,
+            'end_time' => null,
+            'status' => 'pendiente',
+            'company' => $item->company ? ['id' => $item->company->id, 'business_name' => $item->company->business_name] : null,
+            'inspector' => null,
+            'can_edit' => false,
+            'can_toggle' => false,
         ];
     }
 

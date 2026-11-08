@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Database\Seeders\PortalContentSeeder;
 
 return new class extends Migration
 {
@@ -60,6 +61,8 @@ return new class extends Migration
         $add('galeria', 3, ['title' => 'Capacitación en equipo', 'image' => $img('photo-1521737711867-e3b97375f902')]);
 
         DB::table('portal_items')->insert($rows);
+
+        (new PortalContentSeeder())->run();
     }
 
     public function down(): void

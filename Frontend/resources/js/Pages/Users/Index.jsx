@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Link, router } from '@inertiajs/react';
+import defaultAvatar from '../../../images/hys-default-avatar.png';
 import { 
     Users, 
     Plus, 
@@ -9,11 +10,13 @@ import {
     Award, 
     Phone, 
     Edit,
+    Settings2,
 } from 'lucide-react';
 
-export default function UsersIndex({ users, focusedUserId = null }) {
+export default function UsersIndex({ users, focusedUserId = null, inspectorOpenAccess = true }) {
     const [search, setSearch] = useState('');
     const [role, setRole] = useState('');
+    const [openAccess, setOpenAccess] = useState(Boolean(inspectorOpenAccess));
 
     const handleFilter = (e) => {
         e.preventDefault();
@@ -25,6 +28,19 @@ export default function UsersIndex({ users, focusedUserId = null }) {
 
     const handleToggleStatus = (userId) => {
         router.post(`/users/${userId}/toggle-status`, {}, { preserveScroll: true });
+    };
+
+    const openUserEdit = (userId) => {
+        router.visit(`/users/${userId}/edit`);
+    };
+
+    const toggleOpenAccess = () => {
+        const next = !openAccess;
+        setOpenAccess(next);
+        router.put('/users/settings/inspector-open-access', { enabled: next }, {
+            preserveScroll: true,
+            onError: () => setOpenAccess(!next),
+        });
     };
 
     return (
@@ -48,6 +64,36 @@ export default function UsersIndex({ users, focusedUserId = null }) {
                         Registrar Usuario
                     </Link>
                 </div>
+
+                <section className="flex flex-col gap-4 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                            <Settings2 className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-900">Modo de acceso inicial</h3>
+                            <p className="mt-0.5 text-xs text-slate-600">
+                                {openAccess
+                                    ? 'Abierto: los nuevos inspectores reciben acceso a todas las empresas activas.'
+                                    : 'Cerrado: los nuevos inspectores requieren que un administrador les asigne empresas.'}
+                            </p>
+                            <p className="mt-1 text-[11px] text-slate-500">Este cambio no modifica los accesos que ya fueron otorgados.</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2.5 self-end sm:self-auto">
+                        <span className={`text-xs font-bold ${openAccess ? 'text-emerald-700' : 'text-slate-600'}`}>{openAccess ? 'Abierto' : 'Cerrado'}</span>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={openAccess}
+                            onClick={toggleOpenAccess}
+                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 ${openAccess ? 'bg-emerald-500' : 'bg-slate-400'}`}
+                            title={openAccess ? 'Cerrar acceso inicial automático' : 'Abrir acceso inicial automático'}
+                        >
+                            <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${openAccess ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </button>
+                    </div>
+                </section>
 
                 {/* Filter Bar */}
                 <form onSubmit={handleFilter} className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row gap-3 items-center">
@@ -102,24 +148,30 @@ export default function UsersIndex({ users, focusedUserId = null }) {
                                     users.data.map((user) => (
                                         <tr
                                             key={user.id}
-                                            className={`transition-colors ${
+                                            role="link"
+                                            tabIndex={0}
+                                            onClick={() => openUserEdit(user.id)}
+                                            onKeyDown={(event) => {
+                                                if (event.target !== event.currentTarget) return;
+                                                if (event.key === 'Enter' || event.key === ' ') {
+                                                    event.preventDefault();
+                                                    openUserEdit(user.id);
+                                                }
+                                            }}
+                                            className={`cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 ${
                                                 Number(user.id) === Number(focusedUserId)
-                                                    ? 'bg-blue-100/70 hover:bg-blue-100 ring-1 ring-inset ring-blue-200'
-                                                    : 'hover:bg-slate-50/80'
+                                                    ? 'bg-blue-100/70 hover:bg-blue-200/70 ring-1 ring-inset ring-blue-200'
+                                                    : 'bg-white hover:bg-blue-50'
                                             }`}
                                         >
                                             <td className="py-3.5 px-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm overflow-hidden shrink-0">
-                                                        {user.avatar ? (
-                                                            <img
-                                                                src={`/storage/${user.avatar}`}
-                                                                alt={user.name}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            user.name.charAt(0).toUpperCase()
-                                                        )}
+                                                    <div className="w-9 h-9 rounded-xl bg-slate-950 overflow-hidden shrink-0">
+                                                        <img
+                                                            src={user.avatar ? `/storage/${user.avatar}` : defaultAvatar}
+                                                            alt={user.name || 'Avatar predeterminado de HyS'}
+                                                            className="w-full h-full object-cover"
+                                                        />
                                                     </div>
                                                     <div>
                                                         <span className="font-bold text-slate-900 text-sm block">
@@ -161,7 +213,10 @@ export default function UsersIndex({ users, focusedUserId = null }) {
                                                         type="button"
                                                         role="switch"
                                                         aria-checked={user.is_active}
-                                                        onClick={() => handleToggleStatus(user.id)}
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            handleToggleStatus(user.id);
+                                                        }}
                                                         className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                                                             user.is_active ? 'bg-emerald-500' : 'bg-slate-300'
                                                         }`}
@@ -180,6 +235,7 @@ export default function UsersIndex({ users, focusedUserId = null }) {
                                                 <div className="flex items-center justify-end gap-2">
                                                     <Link
                                                         href={`/users/${user.id}/edit`}
+                                                        onClick={(event) => event.stopPropagation()}
                                                         className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                         title="Editar Usuario"
                                                     >

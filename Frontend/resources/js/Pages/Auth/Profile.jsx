@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useForm } from '@inertiajs/react';
-import { Award, Camera, Check, Eye, EyeOff, IdCard, Lock, Mail, Pencil, Phone, Save, User, X } from 'lucide-react';
+import defaultAvatar from '../../../images/hys-default-avatar.png';
+import { Award, Camera, Check, ChevronDown, Eye, EyeOff, IdCard, Lock, Mail, Pencil, Phone, Save, Trash2, User, X } from 'lucide-react';
 
 export default function Profile({ user }) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, delete: destroy, processing, errors, defaults: setDefaults } = useForm({
         first_name: user.first_name || user.name?.split(' ')[0] || '',
         last_name: user.last_name || user.name?.split(' ').slice(1).join(' ') || '',
         email: user.email || '',
@@ -20,6 +21,10 @@ export default function Profile({ user }) {
     const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
     const [editingField, setEditingField] = useState(null);
     const [originalValue, setOriginalValue] = useState('');
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+    const avatarInputRef = useRef(null);
+    const avatarMenuRef = useRef(null);
 
     useEffect(() => {
         if (editingField) {
@@ -27,14 +32,25 @@ export default function Profile({ user }) {
         }
     }, [editingField]);
 
+    useEffect(() => {
+        if (!avatarMenuOpen) return undefined;
+
+        const closeMenuOnOutsideClick = (event) => {
+            if (!avatarMenuRef.current?.contains(event.target)) setAvatarMenuOpen(false);
+        };
+
+        document.addEventListener('pointerdown', closeMenuOnOutsideClick);
+        return () => document.removeEventListener('pointerdown', closeMenuOnOutsideClick);
+    }, [avatarMenuOpen]);
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/profile', { forceFormData: true, preserveState: true, preserveScroll: true, only: ['auth', 'flash', 'user'] });
+        post('/profile', { forceFormData: true, preserveState: true, preserveScroll: true, only: ['auth', 'user', 'flash'], onSuccess: () => { setDefaults(); setHasUnsavedChanges(false); } });
     };
 
     const handleAvatarChange = (e) => {
         const file = e.target.files?.[0] || null;
-        setData('avatar', file);
+        updateField('avatar', file);
         setAvatarPreview(file ? URL.createObjectURL(file) : null);
     };
 
@@ -45,10 +61,27 @@ export default function Profile({ user }) {
             forceFormData: true,
             preserveState: true,
             preserveScroll: true,
-            only: ['auth', 'flash', 'user'],
+            only: ['auth', 'user', 'flash'],
             onSuccess: () => {
                 setAvatarPreview(null);
                 setData('avatar', null);
+                setHasUnsavedChanges(false);
+            },
+        });
+    };
+
+    const removeAvatar = () => {
+        if (!window.confirm('¿Querés quitar tu foto de perfil? Se mostrará el avatar predeterminado de HyS.')) return;
+
+        setAvatarMenuOpen(false);
+        destroy('/profile/avatar', {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['auth', 'user', 'flash'],
+            onSuccess: () => {
+                setAvatarPreview(null);
+                setData('avatar', null);
+                setHasUnsavedChanges(false);
             },
         });
     };
@@ -61,26 +94,35 @@ export default function Profile({ user }) {
     const cancelEditing = () => {
         if (editingField) setData(editingField, originalValue);
         setEditingField(null);
+        setHasUnsavedChanges(false);
     };
 
     const saveField = () => {
-        post('/profile', { forceFormData: true, preserveState: true, preserveScroll: true, only: ['auth', 'flash', 'user'], onSuccess: () => setEditingField(null) });
+        post('/profile', { forceFormData: true, preserveState: true, preserveScroll: true, only: ['auth', 'user', 'flash'], onSuccess: () => { setDefaults(); setEditingField(null); setHasUnsavedChanges(false); } });
     };
 
-    const avatarSource = avatarPreview || (user.avatar ? `/storage/${user.avatar}` : null);
+    const updateField = (field, value) => {
+        setData(field, value);
+        setHasUnsavedChanges(true);
+    };
+
+    const avatarSource = avatarPreview || (user.avatar ? `/storage/${user.avatar}` : defaultAvatar);
 
     return (
         <AuthenticatedLayout title="Mi Perfil">
             <div className="w-full -mx-2 sm:mx-auto lg:w-[90%]">
                 <div className="lg:grid lg:grid-cols-[420px_minmax(0,1fr)] lg:items-start lg:gap-8">
                     <aside className="mb-6 flex flex-col items-center rounded-none border border-slate-200 bg-white p-6 text-center sm:rounded-3xl lg:sticky lg:top-24 lg:mb-0 lg:items-center lg:text-center">
-                        <label className="group cursor-pointer">
-                            <div className="w-28 h-28 rounded-full bg-amber-400 text-slate-950 font-extrabold text-6xl flex items-center justify-center overflow-hidden shadow-lg shadow-amber-400/20 ring-4 ring-amber-100 transition group-hover:ring-amber-300 lg:w-36 lg:h-36 lg:text-7xl">
-                                {avatarSource ? <img src={avatarSource} alt={user.name} className="w-full h-full object-cover" /> : user.name?.charAt(0).toUpperCase()}
-                            </div>
-                            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleAvatarChange} className="hidden" />
-                            <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 transition group-hover:text-amber-500"><Camera className="w-3.5 h-3.5" />Cambiar foto</span>
-                        </label>
+                        <div ref={avatarMenuRef} className="relative">
+                            <button type="button" onClick={() => avatarInputRef.current?.click()} className="group cursor-pointer" aria-label="Cambiar foto de perfil">
+                                <div className="w-28 h-28 rounded-full bg-slate-950 text-slate-950 font-extrabold text-6xl flex items-center justify-center overflow-hidden shadow-lg shadow-slate-950/20 ring-4 ring-slate-200 transition group-hover:ring-amber-300 lg:w-36 lg:h-36 lg:text-7xl">
+                                    <img src={avatarSource} alt={user.name || 'Avatar predeterminado de HyS'} className="w-full h-full object-cover" />
+                                </div>
+                            </button>
+                            <button type="button" onClick={() => setAvatarMenuOpen((open) => !open)} className="absolute bottom-0 right-0 inline-flex items-center gap-1 rounded-full border-2 border-white bg-amber-400 px-2.5 py-1.5 text-xs font-bold text-slate-950 shadow-md transition hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2" aria-expanded={avatarMenuOpen} aria-haspopup="menu"><Pencil className="w-3.5 h-3.5" /><span className="hidden sm:inline">Editar</span><ChevronDown className={`w-3.5 h-3.5 transition-transform ${avatarMenuOpen ? 'rotate-180' : ''}`} /></button>
+                            {avatarMenuOpen && <div role="menu" className="absolute right-0 top-full z-10 mt-2 w-40 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-left shadow-lg shadow-slate-900/10"><button type="button" role="menuitem" onClick={() => { setAvatarMenuOpen(false); avatarInputRef.current?.click(); }} className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-amber-50 hover:text-amber-700"><Camera className="w-3.5 h-3.5" />Cambiar foto</button>{user.avatar && <button type="button" role="menuitem" onClick={removeAvatar} disabled={processing} className="flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-50"><Trash2 className="w-3.5 h-3.5" />Quitar foto</button>}</div>}
+                        </div>
+                        <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={handleAvatarChange} className="hidden" />
                         {avatarPreview && <button type="button" onClick={saveAvatar} disabled={processing} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-amber-300 disabled:opacity-50"><Save className="w-4 h-4" />{processing ? 'Guardando foto...' : 'Guardar foto'}</button>}
                         {errors.avatar && <p className="mt-2 text-xs font-medium text-rose-600">{errors.avatar}</p>}
                         <p className="mt-4 text-lg font-bold text-slate-950">{data.first_name} {data.last_name}</p>
@@ -91,24 +133,24 @@ export default function Profile({ user }) {
                     <section>
                         <div className="mb-4"><h3 className="text-base font-bold text-slate-950">Datos personales</h3><p className="mt-1 text-sm text-slate-500">Tu información de identificación y contacto.</p></div>
                         <div className="overflow-hidden rounded-none border border-slate-200 sm:rounded-2xl">
-                            <ProfileRow label="Nombre" icon={User} id="first_name" value={data.first_name} onChange={(e) => setData('first_name', e.target.value)} error={errors.first_name} required isEditing={editingField === 'first_name'} onEdit={() => startEditing('first_name')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
-                            <ProfileRow label="Apellido" icon={User} id="last_name" value={data.last_name} onChange={(e) => setData('last_name', e.target.value)} error={errors.last_name} required isEditing={editingField === 'last_name'} onEdit={() => startEditing('last_name')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
-                            <ProfileRow label="DNI" icon={IdCard} id="dni" inputMode="numeric" pattern="[0-9]*" value={data.dni} onChange={(e) => setData('dni', e.target.value.replace(/\D/g, ''))} error={errors.dni} required isEditing={editingField === 'dni'} onEdit={() => startEditing('dni')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
-                            <ProfileRow label="Teléfono" icon={Phone} id="phone" inputMode="numeric" pattern="[0-9]*" value={data.phone} onChange={(e) => setData('phone', e.target.value.replace(/\D/g, ''))} placeholder="541112345678" error={errors.phone} isEditing={editingField === 'phone'} onEdit={() => startEditing('phone')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
-                            {user.role === 'inspector' && <ProfileRow label="Matrícula profesional" icon={Award} id="license_number" value={data.license_number} onChange={(e) => setData('license_number', e.target.value)} placeholder="Ej: COPIG-9842" error={errors.license_number} isEditing={editingField === 'license_number'} onEdit={() => startEditing('license_number')} onSave={saveField} onCancel={cancelEditing} saving={processing} />}
+                            <ProfileRow label="Nombre" icon={User} id="first_name" value={data.first_name} onChange={(e) => updateField('first_name', e.target.value)} error={errors.first_name} required isEditing={editingField === 'first_name'} onEdit={() => startEditing('first_name')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
+                            <ProfileRow label="Apellido" icon={User} id="last_name" value={data.last_name} onChange={(e) => updateField('last_name', e.target.value)} error={errors.last_name} required isEditing={editingField === 'last_name'} onEdit={() => startEditing('last_name')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
+                            <ProfileRow label="DNI" icon={IdCard} id="dni" inputMode="numeric" pattern="[0-9]*" value={data.dni} onChange={(e) => updateField('dni', e.target.value.replace(/\D/g, ''))} error={errors.dni} required isEditing={editingField === 'dni'} onEdit={() => startEditing('dni')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
+                            <ProfileRow label="Teléfono" icon={Phone} id="phone" inputMode="numeric" pattern="[0-9]*" value={data.phone} onChange={(e) => updateField('phone', e.target.value.replace(/\D/g, ''))} placeholder="541112345678" error={errors.phone} isEditing={editingField === 'phone'} onEdit={() => startEditing('phone')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
+                            {user.role === 'inspector' && <ProfileRow label="Matrícula profesional" icon={Award} id="license_number" value={data.license_number} onChange={(e) => updateField('license_number', e.target.value)} placeholder="Ej: COPIG-9842" error={errors.license_number} isEditing={editingField === 'license_number'} onEdit={() => startEditing('license_number')} onSave={saveField} onCancel={cancelEditing} saving={processing} />}
                         </div>
                     </section>
 
                     <section className="mt-8">
                         <div className="mb-4"><h3 className="text-base font-bold text-slate-950">Datos de la cuenta</h3><p className="mt-1 text-sm text-slate-500">Correo de acceso y contraseña. Dejá las contraseñas vacías si no querés modificarlas.</p></div>
                         <div className="overflow-hidden rounded-none border border-slate-200 sm:rounded-2xl">
-                            <ProfileRow label="Correo electrónico" icon={Mail} id="email" type="email" value={data.email} onChange={(e) => setData('email', e.target.value)} error={errors.email} required isEditing={editingField === 'email'} onEdit={() => startEditing('email')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
-                            <PasswordRow label="Nueva contraseña" id="password" value={data.password} onChange={(e) => setData('password', e.target.value)} visible={showPassword} toggle={() => setShowPassword((value) => !value)} error={errors.password} isEditing={editingField === 'password'} onEdit={() => startEditing('password')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
-                            <PasswordRow label="Confirmar contraseña" id="password_confirmation" value={data.password_confirmation} onChange={(e) => setData('password_confirmation', e.target.value)} visible={showPasswordConfirmation} toggle={() => setShowPasswordConfirmation((value) => !value)} isEditing={editingField === 'password_confirmation'} onEdit={() => startEditing('password_confirmation')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
+                            <ProfileRow label="Correo electrónico" icon={Mail} id="email" type="email" value={data.email} onChange={(e) => updateField('email', e.target.value)} error={errors.email} required isEditing={editingField === 'email'} onEdit={() => startEditing('email')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
+                            <PasswordRow label="Nueva contraseña" id="password" value={data.password} onChange={(e) => updateField('password', e.target.value)} visible={showPassword} toggle={() => setShowPassword((value) => !value)} error={errors.password} isEditing={editingField === 'password'} onEdit={() => startEditing('password')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
+                            <PasswordRow label="Confirmar contraseña" id="password_confirmation" value={data.password_confirmation} onChange={(e) => updateField('password_confirmation', e.target.value)} visible={showPasswordConfirmation} toggle={() => setShowPasswordConfirmation((value) => !value)} isEditing={editingField === 'password_confirmation'} onEdit={() => startEditing('password_confirmation')} onSave={saveField} onCancel={cancelEditing} saving={processing} />
                         </div>
                     </section>
 
-                    <div className="mt-8 flex justify-end"><button type="submit" disabled={processing} className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 disabled:opacity-50"><Save className="w-4 h-4" />{processing ? 'Guardando...' : 'Guardar cambios'}</button></div>
+                    <div className="mt-8 flex justify-end"><button type="submit" disabled={processing || !hasUnsavedChanges} className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"><Save className="w-4 h-4" />{processing ? 'Guardando...' : 'Guardar cambios'}</button></div>
                     </form>
                 </div>
             </div>

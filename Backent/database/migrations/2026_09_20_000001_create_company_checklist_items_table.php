@@ -17,6 +17,9 @@ return new class extends Migration
             $table->text('reference')->nullable(); // normativa vigente asociada
             $table->string('status')->nullable(); // SI, NO, NO_APLICA
             $table->text('description')->nullable(); // descripción/observación cargada por el usuario
+            $table->date('regulation_date')->nullable();
+            $table->text('correction_notes')->nullable();
+            $table->string('review_status', 20)->nullable(); // en_revision, revisado
             $table->string('photo_1')->nullable();
             $table->string('photo_2')->nullable();
             $table->timestamps();

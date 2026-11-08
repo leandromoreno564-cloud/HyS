@@ -3,6 +3,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import HelpBot from '@/Components/HelpBot';
 import Toast from '@/Components/Toast';
 import hysCatLogo from '../../images/hys-cat-logo-white.png';
+import defaultAvatar from '../../images/hys-default-avatar.png';
 import { 
     LayoutDashboard, 
     Building2, 
@@ -16,29 +17,43 @@ import {
     ChevronRight,
     Search,
     CalendarDays,
-    Globe,
-    LifeBuoy
+    ClipboardList
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, title = '' }) {
     const page = usePage();
-    const { auth, flash, unreadNotifications } = page.props;
-    // En las pantallas de checklist el asistente propio del relevamiento ya ocupa ese lugar
-    const isChecklistPage = /(^|\/)Checklist$/.test(page.component || '');
+    const { auth, flash, unreadNotifications, sidebarChecklists = [] } = page.props;
     const currentUser = auth?.user;
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-    const [dismissFlash, setDismissFlash] = useState(false);
     const flashMessage = flash?.success || flash?.error || flash?.warning || flash?.info;
     const flashType = flash?.success ? 'success' : flash?.error ? 'error' : flash?.warning ? 'warning' : 'info';
+    const flashId = flash?.toast_id;
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+    const [toast, setToast] = useState(() => flashMessage ? {
+        id: `${Date.now()}-${Math.random()}`,
+        message: flashMessage,
+        type: flashType,
+    } : null);
 
     useEffect(() => {
-        if (!flashMessage) return undefined;
+        const showToast = (event) => {
+            const { message, type = 'success' } = event.detail || {};
+            if (!message) return;
 
-        setDismissFlash(false);
-        const timeout = window.setTimeout(() => setDismissFlash(true), 4200);
-        return () => window.clearTimeout(timeout);
-    }, [flashMessage]);
+            setToast({ id: `${Date.now()}-${Math.random()}`, message, type });
+        };
+
+        window.addEventListener('hys:toast', showToast);
+        return () => window.removeEventListener('hys:toast', showToast);
+    }, []);
+
+    useEffect(() => {
+        if (!flashMessage) return;
+
+        // Cada confirmación del servidor incorpora un identificador propio, aun cuando
+        // el texto sea igual al del guardado anterior.
+        setToast({ id: `${Date.now()}-${Math.random()}`, message: flashMessage, type: flashType });
+    }, [flashId, flashMessage, flashType]);
 
     const currentPath = window.location.pathname;
 
@@ -49,17 +64,23 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             icon: LayoutDashboard, 
             active: currentPath === '/dashboard' 
         },
-        { 
-            name: 'Empresas', 
-            href: '/companies', 
-            icon: Building2, 
-            active: currentPath.startsWith('/companies') 
+        {
+            name: 'Mis Relevamientos',
+            href: '/checklists',
+            icon: ClipboardList,
+            active: currentPath.startsWith('/checklists')
         },
-        { 
-            name: 'Calendario', 
-            href: '/calendar', 
-            icon: CalendarDays, 
-            active: currentPath.startsWith('/calendar') 
+        {
+            name: 'Empresas',
+            href: '/companies',
+            icon: Building2,
+            active: currentPath.startsWith('/companies')
+        },
+        {
+            name: 'Calendario',
+            href: '/calendar',
+            icon: CalendarDays,
+            active: currentPath.startsWith('/calendar')
         },
     ];
 
@@ -71,21 +92,6 @@ export default function AuthenticatedLayout({ children, title = '' }) {
             active: currentPath.startsWith('/users') 
         });
     }
-
-    // Acceso a la portada pública (el admin entra para editarla)
-    navigation.push({
-        name: currentUser?.role === 'admin' ? 'Portada (editar)' : 'Portada',
-        href: '/',
-        icon: Globe,
-        active: false
-    });
-
-    navigation.push({
-        name: 'Ayuda',
-        href: '/#ayuda',
-        icon: LifeBuoy,
-        active: false
-    });
 
     const handleLogout = (e) => {
         e.preventDefault();
@@ -151,15 +157,40 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                         );
                     })}
 
+                    {sidebarChecklists.length > 0 && (
+                        <div className="pt-5">
+                            <div className="flex items-center justify-between px-3 pb-2">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Relevamientos recientes</span>
+                                <Link href="/checklists" onClick={() => setSidebarOpen(false)} className="text-[10px] font-semibold text-blue-400 hover:text-blue-300">
+                                    Ver todos
+                                </Link>
+                            </div>
+                            <div className="space-y-1">
+                                {sidebarChecklists.map((checklist) => (
+                                    <Link
+                                        key={checklist.id}
+                                        href={`/companies/${checklist.company.id}/checklist?checklist_id=${checklist.id}`}
+                                        onClick={() => setSidebarOpen(false)}
+                                        title={`${checklist.name} · ${checklist.company.business_name}`}
+                                        className="block rounded-xl px-3 py-2 transition-colors hover:bg-slate-800/60"
+                                    >
+                                        <span className="block truncate text-xs font-semibold text-slate-300">{checklist.name}</span>
+                                        <span className="mt-0.5 block truncate text-[11px] text-slate-500">{checklist.company.business_name}</span>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="pt-4 px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                         Exportación
                     </div>
                     <a
-                        href="/reports/export-csv"
+                        href="/reports/export-excel"
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all"
                     >
                         <FileText className="w-4 h-4 text-slate-400" />
-                        <span>Exportar a Excel (CSV)</span>
+                        <span>Exportar a Excel</span>
                     </a>
                 </nav>
 
@@ -208,16 +239,12 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                                 className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
                             >
-                                <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-semibold text-sm flex items-center justify-center overflow-hidden shrink-0">
-                                    {currentUser?.avatar ? (
-                                        <img
-                                            src={`/storage/${currentUser.avatar}`}
-                                            alt={currentUser.name}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        currentUser?.name?.charAt(0).toUpperCase() || 'U'
-                                    )}
+                                <div className="w-8 h-8 rounded-lg bg-slate-950 overflow-hidden shrink-0">
+                                    <img
+                                        src={currentUser?.avatar ? `/storage/${currentUser.avatar}` : defaultAvatar}
+                                        alt={currentUser?.name || 'Avatar predeterminado de HyS'}
+                                        className="w-full h-full object-cover"
+                                    />
                                 </div>
                                 <div className="text-left hidden sm:block">
                                     <span className="text-xs font-semibold text-slate-800 block truncate max-w-[120px]">
@@ -265,8 +292,13 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                 </header>
 
                 {/* Toast notifications */}
-                {!dismissFlash && flashMessage && (
-                    <Toast message={flashMessage} type={flashType} onClose={() => setDismissFlash(true)} />
+                {toast && (
+                    <Toast
+                        key={toast.id}
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast((current) => current?.id === toast.id ? null : current)}
+                    />
                 )}
 
                 {/* Main Content Area */}

@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\AppNotification;
+use App\Models\Company;
+use App\Models\PortalSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
@@ -57,6 +60,12 @@ class AuthController extends Controller
             'role' => 'inspector', // El auto-registro solo crea Licenciados, nunca administradores
             'is_active' => false, // Debe ser aprobado por un administrador antes de poder ingresar
         ]);
+
+        // Durante la etapa inicial, cada nuevo inspector recibe acceso a todas
+        // las empresas activas para poder trabajar sin pedir asignaciones.
+        if ($newUser->isInspector() && PortalSetting::read('inspector_open_access') !== '0') {
+            $newUser->assignedCompanies()->sync(Company::active()->pluck('id'));
+        }
 
         if ($request->hasFile('avatar')) {
             $newUser->avatar = $request->file('avatar')->store('avatars', 'public');
@@ -119,7 +128,7 @@ class AuthController extends Controller
         // Borra el historial del navegador: con "atrás" no se puede volver al sistema
         Inertia::clearHistory();
 
-        return redirect()->route('portal')->with('success', 'Sesión cerrada correctamente.');
+        return redirect()->route('login')->with('success', 'Sesión cerrada correctamente.');
     }
 
     public function profile()
@@ -164,7 +173,9 @@ class AuthController extends Controller
 
         $user->save();
 
-        return back()->with('success', 'Perfil actualizado exitosamente.');
+        return back()
+            ->with('success', 'Perfil actualizado exitosamente.')
+            ->with('toast_id', Str::uuid()->toString());
     }
 
     public function updateAvatar(Request $request)
@@ -183,6 +194,25 @@ class AuthController extends Controller
         $user->avatar = $request->file('avatar')->store('avatars', 'public');
         $user->save();
 
-        return back()->with('success', 'Foto de perfil actualizada exitosamente.');
+        return back()
+            ->with('success', 'Foto de perfil actualizada exitosamente.')
+            ->with('toast_id', Str::uuid()->toString());
+    }
+
+    public function deleteAvatar(Request $request)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        $user->avatar = null;
+        $user->save();
+
+        return back()
+            ->with('success', 'Foto de perfil eliminada.')
+            ->with('toast_id', Str::uuid()->toString());
     }
 }

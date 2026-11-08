@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('type')->default('info'); // info, warning, danger, success
             $table->string('link')->nullable();
             $table->boolean('is_read')->default(false);
+            $table->timestamp('remind_at')->nullable();
             $table->timestamps();
         });
     }

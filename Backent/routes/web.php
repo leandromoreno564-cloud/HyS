@@ -11,8 +11,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-// Portada pública (lo primero que se ve). El login sigue en /login.
-Route::get('/', [PortalController::class, 'index'])->name('portal');
+// La página principal abre directamente el acceso al sistema.
+Route::redirect('/', '/login')->name('home');
 
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -33,6 +33,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
     Route::post('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
     Route::post('/profile/avatar', [AuthController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [AuthController::class, 'deleteAvatar'])->name('profile.avatar.delete');
 
     // Notificaciones
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -50,6 +51,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->name('companies.request-inspector');
 
     // Relevamiento / Checklist por Empresa
+    Route::get('/checklists', [CompanyChecklistController::class, 'mine'])->name('checklists.index');
     Route::get('/companies/{company}/checklist', [CompanyChecklistController::class, 'index'])->name('companies.checklist.index');
     Route::post('/companies/{company}/checklist/extract', [CompanyChecklistController::class, 'extract'])->name('companies.checklist.extract');
     Route::post('/companies/{company}/checklist', [CompanyChecklistController::class, 'store'])->name('companies.checklist.store');
@@ -68,9 +70,9 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', UserController::class);
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+        Route::put('/users/settings/inspector-open-access', [UserController::class, 'updateInspectorOpenAccess'])->name('users.settings.inspector-open-access');
         Route::post('/companies/{id}/restore', [CompanyController::class, 'restore'])->name('companies.restore');
         Route::post('/companies/{company}/assign', [CompanyController::class, 'assignInspectors'])->name('companies.assign');
-        Route::post('/calendar', [CalendarController::class, 'store'])->name('calendar.store');
         Route::put('/calendar/{event}', [CalendarController::class, 'update'])->name('calendar.update');
         Route::delete('/calendar/{event}', [CalendarController::class, 'destroy'])->name('calendar.destroy');
 

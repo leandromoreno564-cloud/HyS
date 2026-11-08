@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Mail\ProfessionalStatusMail;
+use App\Models\Company;
+use App\Models\PortalSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,7 +49,10 @@ class UserController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return Inertia::render('Users/Index', compact('users', 'focusedUserId'));
+        // Si no se configuró todavía, el modo inicial se considera abierto.
+        $inspectorOpenAccess = PortalSetting::read('inspector_open_access') !== '0';
+
+        return Inertia::render('Users/Index', compact('users', 'focusedUserId', 'inspectorOpenAccess'));
     }
 
     public function create()
@@ -77,7 +82,12 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        return Inertia::render('Users/Edit', compact('user'));
+        $user->load('assignedCompanies:id,business_name');
+        $companies = Company::active()
+            ->orderBy('business_name')
+            ->get(['id', 'business_name', 'tax_id']);
+
+        return Inertia::render('Users/Edit', compact('user', 'companies'));
     }
 
     public function update(Request $request, User $user)
@@ -90,7 +100,13 @@ class UserController extends Controller
             'phone' => ['nullable', 'string', 'max:50'],
             'license_number' => ['nullable', 'string', 'max:100'],
             'is_active' => ['boolean'],
+            'company_ids' => ['nullable', 'array'],
+            'company_ids.*' => [Rule::exists('companies', 'id')->whereNull('deleted_at')],
         ]);
+
+        $companyIds = $data['company_ids'] ?? [];
+        $shouldSyncCompanies = $request->has('company_ids') || $data['role'] !== 'inspector';
+        unset($data['company_ids']);
 
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
@@ -107,6 +123,12 @@ class UserController extends Controller
         }
 
         $user->update($data);
+
+        if ($shouldSyncCompanies) {
+            // Las empresas se asignan únicamente a inspectores. Si el usuario
+            // pasa a ser administrador se eliminan sus asignaciones vigentes.
+            $user->assignedCompanies()->sync($data['role'] === 'inspector' ? $companyIds : []);
+        }
 
         return redirect()->route('users.index')->with('success', 'Usuario actualizado exitosamente.');
     }
@@ -125,6 +147,21 @@ class UserController extends Controller
 
         $statusText = $user->is_active ? 'habilitado' : 'deshabilitado';
         return back()->with('success', "Usuario {$user->name} {$statusText} correctamente.");
+    }
+
+    /** Activa o desactiva la asignación automática de empresas al registrarse un inspector. */
+    public function updateInspectorOpenAccess(Request $request)
+    {
+        $data = $request->validate(['enabled' => ['required', 'boolean']]);
+
+        PortalSetting::put('inspector_open_access', $data['enabled'] ? '1' : '0');
+
+        return back()->with(
+            'success',
+            $data['enabled']
+                ? 'Modo de acceso inicial abierto. Los nuevos inspectores recibirán todas las empresas activas.'
+                : 'Modo de acceso inicial cerrado. Los nuevos inspectores requerirán asignación manual.'
+        );
     }
 
     public function destroy(User $user)

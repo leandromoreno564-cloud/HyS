@@ -73,6 +73,12 @@ function errMsg(err, fallback = 'Ocurrió un error. Probá de nuevo.') {
     return data?.message || fallback;
 }
 
+// Usa el contenedor de avisos global para que las acciones AJAX también tengan
+// una confirmación visible, sin necesidad de recargar la página.
+function showToast(message, type = 'success') {
+    window.dispatchEvent(new CustomEvent('hys:toast', { detail: { message, type } }));
+}
+
 // Valida una imagen antes de aceptarla (mismas reglas que el server: jpeg/png/webp, máx. 5 MB)
 function validateImage(file) {
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
@@ -331,11 +337,11 @@ export default function CompaniesChecklist({ company, checklist, items }) {
             setSavedItems(saved);
             setDraftItems([]);
             setStage('saved');
-            setPageNotice(
-                failed > 0
-                    ? `Relevamiento guardado, pero ${failed} foto(s) no se pudieron subir. Podés volver a agregarlas desde cada ítem.`
-                    : 'Relevamiento guardado correctamente.'
-            );
+            const message = failed > 0
+                ? `Relevamiento guardado, pero ${failed} foto(s) no se pudieron subir. Podés volver a agregarlas desde cada ítem.`
+                : 'Relevamiento guardado correctamente.';
+            setPageNotice(message);
+            showToast(message, failed > 0 ? 'warning' : 'success');
         } catch (err) {
             setPageError(errMsg(err, 'No se pudo guardar el relevamiento.'));
         } finally {
@@ -352,6 +358,7 @@ export default function CompaniesChecklist({ company, checklist, items }) {
             .then((res) => {
                 setSavedItems((prev) => prev.map((it) => (it.id === id ? res.data.item : it)));
                 setSync('saved');
+                showToast('Cambios del relevamiento guardados.');
             })
             .catch((err) => {
                 setSync('error');

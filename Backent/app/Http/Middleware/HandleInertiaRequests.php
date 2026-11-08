@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\CompanyChecklist;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -71,11 +72,35 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'unreadNotifications' => fn () => $request->user() ? $request->user()->appNotifications()->due()->where('is_read', false)->count() : 0,
+            // Accesos breves para el sidebar: los tres relevamientos más recientes
+            // creados por la persona que inició sesión.
+            'sidebarChecklists' => fn () => $request->user()
+                ? CompanyChecklist::query()
+                    ->with('company:id,business_name')
+                    ->where('created_by', $request->user()->id)
+                    ->whereHas('company')
+                    ->orderByDesc('surveyed_at')
+                    ->orderByDesc('id')
+                    ->limit(3)
+                    ->get()
+                    ->map(fn (CompanyChecklist $checklist) => [
+                        'id' => $checklist->id,
+                        'name' => $checklist->name,
+                        'surveyed_at' => $checklist->surveyed_at?->format('Y-m-d'),
+                        'company' => $checklist->company ? [
+                            'id' => $checklist->company->id,
+                            'business_name' => $checklist->company->business_name,
+                        ] : null,
+                    ])
+                    ->values()
+                : [],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'warning' => fn () => $request->session()->get('warning'),
                 'info' => fn () => $request->session()->get('info'),
+                // Distingue confirmaciones consecutivas con el mismo texto.
+                'toast_id' => fn () => $request->session()->get('toast_id'),
             ],
         ];
     }

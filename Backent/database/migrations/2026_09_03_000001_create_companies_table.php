@@ -11,9 +11,14 @@ return new class extends Migration
         // 1. Empresas
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
-            $table->string('business_name'); // Razón social
+            $table->string('business_name')->unique(); // Razón social
             $table->string('tax_id')->unique(); // CUIT/RUC
             $table->string('address')->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
+            $table->float('location_accuracy')->nullable(); // precisión del GPS en metros
+            $table->timestamp('location_captured_at')->nullable();
+            $table->string('location_photo')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->string('industry_sector'); // Sector industrial
