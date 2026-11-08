@@ -1,7 +1,7 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useForm, Link } from '@inertiajs/react';
-import { Users, ArrowLeft, Save, Shield } from 'lucide-react';
+import { Users, Save, Shield } from 'lucide-react';
 
 export default function UsersCreate() {
     const { data, setData, post, processing, errors } = useForm({
@@ -20,18 +20,8 @@ export default function UsersCreate() {
     };
 
     return (
-        <AuthenticatedLayout title="Registrar Nuevo Usuario">
+        <AuthenticatedLayout title="Registrar Nuevo Usuario" backHref="/users" backLabel="Volver a usuarios">
             <div className="max-w-2xl mx-auto space-y-6">
-                <div className="flex items-center justify-between">
-                    <Link
-                        href="/users"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Volver a usuarios
-                    </Link>
-                </div>
-
                 <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs">
                     <div className="pb-6 border-b border-slate-100 flex items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">

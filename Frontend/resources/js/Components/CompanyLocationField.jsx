@@ -10,45 +10,11 @@ import {
     Square,
     Crosshair,
 } from 'lucide-react';
+import { optimizeImage } from '@/utils/imageOptimizer';
 
 const DEFAULT_CENTER = [-24.1858, -65.2995]; // Jujuy, Argentina
 
 const isNum = (v) => v !== '' && v !== null && v !== undefined && !Number.isNaN(Number(v));
-
-// Reduce fotos de celular (5-10 MB) a un tamaño razonable antes de subirlas
-const compressImage = (file, maxSide = 1600, quality = 0.82) =>
-    new Promise((resolve) => {
-        if (!file.type.startsWith('image/')) return resolve(file);
-
-        const url = URL.createObjectURL(file);
-        const img = new Image();
-
-        img.onload = () => {
-            URL.revokeObjectURL(url);
-            const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
-            if (scale === 1 && file.size < 1.5 * 1024 * 1024) return resolve(file);
-
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.round(img.width * scale);
-            canvas.height = Math.round(img.height * scale);
-            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob(
-                (blob) => {
-                    if (!blob) return resolve(file);
-                    const name = (file.name.replace(/\.\w+$/, '') || 'foto') + '.jpg';
-                    resolve(new File([blob], name, { type: 'image/jpeg' }));
-                },
-                'image/jpeg',
-                quality
-            );
-        };
-        img.onerror = () => {
-            URL.revokeObjectURL(url);
-            resolve(file);
-        };
-        img.src = url;
-    });
 
 export default function CompanyLocationField({
     latitude,
@@ -77,12 +43,21 @@ export default function CompanyLocationField({
     const [geoError, setGeoError] = useState('');
     const [photoPreview, setPhotoPreview] = useState(null);
     const [processingPhoto, setProcessingPhoto] = useState(false);
+    const [locationMode, setLocationMode] = useState('pending');
+    const [coordinatesInput, setCoordinatesInput] = useState('');
 
     const hasLocation = isNum(latitude) && isNum(longitude);
     const lat = hasLocation ? Number(latitude) : null;
     const lng = hasLocation ? Number(longitude) : null;
     const acc = isNum(accuracy) ? Number(accuracy) : null;
     const leafletReady = typeof window !== 'undefined' && !!window.L;
+    const mapInteractionEnabled = locationMode === 'point';
+    const mapInteractionRef = useRef(false);
+    mapInteractionRef.current = mapInteractionEnabled;
+
+    useEffect(() => {
+        setCoordinatesInput(hasLocation ? `${lat}, ${lng}` : '');
+    }, [hasLocation, lat, lng]);
 
     const stopTracking = () => {
         if (watchRef.current !== null && navigator.geolocation) {
@@ -105,6 +80,7 @@ export default function CompanyLocationField({
 
         // Clic manual en el mapa: corta el seguimiento en vivo y fija el punto elegido
         map.on('click', (e) => {
+            if (!mapInteractionRef.current) return;
             stopTracking();
             changeCb.current?.({ latitude: e.latlng.lat, longitude: e.latlng.lng, accuracy: null });
         });
@@ -141,7 +117,7 @@ export default function CompanyLocationField({
         }
 
         if (!markerRef.current) {
-            const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+            const marker = L.marker([lat, lng], { draggable: mapInteractionEnabled }).addTo(map);
             marker.on('dragend', () => {
                 stopTracking();
                 const p = marker.getLatLng();
@@ -150,6 +126,8 @@ export default function CompanyLocationField({
             markerRef.current = marker;
         } else {
             markerRef.current.setLatLng([lat, lng]);
+            if (mapInteractionEnabled) markerRef.current.dragging.enable();
+            else markerRef.current.dragging.disable();
         }
 
         if (acc && acc > 0) {
@@ -175,7 +153,7 @@ export default function CompanyLocationField({
         } else if (!map.getBounds().contains([lat, lng])) {
             map.panTo([lat, lng]);
         }
-    }, [hasLocation, lat, lng, acc]);
+    }, [hasLocation, lat, lng, acc, mapInteractionEnabled]);
 
     // ---------- GPS en tiempo real ----------
     const startTracking = () => {
@@ -218,6 +196,30 @@ export default function CompanyLocationField({
         changeCb.current?.({ latitude: '', longitude: '', accuracy: '' });
     };
 
+    const choosePoint = () => {
+        setLocationMode('point');
+        setGeoError('');
+        setTimeout(() => mapRef.current?.invalidateSize(), 0);
+    };
+
+    const markLocationUnknown = () => {
+        clearLocation();
+        setLocationMode('unknown');
+    };
+
+    const updateCoordinatesInput = (value) => {
+        setCoordinatesInput(value);
+        const parts = value.split(',').map((part) => part.trim());
+        if (parts.length !== 2 || !parts[0] || !parts[1]) return;
+
+        const nextLat = Number(parts[0]);
+        const nextLng = Number(parts[1]);
+        if (!Number.isFinite(nextLat) || !Number.isFinite(nextLng) || nextLat < -90 || nextLat > 90 || nextLng < -180 || nextLng > 180) return;
+
+        stopTracking();
+        changeCb.current?.({ latitude: nextLat, longitude: nextLng, accuracy: null });
+    };
+
     // ---------- Foto ----------
     useEffect(() => {
         if (!photoFile) {
@@ -234,7 +236,7 @@ export default function CompanyLocationField({
         e.target.value = '';
         if (!file) return;
         setProcessingPhoto(true);
-        const ready = await compressImage(file);
+        const ready = await optimizeImage(file);
         setProcessingPhoto(false);
         onPhotoChange?.(ready);
     };
@@ -272,6 +274,7 @@ export default function CompanyLocationField({
                             <button
                                 type="button"
                                 onClick={startTracking}
+                                disabled={!mapInteractionEnabled}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
                             >
                                 <Navigation className="w-3.5 h-3.5" />
@@ -309,6 +312,28 @@ export default function CompanyLocationField({
                 {leafletReady ? (
                     <div className="relative h-64 rounded-xl overflow-hidden border border-slate-200 shadow-xs">
                         <div ref={mapEl} className="w-full h-full" />
+                        {!mapInteractionEnabled && (
+                            <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-slate-900/45 p-4 text-center backdrop-blur-[1px]">
+                                <div className="max-w-xs rounded-2xl bg-white/95 p-4 shadow-xl">
+                                    {locationMode === 'unknown' ? (
+                                        <>
+                                            <p className="text-sm font-bold text-slate-900">Ubicación sin registrar</p>
+                                            <p className="mt-1 text-xs leading-5 text-slate-500">Podés continuar sin coordenadas y agregarlas más adelante.</p>
+                                            <button type="button" onClick={choosePoint} className="mt-3 inline-flex rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700">Elegir un punto</button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="text-sm font-bold text-slate-900">¿Querés registrar la ubicación?</p>
+                                            <p className="mt-1 text-xs leading-5 text-slate-500">Elegí un punto para habilitar el mapa o continuá sin ubicación.</p>
+                                            <div className="mt-3 flex flex-wrap justify-center gap-2">
+                                                <button type="button" onClick={choosePoint} className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700">Elegir punto</button>
+                                                <button type="button" onClick={markLocationUnknown} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">No conozco la ubicación</button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
@@ -316,12 +341,14 @@ export default function CompanyLocationField({
                     </p>
                 )}
 
-                <p className="text-[11px] text-slate-400 flex items-start gap-1.5">
+                {mapInteractionEnabled && <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Coordenadas</label><input type="text" inputMode="decimal" value={coordinatesInput} onChange={(event) => updateCoordinatesInput(event.target.value)} placeholder="Ej: -24.268621545130223, -65.23299320318309" className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-mono text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /><p className="mt-1.5 text-[11px] text-slate-500">Ingresá latitud y longitud separadas por una coma. El mapa se actualiza automáticamente.</p></div>}
+
+                {mapInteractionEnabled && <p className="text-[11px] text-slate-400 flex items-start gap-1.5">
                     <Crosshair className="w-3 h-3 mt-0.5 shrink-0" />
                     Tocá “Usar mi GPS en vivo” estando en el lugar: el punto se actualiza solo mientras mejora la
                     precisión. Cuando el círculo azul sea chico, tocá “Fijar”. También podés hacer clic en el mapa o
                     arrastrar el marcador para ajustarlo.
-                </p>
+                </p>}
                 {(errors.latitude || errors.longitude) && (
                     <p className="text-xs text-rose-600">{errors.latitude || errors.longitude}</p>
                 )}

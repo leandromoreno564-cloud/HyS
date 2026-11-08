@@ -29,11 +29,12 @@ class Company extends Model
         'location_accuracy',
         'location_captured_at',
         'location_photo',
+        'cover_photo',
         'created_by',
         'is_active',
     ];
 
-    protected $appends = ['location_photo_url'];
+    protected $appends = ['location_photo_url', 'cover_photo_url'];
 
     protected function casts(): array
     {
@@ -50,6 +51,11 @@ class Company extends Model
     public function getLocationPhotoUrlAttribute(): ?string
     {
         return $this->location_photo ? '/storage/' . $this->location_photo : null;
+    }
+
+    public function getCoverPhotoUrlAttribute(): ?string
+    {
+        return $this->cover_photo ? '/storage/' . $this->cover_photo : null;
     }
 
     public function creator(): BelongsTo

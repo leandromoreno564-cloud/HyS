@@ -3,13 +3,13 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useForm, Link } from '@inertiajs/react';
 import axios from 'axios';
 import CompanyLocationField from '@/Components/CompanyLocationField';
+import { optimizeImage } from '@/utils/imageOptimizer';
 
 const isDocFile = (f) => /\.(pdf|docx|odt|txt)$/i.test(f?.name || '');
 
 import {
     Building2,
     Save,
-    ArrowLeft,
     Users,
     Shield,
     FileUp,
@@ -69,6 +69,7 @@ export default function CompaniesCreate({ inspectors = [] }) {
         longitude: '',
         location_accuracy: '',
         location_photo: null,
+        cover_photo: null,
         inspector_ids: [],
     });
 
@@ -228,18 +229,8 @@ export default function CompaniesCreate({ inspectors = [] }) {
     };
 
     return (
-        <AuthenticatedLayout title="Registrar Nueva Empresa">
+        <AuthenticatedLayout title="Registrar Nueva Empresa" backHref="/companies" backLabel="Volver al listado">
             <div className="max-w-4xl mx-auto space-y-6">
-                <div className="flex items-center justify-between">
-                    <Link
-                        href="/companies"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Volver al listado
-                    </Link>
-                </div>
-
                 <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs">
                     <div className="pb-6 border-b border-slate-100 flex items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -582,6 +573,14 @@ export default function CompaniesCreate({ inspectors = [] }) {
                                 onPhotoRemove={() => setData('location_photo', null)}
                                 errors={errors}
                             />
+                        </div>
+
+                        <div className="pt-6 border-t border-slate-100">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Foto de portada</label>
+                            <p className="text-xs text-slate-500 mb-4">Se muestra como fondo en la ficha de la empresa. Es opcional.</p>
+                            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={async (event) => setData('cover_photo', event.target.files?.[0] ? await optimizeImage(event.target.files[0]) : null)} className="block w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-100 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-blue-700 hover:file:bg-blue-200" />
+                            {data.cover_photo && <p className="mt-2 text-xs font-medium text-blue-700">Portada seleccionada: {data.cover_photo.name}</p>}
+                            {errors.cover_photo && <p className="mt-2 text-xs font-medium text-rose-600">{errors.cover_photo}</p>}
                         </div>
 
                         {/* Asignación de Inspectores */}

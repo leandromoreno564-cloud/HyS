@@ -83,6 +83,8 @@ class CompanyController extends Controller
             'location_accuracy' => ['nullable', 'numeric', 'min:0'],
             'location_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:8192'],
             'remove_location_photo' => ['nullable', 'boolean'],
+            'cover_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:8192'],
+            'remove_cover_photo' => ['nullable', 'boolean'],
             'is_active' => ['boolean'],
             'inspector_ids' => ['nullable', 'array'],
             'inspector_ids.*' => ['exists:users,id'],
@@ -336,6 +338,40 @@ class CompanyController extends Controller
         return Inertia::render('Companies/Edit', compact('company', 'inspectors'));
     }
 
+    /** Actualiza únicamente la portada desde la ficha de la empresa. */
+    public function updateCover(Request $request, Company $company)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        if (!$company->isAccessibleBy($user)) {
+            abort(403, 'No tiene permisos para editar esta empresa.');
+        }
+
+        $data = $request->validate([
+            'cover_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:8192'],
+            'remove_cover_photo' => ['nullable', 'boolean'],
+        ]);
+
+        if ($request->hasFile('cover_photo')) {
+            if ($company->cover_photo) {
+                Storage::disk('public')->delete($company->cover_photo);
+            }
+            $company->cover_photo = $request->file('cover_photo')->store('company-covers', 'public');
+            $company->save();
+
+            return back()->with('success', 'Portada de la empresa actualizada.');
+        }
+
+        if (($data['remove_cover_photo'] ?? false) && $company->cover_photo) {
+            Storage::disk('public')->delete($company->cover_photo);
+            $company->cover_photo = null;
+            $company->save();
+        }
+
+        return back()->with('success', 'Portada de la empresa eliminada.');
+    }
+
     public function update(Request $request, Company $company)
     {
         /** @var User $user */
@@ -360,6 +396,8 @@ class CompanyController extends Controller
             'location_accuracy' => ['nullable', 'numeric', 'min:0'],
             'location_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:8192'],
             'remove_location_photo' => ['nullable', 'boolean'],
+            'cover_photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:8192'],
+            'remove_cover_photo' => ['nullable', 'boolean'],
             'is_active' => ['boolean'],
             'inspector_ids' => ['nullable', 'array'],
             'inspector_ids.*' => ['exists:users,id'],
@@ -504,7 +542,7 @@ class CompanyController extends Controller
      */
     private function applyLocation(array &$data, Request $request, ?Company $company = null): void
     {
-        unset($data['location_photo'], $data['remove_location_photo']);
+        unset($data['location_photo'], $data['remove_location_photo'], $data['cover_photo'], $data['remove_cover_photo']);
 
         if (array_key_exists('latitude', $data) || array_key_exists('longitude', $data)) {
             $lat = $data['latitude'] ?? null;
@@ -532,6 +570,18 @@ class CompanyController extends Controller
                 Storage::disk('public')->delete($company->location_photo);
             }
             $data['location_photo'] = null;
+        }
+
+        if ($request->hasFile('cover_photo')) {
+            if ($company?->cover_photo) {
+                Storage::disk('public')->delete($company->cover_photo);
+            }
+            $data['cover_photo'] = $request->file('cover_photo')->store('company-covers', 'public');
+        } elseif ($company && $request->boolean('remove_cover_photo')) {
+            if ($company->cover_photo) {
+                Storage::disk('public')->delete($company->cover_photo);
+            }
+            $data['cover_photo'] = null;
         }
     }
 }

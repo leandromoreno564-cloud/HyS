@@ -1,7 +1,7 @@
 import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useForm, Link } from '@inertiajs/react';
-import { Building2, Save, ArrowLeft } from 'lucide-react';
+import { Building2, Save } from 'lucide-react';
 import CompanyLocationField from '@/Components/CompanyLocationField';
 
 export default function CompaniesEdit({ company, inspectors = [] }) {
@@ -59,18 +59,8 @@ export default function CompaniesEdit({ company, inspectors = [] }) {
     };
 
     return (
-        <AuthenticatedLayout title={`Editar Empresa: ${company.business_name}`}>
+        <AuthenticatedLayout title={`Editar Empresa: ${company.business_name}`} backHref={`/companies/${company.id}`} backLabel="Volver a la ficha">
             <div className="max-w-4xl mx-auto space-y-6">
-                <div className="flex items-center justify-between">
-                    <Link
-                        href={`/companies/${company.id}`}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Volver a la ficha
-                    </Link>
-                </div>
-
                 <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs">
                     <div className="pb-6 border-b border-slate-100 flex items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">

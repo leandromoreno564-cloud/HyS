@@ -2,7 +2,7 @@ import React from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useForm, Link } from '@inertiajs/react';
 import defaultAvatar from '../../../images/hys-default-avatar.png';
-import { ArrowLeft, Award, Building2, Check, Mail, Phone, Save, Shield, User } from 'lucide-react';
+import { Award, Building2, Check, Mail, Phone, Save, Shield, User } from 'lucide-react';
 
 const inputClass = 'mt-1.5 block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-400';
 
@@ -27,12 +27,8 @@ export default function UsersEdit({ user, companies = [] }) {
     const allCompaniesSelected = companies.length > 0 && companies.every((company) => data.company_ids.includes(company.id));
 
     return (
-        <AuthenticatedLayout title={`Editar Usuario: ${user.name}`}>
+        <AuthenticatedLayout title={`Editar Usuario: ${user.name}`} backHref="/users" backLabel="Volver a usuarios">
             <div className="w-full -mx-2 sm:mx-auto lg:w-[90%]">
-                <div className="mb-5">
-                    <Link href="/users" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition hover:text-slate-900"><ArrowLeft className="h-4 w-4" />Volver a usuarios</Link>
-                </div>
-
                 <div className="lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start lg:gap-8">
                     <aside className="mb-6 flex flex-col items-center rounded-none border border-slate-200 bg-white p-6 text-center sm:rounded-3xl lg:sticky lg:top-24 lg:mb-0">
                         <div className="h-28 w-28 overflow-hidden rounded-full bg-slate-950 shadow-lg shadow-slate-950/20 ring-4 ring-slate-200 lg:h-36 lg:w-36"><img src={avatarSource} alt={user.name || 'Avatar predeterminado de HyS'} className="h-full w-full object-cover" /></div>

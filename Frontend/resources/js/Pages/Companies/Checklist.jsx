@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Link } from '@inertiajs/react';
 import axios from 'axios';
+import { optimizeImage } from '@/utils/imageOptimizer';
 
 const isDocFile = (f) => /\.(pdf|docx|odt|txt)$/i.test(f?.name || '');
 
@@ -21,7 +21,6 @@ const dataUrlToFile = (dataUrl, name) => {
 };
 
 import {
-    ArrowLeft,
     FileUp,
     FileDown,
     Loader2,
@@ -235,8 +234,9 @@ export default function CompaniesChecklist({ company, checklist, items }) {
     const updateDraft = (key, field, value) =>
         setDraftItems((prev) => prev.map((it) => (it._key === key ? { ...it, [field]: value } : it)));
 
-    const setDraftPhoto = (key, slotIdx, file) => {
-        const problem = validateImage(file);
+    const setDraftPhoto = async (key, slotIdx, file) => {
+        const optimizedFile = await optimizeImage(file);
+        const problem = validateImage(optimizedFile);
         if (problem) {
             setPageError(problem);
             return;
@@ -247,7 +247,7 @@ export default function CompaniesChecklist({ company, checklist, items }) {
                 if (it._key !== key) return it;
                 const photos = [...it.photos];
                 if (photos[slotIdx]) URL.revokeObjectURL(photos[slotIdx].url);
-                photos[slotIdx] = { file, url: URL.createObjectURL(file) };
+                photos[slotIdx] = { file: optimizedFile, url: URL.createObjectURL(optimizedFile) };
                 return { ...it, photos };
             })
         );
@@ -378,7 +378,8 @@ export default function CompaniesChecklist({ company, checklist, items }) {
     };
 
     const uploadPhoto = async (id, slot, file) => {
-        const problem = validateImage(file);
+        const optimizedFile = await optimizeImage(file);
+        const problem = validateImage(optimizedFile);
         if (problem) {
             setPageError(problem);
             return;
@@ -386,7 +387,7 @@ export default function CompaniesChecklist({ company, checklist, items }) {
         setPageError('');
         const fd = new FormData();
         fd.append('slot', slot);
-        fd.append('photo', file);
+        fd.append('photo', optimizedFile);
         try {
             const res = await track(
                 axios.post(`/checklist-items/${id}/photo`, fd, {
@@ -570,18 +571,8 @@ export default function CompaniesChecklist({ company, checklist, items }) {
     };
 
     return (
-        <AuthenticatedLayout title={`Relevamiento — ${company.business_name}`}>
+        <AuthenticatedLayout title={`Relevamiento — ${company.business_name}`} backHref={`/companies/${company.id}`} backLabel={`Volver a ${company.business_name}`}>
             <div className="max-w-5xl mx-auto space-y-6">
-                <div className="flex items-center justify-between">
-                    <Link
-                        href={`/companies/${company.id}`}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Volver a {company.business_name}
-                    </Link>
-                </div>
-
                 <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs">
                     <div className="pb-6 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
                         <div className="flex items-center gap-3">

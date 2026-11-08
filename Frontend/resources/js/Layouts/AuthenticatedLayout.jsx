@@ -17,10 +17,11 @@ import {
     ChevronRight,
     Search,
     CalendarDays,
-    ClipboardList
+    ClipboardList,
+    ArrowLeft,
 } from 'lucide-react';
 
-export default function AuthenticatedLayout({ children, title = '' }) {
+export default function AuthenticatedLayout({ children, title = '', backHref = null, backLabel = 'Volver' }) {
     const page = usePage();
     const { auth, flash, unreadNotifications, sidebarChecklists = [] } = page.props;
     const currentUser = auth?.user;
@@ -210,6 +211,15 @@ export default function AuthenticatedLayout({ children, title = '' }) {
                         >
                             <Menu className="w-5 h-5" />
                         </button>
+                        {backHref && (
+                            <Link
+                                href={backHref}
+                                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                                <span className="hidden sm:inline">{backLabel}</span>
+                            </Link>
+                        )}
                         {title && (
                             <h1 className="text-base sm:text-lg font-semibold text-slate-900 truncate">
                                 {title}
