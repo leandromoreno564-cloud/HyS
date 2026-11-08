@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title inertia>Plataforma de Higiene y Seguridad Laboral</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png?v=3') }}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="HyS Control">
+    <meta property="og:description" content="Plataforma de Higiene y Seguridad Laboral.">
+    <meta property="og:image" content="{{ url(\Illuminate\Support\Facades\Vite::asset('resources/images/hys-default-avatar.png')) }}">
+    <meta property="og:image:alt" content="Gato de HyS Control">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="HyS Control">
+    <meta name="twitter:description" content="Plataforma de Higiene y Seguridad Laboral.">
+    <meta name="twitter:image" content="{{ url(\Illuminate\Support\Facades\Vite::asset('resources/images/hys-default-avatar.png')) }}">
 
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
