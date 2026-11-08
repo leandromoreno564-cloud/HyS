@@ -227,7 +227,7 @@ export default function UsersIndex({ users, focusedUserId = null, inspectorOpenA
                                                         }`} />
                                                     </button>
                                                     <span className={`text-[11px] font-semibold ${user.is_active ? 'text-emerald-700' : 'text-slate-500'}`}>
-                                                        {user.is_active ? 'Activo' : Number(user.id) === Number(focusedUserId) ? 'Pendiente de aprobación' : 'Inactivo'}
+                                                        {user.is_active ? 'Activo' : 'Inactivo'}
                                                     </span>
                                                 </div>
                                             </td>

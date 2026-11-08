@@ -89,7 +89,7 @@ class AuthController extends Controller
         return redirect()->route('login')->with(
             'success',
             'Tu cuenta fue creada. Un administrador debe habilitarla antes de que puedas ingresar al sistema.'
-        );
+        )->with('registration_completed', true);
     }
 
     public function login(Request $request)

@@ -1,10 +1,13 @@
-import React from 'react';
-import { Link, useForm } from '@inertiajs/react';
-import { Lock, User, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useForm, usePage } from '@inertiajs/react';
+import { Lock, User, ArrowRight, CircleCheck, Clock3 } from 'lucide-react';
+import Toast from '@/Components/Toast';
 import loginBg from '../../../images/login-bg-no-shield.png';
 import hysCatLogo from '../../../images/hys-cat-logo-white.png';
 
 export default function Login() {
+    const { flash } = usePage().props;
+    const [registrationToast, setRegistrationToast] = useState(() => Boolean(flash?.registration_completed));
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -18,6 +21,13 @@ export default function Login() {
 
     return (
         <div className="min-h-screen flex bg-[#0b1322]">
+            {registrationToast && (
+                <Toast
+                    message="Tu cuenta fue creada. Esperá la aprobación de un administrador para ingresar."
+                    type="success"
+                    onClose={() => setRegistrationToast(false)}
+                />
+            )}
             {/* Panel izquierdo: foto + branding (solo desktop) */}
             <div
                 className="hidden lg:flex lg:w-[58%] relative bg-cover bg-center"
@@ -48,6 +58,26 @@ export default function Login() {
                                 Accedé al sistema de Higiene y Seguridad
                             </p>
                         </div>
+
+                        {flash?.registration_completed && (
+                            <div className="mb-5 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-left">
+                                <div className="flex gap-3">
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-400/20 text-emerald-300">
+                                        <CircleCheck className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm font-bold text-emerald-200">¡Tu cuenta fue creada!</h2>
+                                        <p className="mt-1 text-xs leading-relaxed text-slate-300">
+                                            Recibimos tus datos correctamente. Un administrador debe aprobar tu cuenta antes de que puedas ingresar.
+                                        </p>
+                                        <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-200">
+                                            <Clock3 className="h-3.5 w-3.5" />
+                                            Cuando se habilite, ingresá con tu correo y contraseña.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         <form className="space-y-3" onSubmit={handleSubmit}>
                             {/* Usuario */}
